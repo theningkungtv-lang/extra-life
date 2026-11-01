@@ -8944,7 +8944,7 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
   const t0=performance.now();let raf;
   const fxc=document.createElement('canvas');fxc.width=220;fxc.height=72;const fxx=fxc.getContext('2d');
   const draw=()=>{if(!d.isConnected)return;raf=requestAnimationFrame(draw);paint();};
-  const paint=()=>{if(!d.isConnected)return;const now=performance.now();if(window.BTSTOP&&fx&&now-fx.t0>window.BTSTOP)return;try{const t=now-t0;const sk=now<shake?((now/32|0)%2?2:-2):0;c.setTransform(1,0,0,1,sk,0);c.imageSmoothingEnabled=false;
+  const paint=()=>{if(!d.isConnected)return;const now=performance.now();if(window.BTSTOP&&fx&&now-fx.t0>window.BTSTOP)return;if(BT.heal){BT.heal=0;me=mx;hud();say2('คุณกินถั่วเซียนซึ แผลทุกแผลปิดสนิท พลังกลับมาเต็มเปี่ยม');}try{const t=now-t0;const sk=now<shake?((now/32|0)%2?2:-2):0;c.setTransform(1,0,0,1,sk,0);c.imageSmoothingEnabled=false;
     const g=c.createLinearGradient(0,0,0,120);const sky=W.id==='jjk'||W.id==='bleach'?['#262b44','#5a4a6a']:W.id==='op'?['#5fcde4','#3a6aa8']:W.id==='naruto'?['#9fd3a0','#5a8a5a']:['#9fc0d4','#c8b88a'];g.addColorStop(0,sky[0]);g.addColorStop(1,sky[1]);c.fillStyle=g;c.fillRect(0,0,240,120);if(bgImg){c.drawImage(bgImg,bgCrop.sx,bgCrop.sy,bgCrop.sw,bgCrop.sh,0,0,240,120);c.fillStyle='rgba(10,8,16,.18)';c.fillRect(0,0,240,120);}
     const px=(x,y,w,h,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};px.c=c;px.k=1;
     const p2=(x,y,w,h,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(Math.round(x)*2,Math.round(y)*2,w*2,h*2);};p2.c=c;p2.k=2;
@@ -9485,6 +9485,265 @@ setInterval(()=>{try{if(!S||!S.online||!ON.sv||ON.sv.m0==null||!S.alive||$('#gam
   if(!AUTO.on&&!busy&&$('#modal').hidden){ON.svHold=0;setAuto(true);}
   if(diff>1.2&&!busy&&$('#modal').hidden)S.mt=Math.min(.98,(S.mt||0)+Math.min(.45,diff*.06));}catch(e){}},300);
 {const ca1=continueAs;continueAs=function(k){const on=S?.online;const r=ca1.apply(this,arguments);try{if(on&&S){S.online=true;if(ON.sv){ON.sv.t0=Date.now();ON.sv.m0=S.year*12+(S.mo||0);svSave();}}}catch(e){}return r;};}
+
+/* ===================== DRAGON BALL: martial artists, Saiyans, seven balls and a dragon that grants a wish ===================== */
+const saiyan=S=>bloodOf(S).some(b=>b==='saiyan'||b==='halfsaiyan');
+const dbF=S=>powersOf(S).some(p=>/^db_/.test(p));
+Object.assign(POWERS,{db_ki:{n:'ควบคุมพลังลมปราณ (คิ)',cat:'วิชาลมปราณ',c:10},db_fly:{n:'บุคูจุตสึ (บินได้)',cat:'วิชาลมปราณ',c:8},db_kame:{n:'คาเมฮาเมฮะ',cat:'วิชาลับ',c:16,fame:4},db_kienzan:{n:'คิเอ็นซัน',cat:'วิชาลับ',c:14},
+  db_taiyo:{n:'ไทโยเคน',cat:'วิชาลับ',c:8},db_kikoho:{n:'คิโคโฮ',cat:'วิชาลับ',c:16},db_kaioken:{n:'ไคโอเคน',cat:'วิชาลับ',c:20,fame:5},db_genki:{n:'เก็นกิดามะ',cat:'วิชาลับ',c:28,fame:8},db_galick:{n:'แกลิคกัน',cat:'วิชาลับ',c:16},
+  db_masenko:{n:'มาเซนโกะ',cat:'วิชาลับ',c:14},db_shunkan:{n:'ชุนคันอิโด',cat:'วิชาลับ',c:18,fame:4},db_namek:{n:'ร่างกายชาวนาเม็ก',cat:'สายเลือด',c:12},db_ssj:{n:'ซูเปอร์ไซย่า',cat:'ร่างแปลง',c:34,fame:15},
+  db_ssj2:{n:'ซูเปอร์ไซย่า 2',cat:'ร่างแปลง',c:42,fame:15},db_ssg:{n:'ซูเปอร์ไซย่าก็อด',cat:'ร่างแปลง',c:52,fame:20},db_ui:{n:'อัลตร้าอินสติงต์',cat:'ร่างแปลง',c:62,fame:30},db_majin:{n:'ตราจอมมาร (มาจิน)',cat:'วิชาต้องห้าม',c:22},db_oozaru:{n:'ร่างโอซารุ',cat:'ร่างแปลง',c:24}});
+const DB={
+  id:'db',title:'ดราก้อนบอล',sub:'Dragon Ball',style:'jp',gi:0,blurb:'เกิดในโลกที่มีนักสู้บินได้ ไดโนเสาร์ยังเดินอยู่ในป่า และดราก้อนบอลเจ็ดลูกที่ใครรวบรวมได้จะขอพรได้หนึ่งข้อ แต่ทุกไม่กี่ปีจะมีคนจากนอกโลกมาทำลายมัน',
+  cur:'เซนี',mult:1000,yl:y=>`ปีที่ ${y}`,range:[700,800],def:737,fitL:'พลังต่อสู้',trainL:'ฝึกวิชาการต่อสู้',jobMin:15,originL:'บ้านเกิด',postY:790,
+  keyEvents:['raditz','namek','cellgames','buu'],firstWord:'คาเมฮาเมฮะ',tlNote:'คุณรู้อนาคต ตัวละครของคุณไม่รู้',cloth:'#f77622',
+  ruins:'ซากกองทัพริบบอนแดง',promo:'ได้เลื่อนตำแหน่ง',street:'คุณนอนในแคปซูลบ้านพังๆ ริมทาง',exec:'ถูกทหารกองทัพริบบอนแดงประหาร',
+  gifts:['แคปซูลบ้านจากแคปซูลคอร์ป','ถั่วเซียนซึหนึ่งเม็ด','หนังสือการ์ตูนของผู้เฒ่าเต่า','เสื้อกี่สีส้ม','เค้กจากร้านดังในเวสต์ซิตี้'],
+  food:S=>pick(['ไดโนเสาร์ย่างทั้งตัว','ข้าวกล่องฝีมือจีจี้','ซูชิที่ปาร์ตี้ของบุลมา','ราเม็งในซาตานซิตี้','ปลายักษ์ย่างริมแม่น้ำ']),
+  law:S=>S.year<751?'กองทัพริบบอนแดง':'ตำรวจของราชาโลก',
+  exposed(what){S.flags.wanted=1;say(`ตำรวจของราชาโลกออกหมายจับคุณ ${what}`,'bad');},
+  betray:(S,p)=>pick([`คุณขายที่อยู่ของ${p.short}ให้กองทัพริบบอนแดง`,`คุณขโมยดราก้อนบอลที่${p.short}เก็บไว้`,`คุณใส่ร้าย${p.short}ต่อหน้าทุกคน`]),
+  accidents:S=>dbF(S)?['คลื่นพลังจากการซ้อมสะท้อนกลับมาโดนตัวเอง','บินชนภูเขาตอนฝึกบินกลางพายุ','ไดโนเสาร์ยักษ์ไล่กิน']:['ไดโนเสาร์ยักษ์ไล่กิน','รถยนต์ลอยฟ้าตก','หลงทะเลทรายจนขาดน้ำ'],
+  statusX:S=>{const pl=Math.round(Math.pow(Math.max(1,myPow()),2.15));return ` · พลังต่อสู้ ${pl.toLocaleString('th-TH')}`;},
+  festivals:['ศึกชิงเจ้ายุทธภพ (เทนคาอิจิบุโดไก)','ปาร์ตี้วันเกิดของบุลมา','เทศกาลดอกไม้ไฟที่ซาตานซิตี้'],
+  kidPaths:[['เป็นนักสู้ศิลปะการต่อสู้','เป็นนักวิทยาศาสตร์'],['ทำงานที่แคปซูลคอร์ป','เป็นชาวนาบนภูเขา'],['เข้าศึกชิงเจ้ายุทธภพ','เปิดร้านอาหาร']],
+  famName:n=>n,join:(f,l)=>f,
+  studyTxt:['คุณอ่านคู่มือการประกอบแคปซูลจนตาลาย','คุณเรียนคณิตศาสตร์ที่จีจี้บังคับให้เรียน','คุณแอบอ่านการ์ตูนของผู้เฒ่าเต่า'],
+  trainTxt:['คุณแบกกระดองเต่าวิ่งส่งนมทั้งเกาะ','คุณซ้อมต่อยใต้น้ำตก','คุณวิ่งหนีไดโนเสาร์จนขาแข็ง'],
+  funTxt:['คุณดูศึกชิงเจ้ายุทธภพทางทีวี','คุณขับรถลอยฟ้าเล่นรอบเมือง','คุณกินจุจนเจ้าของร้านปิดร้านใส่'],
+  hurtTxt:['คุณโดนไดโนเสาร์เหยียบ','คุณบินชนต้นไม้','คุณโดนลูกพลังหลงจากการซ้อมของคนอื่น'],
+  places:{
+    paozu:{n:'ภูเขาพาโอสึ',d:'ป่าเขาห่างไกล ไดโนเสาร์เดินผ่านหน้าบ้าน',money:20,v:'paddy'},
+    westcity:{n:'เวสต์ซิตี้',d:'มหานครของแคปซูลคอร์ป รถลอยฟ้าเต็มท้องฟ้า',money:45,v:'metro'},
+    kame:{n:'เกาะคาเมะ',d:'เกาะเล็กกลางทะเลกับบ้านสีชมพูหนึ่งหลัง',money:15,v:'isle'},
+    satan:{n:'ซาตานซิตี้',d:'เมืองที่ตั้งชื่อตามแชมป์โลก',money:35,v:'jtown'},
+    desert:{n:'ทะเลทรายเดียโบ',d:'ดินแดนโจรทะเลทรายและหินสูง',money:15,v:'desert'},
+  },
+  mkName(sx,pl){return pick(NAMES.db[sx]);},
+  jobs:[
+    {id:'farmer',n:'ชาวนาบนภูเขา',pay:6,sk:'craft'},
+    {id:'cc',n:'วิศวกรแคปซูลคอร์ป',pay:30,sk:'craft',need:{iq:70},where:'westcity'},
+    {id:'cook',n:'พ่อครัวร้านอาหาร',pay:12,sk:'cook'},
+    {id:'police',n:'ตำรวจ',pay:16,sk:'fight',need:{fit:45}},
+    {id:'fighter',n:'นักสู้ศิลปะการต่อสู้อาชีพ',pay:20,sk:'fight',need:{fit:55,fight:40}},
+    {id:'news',n:'ผู้ประกาศข่าว',pay:18,sk:'charm',need:{charm:40}},
+    {id:'bandit',n:'โจรทะเลทราย',pay:10,sk:'fight',where:'desert'},
+  ],
+  mil:[{id:'redribbon',n:'ทหารกองทัพริบบอนแดง',pay:16,mil:1,train:1},{id:'frieza',n:'ทหารกองทัพฟรีเซอร์',pay:30,mil:1,train:1}],
+  special(S){const o=[];if(S.year<751&&S.age>=16&&!isMil(S))o.push({l:'สมัครกองทัพริบบอนแดง',h:'เงินดี แต่ทั้งโลกจะเกลียดคุณ',f(S){dk(15);setJob('redribbon');say('นายพลแบล็คยื่นเครื่องแบบให้คุณ "ภารกิจแรกคือดราก้อนบอล"','bad');}});
+    if(saiyan(S)&&S.age>=14&&S.year>=760&&S.year<=762&&!isMil(S))o.push({l:'เข้ากองทัพฟรีเซอร์',h:'ชาวไซย่าที่เหลือรับใช้ฟรีเซอร์',f(S){dk(25);setJob('frieza');say('คุณสวมเกราะของกองทัพฟรีเซอร์ สเกาเตอร์สีเขียวติดที่ตา','bad');}});return o;},
+  isWhere(j,S){return !j.where||j.where===S.place;},
+  canon:[
+    {id:'vegetaplanet',y:737,mo:3,t:'ดาวเบจิต้าถูกทำลาย',major:true,play(S){news(this.t,'ดาวตกสีแดงดวงหนึ่งตกลงในภูเขาพาโอสึ ไม่มีใครรู้ว่าข้างในมีทารกที่มีหาง และไกลออกไปในอวกาศ ดาวเบจิต้าเพิ่งแตกเป็นผง');if(saiyan(S))say('คุณคือหนึ่งในชาวไซย่าไม่กี่คนที่รอดชีวิต','power');}},
+    {id:'bulma',y:749,mo:2,t:'บุลมาออกตามหาดราก้อนบอล',major:true,play(S){if(S.place!=='paozu'||S.age<8){news(this.t,'ลูกสาวประธานแคปซูลคอร์ปขับรถออกจากเวสต์ซิตี้พร้อมเรดาร์แปลกๆ');return;}
+      return{text:'เด็กหนุ่มมีหางลากปลายักษ์ผ่านหน้าคุณ ตามด้วยรถของสาวผมฟ้าที่เบรกเสียงดังลั่น เธอถือเรดาร์ที่ชี้ไปทางบ้านของเขา',choices:[
+        {l:'ขอร่วมเดินทางไปด้วย',g:'brave curious',f(S){bond('goku',10);bond('bulma',8);S.flags.dbHunt=1;say('การผจญภัยตามหาดราก้อนบอลเริ่มต้นขึ้น และคุณก็อยู่ในนั้นด้วย','good');}},
+        {l:'แค่โบกมือให้',g:'safe',f(S){say('รถคันนั้นหายไปพร้อมฝุ่น คุณไม่รู้เลยว่าเพิ่งพลาดอะไรไป','plain');}}]};}},
+    {id:'budokai21',y:749,mo:9,t:'ศึกชิงเจ้ายุทธภพครั้งที่ 21',major:true,play(S){const t=this.t;if(S.age<12){news(t,'ชายแก่ชื่อแจ็คกี้ชุนชนะเด็กหัวโล้นกับเด็กมีหาง ทุกคนสงสัยว่าเขาคือใคร');return;}
+      return{text:'ศึกชิงเจ้ายุทธภพเปิดรับสมัคร เด็กหัวโล้นกับเด็กมีหางยืนอยู่ในแถว ชายแก่ใส่แว่นกันแดดยิ้มอยู่หลังสุด',choices:[
+        {l:'ลงแข่ง สู้บนเวที',g:'brave',f(S){if(live(.95,'ถูกโยนออกนอกเวทีแล้วกระแทกหัว')){if(chance(.35+fitb(200))){fm(8);skill('fight',6);say('คุณผ่านเข้ารอบแปดคนสุดท้าย คนดูจำชื่อคุณได้','good');}else{skill('fight',3);say('คุณตกเวทีในรอบแรก แต่ได้เห็นวิชาที่ไม่เคยเห็นมาก่อน','plain');}}}},
+        {l:'นั่งดู',g:'safe',f(S){say('แจ็คกี้ชุนปล่อยคลื่นพลังจนจันทร์บนฟ้าหายไป คุณตาค้าง','plain');}}]};}},
+    {id:'redribbon',y:750,mo:4,t:'สงครามกองทัพริบบอนแดง',major:true,play(S){if(S.job?.id==='redribbon')return{text:'เด็กมีหางคนเดียวบุกทลายฐานทัพของคุณทีละชั้น',choices:[
+        {l:'ต่อสู้ปกป้องฐาน',g:'brave dark obey',f(S){if(live(.6+fitb(250),'ถูกเด็กมีหางตีจนฐานถล่มทับ')){setJob(null);say('กองทัพริบบอนแดงล่มสลายในวันเดียว คุณตกงาน','bad');}}},{l:'หนีออกจากฐาน',g:'safe',f(S){setJob(null);say('คุณถอดเครื่องแบบทิ้งข้างทาง','plain');}}]};
+      news(this.t,'ข่าวลือว่ากองทัพที่ใหญ่ที่สุดในโลกถูกเด็กคนเดียวทำลาย');}},
+    {id:'daimao',y:753,mo:5,t:'จอมมารพิคโกโร่กลับมา',major:true,play(S){news(this.t,'จอมมารพิคโกโร่ฆ่านักสู้ทั่วโลก ราชาโลกถูกบังคับยกบัลลังก์ วันจอมมารถูกประกาศ');
+      if(S.age>=12)return{text:'ปีศาจสีเขียวประกาศทางโทรทัศน์ว่าจะทำลายเมืองหนึ่งเมืองทุกปี',choices:[
+        {l:'ออกไปสู้กับลูกน้องจอมมาร',g:'brave hero',f(S){if(live(.5+fitb(200),'ถูกลูกน้องของจอมมารพิคโกโร่ฆ่า')){fm(6);skill('fight',5);say('คุณรอดมาได้ แล้วข่าวก็ประกาศว่าเด็กมีหางล้มจอมมารได้แล้ว','good');}}},
+        {l:'อพยพไปภูเขา',g:'safe',f(S){say('เมืองที่คุณจากมาหายไปจากแผนที่','bad');}}]};}},
+    {id:'budokai23',y:756,mo:5,t:'ศึกชิงเจ้ายุทธภพครั้งที่ 23',major:true,play(S){news(this.t,'ซน โกคูชนะลูกชายของจอมมาร แล้วขอจีจี้แต่งงานต่อหน้าคนดูทั้งสนาม');}},
+    {id:'raditz',y:761,mo:3,t:'ราดิซมาถึงโลก',major:true,play(S){news(this.t,'ยานทรงกลมตกลงกลางทุ่ง ชายผมยาวมีหางอ้างว่าเป็นพี่ชายของซน โกคู และพาเด็กคนหนึ่งไป');
+      if(saiyan(S)&&S.age>=10)return{text:'ราดิซหยุดอยู่ตรงหน้าคุณ สเกาเตอร์ส่งเสียงบี๊บ "ชาวไซย่าอีกคน... มากับฉัน ไปพิชิตดาวด้วยกัน"',choices:[
+        {l:'ไปกับเขา',g:'dark rebel',f(S){dk(20);setJob('frieza');say('คุณขึ้นยานไปกับราดิซ ไม่กี่วันต่อมา เขาตาย คุณถูกทิ้งไว้ในกองทัพฟรีเซอร์คนเดียว','bad');}},
+        {l:'ปฏิเสธและสู้',g:'brave hero',f(S){if(live(.4+fitb(300),'ถูกราดิซปล่อยคลื่นพลังใส่')){fm(10);say('คุณถ่วงเวลาได้นานพอให้ปีศาจสีเขียวยิงมาคังโคซัปโป','good');}}}]};}},
+    {id:'saiyans',y:762,mo:0,t:'ชาวไซย่าบุกโลก',major:true,play(S){news(this.t,'ยามชา เทนชินฮัง เจาซึ และพิคโกโร่ตาย เมืองหนึ่งถูกระเบิดหายไปด้วยนิ้วเดียวของนัปปะ');
+      if(S.age>=14&&dbF(S))return{text:'ไซบาแมนหกตัวงอกขึ้นจากดิน นักสู้ทุกคนต้องลงสนาม',choices:[
+        {l:'สู้กับไซบาแมน',g:'brave hero',f(S){if(live(.55+fitb(250),'ถูกไซบาแมนกอดแล้วระเบิด')){fm(12);skill('fight',8);say('คุณล้มไซบาแมนได้หนึ่งตัว นักสู้ทุกคนหันมามอง','good');}}},
+        {l:'ถอยไปรอโกคู',g:'safe',f(S){say('โกคูมาถึงพร้อมไคโอเคนหลังจากทุกอย่างเกือบสาย','plain');}}]};}},
+    {id:'namek',y:762,mo:8,t:'ศึกดาวนาเม็ก',major:true,play(S){news(this.t,'ไกลออกไปบนดาวนาเม็ก ผู้ชายคนหนึ่งตะโกนด้วยความโกรธจนผมกลายเป็นสีทอง ตำนานซูเปอร์ไซย่าเป็นจริงแล้ว');if(saiyan(S)&&S.age>=12)say('ทั้งคืนคุณนอนไม่หลับ เลือดในตัวเต้นแรงแบบไม่มีเหตุผล','power');}},
+    {id:'trunks',y:764,mo:5,t:'ชายหนุ่มจากอนาคต',major:true,play(S){news(this.t,'ฟรีเซอร์ที่กลับมาเป็นเครื่องจักรถูกเด็กหนุ่มผมสีม่วงหั่นเป็นชิ้นในไม่กี่วินาที เขาเตือนเรื่องมนุษย์ดัดแปลงที่จะมาในอีกสามปี');}},
+    {id:'androids',y:767,mo:4,t:'มนุษย์ดัดแปลงปรากฏตัว',major:true,play(S){news(this.t,'มนุษย์ดัดแปลงหมายเลข 19 และ 20 โจมตีเกาะทางใต้ แล้วหมายเลข 17 และ 18 ก็ถูกปลุกขึ้น');
+      if(S.place==='westcity'||S.place==='satan')return{text:'สิ่งมีชีวิตสีเขียวมีปีกดูดคนทั้งเมืองเข้าไปในหาง เหลือแค่เสื้อผ้ากองอยู่บนถนน',choices:[
+        {l:'หนีออกจากเมือง',g:'safe',f(S){if(live(.8,'ถูกเซลดูดร่าง'))say('คุณหนีพ้น แต่เพื่อนบ้านทั้งซอยไม่เหลือใคร','bad');}},
+        {l:'ต่อสู้กับมัน',g:'brave',f(S){if(live(.25+fitb(500),'ถูกเซลดูดร่างจนเหลือแต่เสื้อผ้า')){fm(15);say('มันแค่หัวเราะแล้วบินจากไป มันไม่สนใจคุณด้วยซ้ำ','plain');}}}]};}},
+    {id:'cellgames',y:767,mo:9,t:'เซลเกมส์',major:true,play(S){const t=this.t;if(S.age<12){news(t,'ทั่วโลกดูการถ่ายทอดสด มิสเตอร์ซาตานถูกปัดตกเวที แล้วเด็กผมทองคนหนึ่งก็ล้มเซลได้ด้วยคาเมฮาเมฮะมือเดียว');return;}
+      return{text:'เซลสร้างเวทีกลางทุ่ง ให้เวลาโลกสิบวัน นักสู้ทุกคนลงสนามได้',choices:[
+        {l:'ขึ้นเวทีสู้กับเซล',g:'brave hero',f(S){if(live(.15+fitb(600),'ถูกเซลเตะทะลุหน้าอกบนเวที')){fm(30);say('คุณยืนได้สามหมัดกับเซล ซึ่งมากกว่าที่มิสเตอร์ซาตานทำได้ ทั่วโลกจำหน้าคุณได้','good');}}},
+        {l:'สู้กับเซลจูเนียร์',g:'brave',f(S){if(live(.4+fitb(400),'ถูกเซลจูเนียร์รุมจนตาย')){fm(15);skill('fight',8);say('คุณรอดจากเซลจูเนียร์มาได้ แล้วเห็นโกฮังผมทองระเบิดพลังจนพื้นแตก','good');}}},
+        {l:'ดูอยู่ห่างๆ',g:'safe',f(S){say('ซน โกคูใช้ชุนคันอิโดพาเซลไปตายที่ดาวไคโอ แล้วตัวเองก็ไม่กลับมา','bad');}}]};}},
+    {id:'buu',y:774,mo:4,t:'จอมมารบู',major:true,play(S){news(this.t,'จอมมารบูตื่นขึ้น มนุษย์ทั่วโลกกลายเป็นขนม แล้วบูตัวเล็กก็ระเบิดโลกทั้งใบ');
+      if(!S.flags.buuDie){S.flags.buuDie=1;say('วินาทีนั้นโลกทั้งใบหายไป รวมทั้งคุณ...','bad');say('แล้วคุณก็ลืมตาขึ้นอีกครั้ง ดราก้อนบอลนาเม็กชุบชีวิตทุกคนที่ตายเพราะบู ทั่วโลกยกมือขึ้นฟ้าส่งพลังให้เก็นกิดามะโดยไม่รู้ว่าทำไม','good');remember('โลกถูกทำลายแล้วฟื้นคืน','ดราก้อนบอลชุบชีวิต','dawn',3);
+        if(S.age>=12&&dbF(S)&&!hp_('db_genki'))gainPower('db_genki','คุณรู้สึกถึงพลังที่ทั้งโลกส่งขึ้นไป และเข้าใจวิธีรวบรวมมัน');}}},
+    {id:'beerus',y:778,mo:2,t:'เทพแห่งการทำลายมาเยือนโลก',major:true,play(S){news(this.t,'แมวสีม่วงในชุดอียิปต์โกรธเรื่องพุดดิ้งในปาร์ตี้วันเกิดของบุลมา โลกเกือบถูกทำลายเพราะของหวานถ้วยเดียว');}},
+    {id:'resf',y:779,mo:5,t:'การคืนชีพของฟรีเซอร์',major:true,play(S){news(this.t,'ทหารพันนายของฟรีเซอร์บุกโลก ฟรีเซอร์ทองคำปรากฏตัวแล้วระเบิดโลกทิ้ง วิสต้องย้อนเวลากลับไปสามนาที');}},
+    {id:'top',y:780,mo:3,t:'ศึกแห่งพลัง',major:true,play(S){news(this.t,'ซน โกคูไปแข่งในศึกที่ทั้งจักรวาลเดิมพัน ทั้งโลกไม่รู้ว่าเกือบถูกลบหายไปหมดแล้ว');if(dbF(S)&&S.age>=14)say('ฟ้าเป็นสีเงินอยู่ชั่วครู่ บางคนบอกว่าเห็นเทพเจ้าองค์หนึ่งเคลื่อนไหวด้วยสัญชาตญาณล้วนๆ','power');}},
+    {id:'budokai28',y:784,mo:5,t:'ศึกชิงเจ้ายุทธภพครั้งที่ 28',major:true,play(S){news(this.t,'เด็กหมู่บ้านชื่ออูบชนะใจซน โกคู ทั้งสองบินจากไปด้วยกันกลางการแข่ง');}},
+  ],
+  lore:[{id:'capsule',at:()=>R(740,750),t:'แคปซูลรุ่นใหม่',play(S){news(this.t,'แคปซูลคอร์ปออกแคปซูลบ้านรุ่นที่พับเก็บรถ บ้าน และเครื่องบินได้ในกระเป๋าเดียว');}}],
+  makeLore(L){},
+  newsFor(S){return['ราชาโลกออกกฎหมายห้ามไดโนเสาร์เข้าเมือง','ร้านขายแคปซูลในเวสต์ซิตี้ลดราคา','มิสเตอร์ซาตานออกหนังสือเล่มใหม่','มีคนเห็นแสงสีฟ้าพุ่งขึ้นจากภูเขาพาโอสึ'];},
+  miles:[
+    {id:'dbKi',once:1,when:S=>S.age>=8&&(S.sk?.fight||0)>=20&&chance(.04),play(S){gainPower('db_ki','คุณตั้งสมาธิ แล้วลูกแสงเล็กๆ ก็ลอยขึ้นจากฝ่ามือ');}},
+    {id:'dbSSJ',once:1,when:S=>saiyan(S)&&S.year>=762&&(S.sk?.fight||0)>=55&&(S.trauma||0)>=25&&chance(.25),play(S){gainPower('db_ssj','ความโกรธทะลุขีดจำกัด ผมของคุณลุกเป็นสีทอง ตาเป็นสีเขียวมรกต');remember('ซูเปอร์ไซย่า','ความโกรธที่ทะลุขีดจำกัด','power',3);}},
+    {id:'dbSSJ2',once:1,when:S=>hp_('db_ssj')&&(S.sk?.fight||0)>=75&&(S.trauma||0)>=45&&chance(.2),play(S){gainPower('db_ssj2','สายฟ้าแตกรอบออร่าสีทอง คุณข้ามขีดจำกัดของซูเปอร์ไซย่าไปอีกขั้น');}},
+    {id:'dbTail',once:1,when:S=>S.flags.tail&&S.age>=4&&chance(.06),play(S){return{t:'คืนพระจันทร์เต็มดวง',text:'คุณมองพระจันทร์เต็มดวง ร่างกายเริ่มขยายใหญ่ ขนงอกเต็มตัว',choices:[{l:'ปล่อยให้มันเกิดขึ้น',g:'dark',f(S){gainPower('db_oozaru','คุณกลายเป็นลิงยักษ์ เช้ามาไม่เหลืออะไรในรัศมีหนึ่งกิโล');dk(15);}},{l:'ตัดหางทิ้ง',g:'safe',f(S){S.flags.tail=0;say('มันเจ็บมาก แต่คุณจะไม่กลายเป็นสัตว์ประหลาดอีก','plain');}}]};}},
+  ],
+  pool:[
+    {id:'db_dino',w:3,when:S=>S.place==='paozu'&&S.age>=6,play(S){return{text:'ไดโนเสาร์ยักษ์ขวางทางกลับบ้าน มันหิว',choices:[
+      {l:'สู้กับไดโนเสาร์',g:'brave',f(S){if(live(.8+fitb(150),'ถูกไดโนเสาร์กิน')){mon(2);skill('fight',4);say('คืนนี้บ้านคุณได้กินไดโนเสาร์ย่าง','good');}}},{l:'วิ่งหนี',g:'safe',f(S){st('fit',1);say('คุณวิ่งเร็วกว่าที่เคยวิ่งในชีวิต','plain');}}]};}},
+    {id:'db_pilaf',once:1,w:2,when:S=>S.year>=748&&S.year<=760&&S.age>=8,play(S){return{text:'ชายตัวเล็กสีฟ้ากับลูกน้องสองคนถามหาดราก้อนบอล เขาอยากขอพรให้ได้ครองโลก',choices:[
+      {l:'ไล่พวกเขาไป',g:'brave',f(S){if(live(.95,'ถูกหุ่นยนต์ของพิลาฟเหยียบ'))say('พิลาฟวิ่งหนีไปพร้อมตะโกนว่าจะกลับมาแก้แค้น','good');}},{l:'ช่วยเขาตามหา',g:'dark',f(S){dk(4);mon(3);say('พิลาฟจ่ายค่าจ้างเป็นเหรียญปลอม','plain');}}]};}},
+    {id:'db_bandit',w:2,when:S=>S.place==='desert'&&S.age>=10,play(S){return{text:'โจรทะเลทรายผมยาวกับแมวลอยได้ตัวหนึ่งขวางทาง "เอาแคปซูลมาให้หมด!"',choices:[
+      {l:'สู้',g:'brave',f(S){if(live(.85+fitb(150),'ถูกโจรทะเลทรายฟันด้วยดาบ')){bond('yamcha',6);skill('fight',3);say('เขาเห็นผู้หญิงที่มากับคุณแล้วหน้าแดง วิ่งหนีไปเอง','good');}}},{l:'ยอมให้',g:'safe',f(S){mon(-3);say('คุณเสียแคปซูลไปสามอัน','bad');}}]};}},
+    {id:'db_rr',w:2,when:S=>S.year>=749&&S.year<=750&&S.age>=8,play(S){return{text:'ทหารกองทัพริบบอนแดงบุกหมู่บ้านถามหาลูกบอลสีส้มมีดาว',choices:[
+      {l:'ต่อสู้กับทหาร',g:'brave hero',f(S){if(live(.75+fitb(200),'ถูกทหารกองทัพริบบอนแดงยิง')){fm(4);say('ทหารถอยกลับไป ชาวบ้านยกคุณเป็นฮีโร่','good');}}},{l:'บอกที่ซ่อนลูกบอล',g:'dark selfish',f(S){dk(6);mon(4);say('ทหารให้เงินคุณแล้วเผาบ้านข้างๆ','bad');}}]};}},
+    {id:'db_spar',w:3,when:S=>dbF(S)&&S.age>=12,play(S){return{text:pick(['นักสู้หัวโล้นท้าคุณประลองบนหน้าผา','ชายใส่ผ้าโพกหัวท้าคุณแข่งบิน','เด็กผมม่วงกับเด็กผมดำแอบดูคุณซ้อมแล้วท้าสู้']),choices:[
+      {l:'รับคำท้าและต่อสู้',g:'brave',f(S){if(chance(.45+fitb(200))){skill('fight',4);fm(2);say('คุณชนะ คู่ต่อสู้ยิ้มแล้วขอสู้ใหม่สัปดาห์หน้า','good');}else if(live(.95,'ตกหน้าผาระหว่างประลอง'))st('hp',-R(6,14));}},{l:'ปฏิเสธ',g:'safe',f(){say('คุณบอกว่าวันนี้ขอพัก','plain');}}]};}},
+  ],
+  surprise:[{id:'s_senzu',w:1,when:S=>S.age>=10,play(S){return{text:'แมวขาวถือไม้เท้าโยนถุงเล็กๆ ลงมาจากฟ้า',then(S){S.flags.senzu=(S.flags.senzu||0)+1;say('ในถุงมีถั่วเซียนซึหนึ่งเม็ด กินแล้วหายเจ็บทันที','good');}};}},
+    {id:'s_dragon',w:1,when:S=>S.age>=6,play(S){return{text:'ท้องฟ้ามืดกลางวัน มังกรเขียวยาวสุดสายตาปรากฏขึ้นไกลๆ',then(S){say('ใครบางคนกำลังขอพร คุณได้แต่สงสัยว่าเขาขออะไร','plain');}};}}],
+  nightmares:['คุณฝันว่าโลกทั้งใบกลายเป็นขนม','คุณฝันว่าเสียงหัวเราะของฟรีเซอร์ดังอยู่ข้างหู','คุณฝันว่าตัวเองถูกเซลดูดเข้าไปในหาง'],
+  mini:[{id:'db_roshi',w:2,when:S=>S.place==='kame'&&S.age>=12,play(S){return{text:'ผู้เฒ่าเต่าแอบดูนิตยสารบนเกาะแล้วเลือดกำเดาไหล',then(S){st('joy',3);say('เต่าข้างๆ ส่ายหัวอย่างเหนื่อยใจ','plain');}};}},
+    {id:'db_ffly',w:2,when:S=>S.place==='westcity'&&S.age>=6,play(S){return{text:'รถลอยฟ้าคันใหม่ของแคปซูลคอร์ปบินผ่านหน้าต่าง',then(S){st('joy',2);say('คุณอยากได้สักคันมาก','plain');}};}}],
+  hangPlaces:['ร้านอาหารในเวสต์ซิตี้','บ้านคาเมะ','ทุ่งหญ้าบนภูเขาพาโอสึ','สนามศึกชิงเจ้ายุทธภพ','ร้านเกมในซาตานซิตี้'],
+  castMeta:{goku:{b:737,at:S=>S.year<=751?['paozu','kame','desert'].includes(S.place):['paozu','kame'].includes(S.place)},bulma:{b:733,at:S=>S.place==='westcity'},krillin:{b:736,at:S=>S.place==='kame'},yamcha:{b:733,at:S=>S.year<751?S.place==='desert':S.place==='westcity'},
+    roshi:{b:430,at:S=>S.place==='kame'},chichi:{b:737,at:S=>S.place==='paozu'},tien:{b:733,at:S=>S.year>=749},piccolo:{b:753,at:S=>S.place==='paozu'&&S.year>=761},vegeta:{b:732,at:S=>S.place==='westcity'&&S.year>=764},gohan:{b:757,at:S=>S.year<=774?S.place==='paozu':['satan','paozu'].includes(S.place)},
+    trunks:{b:766,at:S=>S.place==='westcity'},goten:{b:767,at:S=>S.place==='paozu'},a18:{b:740,at:S=>S.year>=768&&S.place==='kame'},satan:{b:733,at:S=>S.place==='satan'},videl:{b:760,at:S=>S.place==='satan'},
+    raditz:{b:734,d:761,at:S=>S.year===761},frieza:{b:720,at:S=>S.year===764||S.year===779},cell:{b:767,d:767,at:S=>S.year===767},buu:{b:740,at:S=>S.year>=774},beerus:{b:100,at:S=>S.year>=778&&S.place==='westcity'}},
+  skL:{fight:'ต่อสู้',gear:'ควบคุมคิ',ride:'ขับรถลอยฟ้า',trade:'ค้าขาย',medic:'การแพทย์',craft:'งานช่าง',cook:'ทำอาหาร',charm:'เสน่ห์',art:'ศิลปะ'},
+  acts:{
+    learn:[{l:'อ่านคู่มือแคปซูลคอร์ป',c:0,st:{iq:[2,5]},txt:'คุณเข้าใจวิธีย่อบ้านทั้งหลังเหลือเม็ดเดียว'},{l:'เรียนซ่อมรถลอยฟ้า',c:4,min:12,sk:{craft:[3,6]},a:'craft',txt:'เครื่องยนต์ลอยได้เพราะอะไร คุณเริ่มเข้าใจแล้ว'},{l:'เรียนทำอาหารกับจีจี้',c:2,min:10,sk:{cook:[3,6]},a:'cook',txt:'จีจี้บอกว่าต้องทำเผื่อชาวไซย่าสามคนเสมอ'}],
+    train:[{l:'แบกกระดองเต่าส่งนม',c:0,st:{fit:[2,5]},a:'run',txt:'กระดองหนักยี่สิบกิโลกดหลังคุณทั้งวัน'},{l:'ซ้อมต่อยใต้น้ำตก',c:0,min:8,sk:{fight:[3,6]},a:'sword',txt:'น้ำตกกระแทกหัวคุณจนมึน'},{l:'ฝึกควบคุมคิ',c:0,when:S=>dbF(S),sk:{gear:[3,7]},txt:'ลูกแสงในมือคุณนิ่งขึ้นอีกนิด'},{l:'ฝึกในแรงโน้มถ่วงสิบเท่า',c:6,min:14,when:S=>S.year>=762,sk:{fight:[4,8]},st:{fit:[2,4]},txt:'ห้องแรงโน้มถ่วงที่แคปซูลคอร์ปทำให้แขนคุณยกไม่ขึ้น'}],
+    date:[{l:'ไปหาคู่ที่ปาร์ตี้ของบุลมา',c:3,find:1},{l:'ให้เพื่อนแนะนำ',c:2,find:1,bonus:.1},{l:'ขับรถลอยฟ้าชมเมือง',c:4,love:[5,9]},{l:'ดินเนอร์ในเวสต์ซิตี้',c:10,love:[8,13]}],
+    fun:[{l:'ดูศึกชิงเจ้ายุทธภพ',c:2,joy:[4,7],txt:'มิสเตอร์ซาตานโพสท่าชูสองนิ้ว คนดูกรี๊ดทั้งสนาม'},{l:'ไปสวนสนุกในเวสต์ซิตี้',c:3,joy:[4,7],txt:'รถไฟเหาะที่นี่บินได้จริง'},{l:'ตกปลายักษ์',c:0,joy:[3,6],txt:'คุณใช้หางเป็นเหยื่อ... ไม่ใช่ คุณใช้ไส้เดือน'}],
+  },
+  shop:[{id:'h1',n:'แคปซูลบ้านหลังเล็ก',cost:60,tier:1,d:'กางได้ทุกที่'},{id:'h2',n:'บ้านโดมในเวสต์ซิตี้',cost:170,tier:2,d:'ทรงโดมแบบแคปซูลคอร์ป'},{id:'h3',n:'บ้านพักริมทะเล',cost:400,tier:3,d:'มองเห็นเกาะคาเมะ'},{id:'dog',n:'ลูกแมวพูดได้',cost:8,v:'dog',pet:'ปูอาร์',d:'แปลงร่างได้ห้านาที',yr(S){st('joy',1);}}],
+  meets:[
+    {id:'db_goku',once:1,w:4,when:S=>S.year>=749&&S.age>=8&&['paozu','kame'].includes(S.place),play(S){return{text:'เด็กผู้ชายมีหางถามคุณว่า "นายแข็งแรงไหม สู้กันหน่อยสิ!"',choices:[
+      {l:'สู้กับเขา',g:'brave',f(S){bond('goku',14);skill('fight',4);say('คุณแพ้แบบไม่ทันได้เห็นหมัด แต่เขาหัวเราะแล้วชวนกินข้าวด้วยกัน','good');}},{l:'ชวนกินข้าวแทน',g:'kind',f(S){bond('goku',10);mon(-2);say('เขากินสิบห้าจาน คุณจ่ายคนเดียว','plain');}}]};}},
+    {id:'db_bulma',once:1,w:4,when:S=>S.place==='westcity'&&S.age>=10,play(S){return{text:'สาวผมฟ้าจากแคปซูลคอร์ปบ่นเรื่องเครื่องยนต์เสียกลางถนน',choices:[
+      {l:'ช่วยซ่อม',g:'kind',f(S){bond('bulma',14);skill('craft',3);say('เธอให้แคปซูลรถลอยฟ้าคุณหนึ่งอันเป็นค่าตอบแทน','good');}},{l:'เดินผ่านไป',g:'safe',f(){say('เธอตะโกนตามหลังคุณว่า "คนไม่มีน้ำใจ!"','plain');}}]};}},
+  ],
+  pivots:{},
+  quiet:['ปีที่ไม่มีใครจากนอกโลกมาบุก','โลกสงบสุขจนน่าสงสัย','ไม่มีใครขอพรกับเทพมังกรปีนี้'],
+  gossip:['ว่ากันว่าใครรวบรวมดราก้อนบอลครบเจ็ดลูกจะได้พรหนึ่งข้อ','มีคนเห็นแมวสีขาวอยู่บนยอดหอคอย','บ้านสีชมพูกลางทะเลมีชายแก่ลามกอยู่'],
+  epitaph(S){return hp_('db_ui')?'ผู้ที่ไปถึงอัลตร้าอินสติงต์':hp_('db_ssj')?'ซูเปอร์ไซย่าในตำนาน':'ชาวโลกคนหนึ่งในยุคของดราก้อนบอล';},
+  afterlife(cause){if(!S||(S.flags.dbRev||0)>=2||S.year<749||!/ถูก|ระเบิด|คลื่นพลัง|ต่อสู้|ฆ่า/.test(cause))return false;const fr=['goku','bulma','krillin','gohan','piccolo','vegeta'].some(id=>(S.bonds?.[id]||0)>=20);if(!fr&&!chance(.15))return false;
+    S.flags.dbRev=(S.flags.dbRev||0)+1;S.st.hp=60;say(`คุณตาย (${cause}) วิญญาณของคุณเดินบนถนนงูไปถึงดาวไคโอ`,'bad');if(!hp_('db_kaioken')&&(S.sk?.fight||0)>=40)gainPower('db_kaioken','ไคโอสอนไคโอเคนให้คุณหลังจากหัวเราะกับมุกตลกของคุณ');say('แล้วเพื่อนของคุณก็รวบรวมดราก้อนบอลครบ เทพมังกรชุบชีวิตคุณกลับมา','good');remember('ชุบชีวิตด้วยดราก้อนบอล',cause,'dawn',3);return true;},
+  banner:{place:'paozu',y:762,draw(px,cx,gy,lw,lh){chibi(px,cx,gy,{...castSpec('goku'),dir:1,md:'angry',pose:'arm'});chibi(px,cx-18,gy,{...castSpec('piccolo'),dir:1});chibi(px,cx+18,gy,{...castSpec('vegeta'),dir:-1,md:'angry'});}},
+};
+WORLDS.db=DB;
+Object.assign(CAST,{db:{goku:'ซน โกคู',bulma:'บุลมา',krillin:'คุริริน',yamcha:'ยามชา',roshi:'ผู้เฒ่าเต่า',chichi:'จีจี้',tien:'เทนชินฮัง',piccolo:'พิคโกโร่',vegeta:'เบจิต้า',gohan:'ซน โกฮัง',trunks:'ทรังคซ์',goten:'ซน โกเท็น',a18:'มนุษย์ดัดแปลงหมายเลข 18',satan:'มิสเตอร์ซาตาน',videl:'บีเดล',raditz:'ราดิซ',frieza:'ฟรีเซอร์',cell:'เซล',buu:'จอมมารบู',beerus:'บิรุส'}});
+Object.assign(CASTLOOK,{goku:CL('m','#1c1a1f','spiky','#f77622',{belt:'#3a4466',md:'happy'}),bulma:CL('f','#5fcde4','bob','#e43b44',{eye:'#4f86b8'}),krillin:CL('m','#e8b796','short','#f77622',{md:'happy'}),yamcha:CL('m','#1c1a1f','long','#f77622',{scar:1}),
+  roshi:CL('m','#f0ece0','short','#f77622',{shades:1,beard:1}),chichi:CL('f','#1c1a1f','bun','#b55088'),tien:CL('m','#e8b796','short','#3e8948'),piccolo:CL('m','#63c74d','short','#68386c',{skin:'#63c74d',robe:'#f0ece0',capH:'#f0ece0'}),
+  vegeta:CL('m','#1c1a1f','spiky','#3a4466',{md:'angry'}),gohan:CL('m','#1c1a1f','spiky','#68386c'),trunks:CL('m','#b8a8e8','short','#3a4466',{coat:'#3a4466'}),goten:CL('m','#1c1a1f','spiky','#f77622'),a18:CL('f','#e2c15a','bob','#3a4466',{eye:'#4f86b8'}),
+  satan:CL('m','#3e2731','short','#f0ece0',{beard:1}),videl:CL('f','#1c1a1f','short','#f0ece0'),raditz:CL('m','#1c1a1f','long','#3a3a44',{md:'angry'}),frieza:CL('m','#68386c','short','#f0ece0',{skin:'#f0ece0',md:'angry'}),cell:CL('m','#3e8948','short','#3e8948',{skin:'#a8d8a0',md:'angry'}),
+  buu:CL('m','#f6a0b8','short','#f0ece0',{skin:'#f6a0b8',md:'happy'}),beerus:CL('m','#68386c','short','#1c1a1f',{skin:'#8a6aa8'})});
+Object.assign(CASTPOW,{goku:99,vegeta:98,gohan:95,piccolo:90,frieza:99,cell:98,buu:97,beerus:100,krillin:72,yamcha:60,tien:76,satan:30,videl:38,a18:88,trunks:93,goten:85,roshi:66,chichi:45,raditz:80,bulma:6});
+for(const id of ['bulma','chichi','a18','videl'])FEM.add(id);
+NAMES.db={m:['ทาร์เบิ้ล','บร็อคโค','ราดิช','คาเบจ','โอเนียน','แครอท','เซเลอร์','ปาปาย่า','ฮาเซล','นาสึ','เนกิ','โกโบ','คาบุ','ทูน่า','เบรด','ไรซ์','เปปเปอร์','คอร์น','สปิแนช','บีทส์'],f:['มารอน','ลันช์','เรนจ์','ปิแมน','ชูก้า','ซินนามอน','เมเปิล','บรา','มารอน','วานิลลา','ครีม','ปาร์ฟี','ซูชิ','โมจิ','มินต์','โคโค่','ลาเต้','ชีส','แคนดี้','ฮันนี่']};
+LOOKS.db={hair:[['ดำ','#1c1a1f'],['ฟ้า','#5fcde4'],['ม่วง','#b8a8e8'],['ทอง','#e2c15a'],['น้ำตาล','#3e2731'],['ชมพู','#f6a0b8']],eye:[['ดำ','#262b44'],['ฟ้า','#4f86b8'],['น้ำตาล','#5a3a2a']]};
+FESTIVALS.db={5:['ศึกชิงเจ้ายุทธภพ',['ผู้คนต่อแถวยาวหน้าสนาม','นักข่าวผมทองถือไมค์วิ่งไปมา']],10:['ปาร์ตี้วันเกิดของบุลมา',['เรือสำราญลอยลำ บนเรือมีพุดดิ้งร้อยถ้วย','ไม่มีใครกล้ากินพุดดิ้งถ้วยสุดท้าย']]};
+AMB.db=['รถลอยฟ้าบินผ่านหน้าต่าง','ไดโนเสาร์ตัวเล็กเดินข้ามถนน','ป้ายโฆษณาแคปซูลคอร์ปเปลี่ยนสีทุกนาที','เด็กๆ เล่นท่าคาเมฮาเมฮะกันในสนาม','มีคนตะโกนว่าเห็นคนบินอยู่บนฟ้า'];
+FOES.db=[CL('m','#1c1a1f','short','#a22633',{md:'angry'}),CL('m','#3e8948','spiky','#3a3a44',{md:'angry'}),CL('m','#e2c15a','short','#68386c',{md:'angry'})];
+HOUSEPAL.db=[['#f0ece0','#feae34'],['#ffffff','#5fcde4'],['#f6a0b8','#a22633'],['#e0d8c8','#3e8948']];
+RENTS.db=[{id:'r0',n:'แคปซูลบ้านมือสอง',tier:0,rent:4,d:'ประตูปิดไม่สนิท'},{id:'r1',n:'อพาร์ตเมนต์ในเวสต์ซิตี้',tier:1,rent:9,d:'มองเห็นแคปซูลคอร์ป'}];
+DESC.db=[[/เด็กมีหาง|เด็กผู้ชายมีหาง/,'goku'],[/สาวผมฟ้า/,'bulma'],[/ปีศาจสีเขียว/,'piccolo'],[/เด็กผมม่วง|หนุ่มผมสีม่วง/,'trunks'],[/สิ่งมีชีวิตสีเขียวมีปีก/,'cell'],[/แมวสีม่วง/,'beerus'],[/ผู้เฒ่า.*แว่นกันแดด|ชายแก่ใส่แว่นกันแดด/,'roshi']];
+Object.assign(OUTFIT,{fighter:'#f77622',redribbon:'#a22633',frieza:'#3a3a44',cc:'#f0ece0',police:'#262b44'});
+Object.assign(AURA,{db_ki:'#fee761',db_kame:'#5fcde4',db_kaioken:'#e43b44',db_ssj:'#fee761',db_ssj2:'#fee761',db_ssg:'#e43b44',db_ui:'#c0cbdc',db_genki:'#5fcde4',db_galick:'#b55088',db_namek:'#63c74d',db_majin:'#b55088'});
+CLANS.db=[
+  {id:'saiyan',n:'ชาวไซย่า',d:'เกิดมาพร้อมหาง พลังพุ่งขึ้นทุกครั้งที่รอดจากความตาย ถ้ามองพระจันทร์เต็มดวงจะกลายเป็นลิงยักษ์ และวันหนึ่งอาจเป็นซูเปอร์ไซย่า',pl:'paozu',on(S){S.flags.tail=1;S.st.fit=Math.min(100,S.st.fit+18);S.look.hair=['ดำ','#1c1a1f'];}},
+  {id:'halfsaiyan',n:'ลูกครึ่งไซย่า',d:'พ่อหรือแม่เป็นชาวไซย่า พลังซ่อนเร้นที่ตื่นเมื่อโกรธ และหัวดีเพราะอีกฝั่งเป็นมนุษย์',pl:'paozu',on(S){S.flags.tail=1;S.st.fit=Math.min(100,S.st.fit+10);S.st.iq=Math.min(100,S.st.iq+10);S.look.hair=['ดำ','#1c1a1f'];}},
+  {id:'namek',n:'ชาวนาเม็ก',d:'ผิวสีเขียว งอกแขนใหม่ได้ หูดีกว่ามนุษย์ ไม่ต้องกินอาหาร ดื่มแค่น้ำ',pl:'paozu',on(S){S.look.skin='#63c74d';S.powers=S.powers||[];if(!S.powers.includes('db_namek'))S.powers.push('db_namek');}},
+];
+DREAMS.db=[{id:'db_strong',n:'เป็นนักสู้ที่แข็งแกร่งที่สุดในโลก',p:'ฝึกจนไม่มีมนุษย์คนไหนเทียบได้',ok:S=>(S.sk?.fight||0)>=80},{id:'db_ssj',n:'เป็นซูเปอร์ไซย่าในตำนาน',p:'ตามรอยความโกรธในสายเลือด',ok:S=>hp_('db_ssj')},
+  {id:'db_wish',n:'ได้ขอพรกับเทพมังกร',p:'รวบรวมดราก้อนบอลให้ครบเจ็ดลูก',ok:S=>S.flags.wished},{id:'db_champ',n:'ชนะศึกชิงเจ้ายุทธภพ',p:'ยืนเป็นคนสุดท้ายบนเวที',ok:S=>S.flags.champ},
+  {id:'db_conquer',n:'ครองโลกด้วยดราก้อนบอล',p:'แบบที่พิลาฟฝันมาตลอดชีวิต',dark:1,ok:S=>S.flags.wishWorld}];
+/* techniques and how each is drawn */
+TECHDEF.db=[
+  T('kiblast','ยิงลูกพลังคิ',S=>hp_('db_ki'),{chant:'รวมคิไว้ในฝ่ามือ แล้วปาลูกแสงใส่ศัตรูรัวๆ',anim:'kiblast',col:'#fee761',lv:.12}),
+  T('kame','คาเมฮาเมฮะ',S=>hp_('db_kame'),{chant:'"คา... เม... ฮา... เม..." พลังสีฟ้ารวมตัวระหว่างสองมือ',full:'"คาาา... เมะ... ฮาาา... เมะ... ฮาาาาาาา!!!" ลำแสงสีฟ้าพุ่งทะลุเมฆ',anim:'kamehameha',col:'#5fcde4',lv:.3}),
+  T('kienzan','คิเอ็นซัน',S=>hp_('db_kienzan'),{chant:'ยกมือขึ้นฟ้า จานพลังสีเหลืองหมุนจนตัดได้ทุกอย่าง',anim:'kienzan',col:'#fee761',lv:.28}),
+  T('taiyo','ไทโยเคน',S=>hp_('db_taiyo'),{chant:'"ไทโยเคน!" แสงจ้าจากใบหน้าทำให้ศัตรูตาบอดชั่วขณะ',anim:'taiyoken',col:'#ffffff',lv:.14}),
+  T('kikoho','คิโคโฮ',S=>hp_('db_kikoho'),{chant:'ทำมือเป็นสามเหลี่ยม แลกพลังชีวิตกับคลื่นพลังที่กดศัตรูจมดิน',anim:'kikoho',col:'#fee761',lv:.34,hp:10}),
+  T('kaioken','ไคโอเคน',S=>hp_('db_kaioken'),{chant:'"ไคโอเคน... สามเท่า!" ออร่าสีแดงลุกท่วมตัว กล้ามเนื้อเริ่มฉีก',anim:'kaioken',col:'#e43b44',lv:.38,hp:9}),
+  T('genki','เก็นกิดามะ',S=>hp_('db_genki'),{chant:'"ทุกคน ส่งพลังมาให้ฉันหน่อย!" ลูกพลังสีฟ้าขนาดภูเขาก่อตัวเหนือหัว',anim:'genkidama',col:'#5fcde4',lv:.55}),
+  T('galick','แกลิคกัน',S=>hp_('db_galick'),{chant:'"แกลิค... กัน! ยิง!" ลำแสงสีม่วงจากสองมือ',anim:'galick',col:'#b55088',lv:.32}),
+  T('masenko','มาเซนโกะ',S=>hp_('db_masenko'),{chant:'ยกสองมือเหนือหัว "มาเซนโก... ฮา!"',anim:'masenko',col:'#fee761',lv:.3}),
+  T('makanko','มาคังโคซัปโป',S=>hp_('db_namek')&&(S.sk?.fight||0)>=45,{chant:'สองนิ้วแตะหน้าผาก รวมพลังนาน แล้วยิงลำแสงเกลียวที่เจาะทะลุทุกอย่าง',anim:'makanko',col:'#b55088',lv:.4,isFullOnly:1}),
+  T('shunkan','ชุนคันอิโด',S=>hp_('db_shunkan'),{chant:'สองนิ้วแตะหน้าผาก จับคิของศัตรู แล้วไปโผล่ข้างหลังเขา',anim:'shunkan',col:'#c0cbdc',lv:.24}),
+  T('ssj','แปลงร่างซูเปอร์ไซย่า',S=>hp_('db_ssj'),{chant:'ออร่าสีทองระเบิดออก ผมตั้งชันเป็นสีทอง ตาเป็นสีเขียว',anim:'ssj',col:'#fee761',lv:.45}),
+  T('ssj2','ซูเปอร์ไซย่า 2',S=>hp_('db_ssj2'),{chant:'สายฟ้าแตกรอบออร่าสีทอง พลังมากกว่าซูเปอร์ไซย่าสองเท่า',anim:'ssj2',col:'#fee761',lv:.55}),
+  T('ssg','ซูเปอร์ไซย่าก็อด',S=>hp_('db_ssg'),{chant:'ผมเป็นสีแดง ร่างเพรียวลง พลังเทพที่สแกนไม่เจอ',anim:'ssg',col:'#e43b44',lv:.66}),
+  T('ui','อัลตร้าอินสติงต์',S=>hp_('db_ui'),{chant:'ผมสีเงิน ร่างกายหลบและโจมตีเองโดยไม่ต้องคิด',anim:'uiform',col:'#c0cbdc',lv:.78}),
+  T('oozaru','แปลงร่างโอซารุ',S=>hp_('db_oozaru')&&S.flags.tail,{chant:'มองพระจันทร์เทียม ร่างขยายเป็นลิงยักษ์สูงสิบเมตร',anim:'oozaru',col:'#7a5a32',lv:.42,dk:8}),
+  T('candy','ลำแสงเปลี่ยนเป็นขนม',S=>hp_('db_majin'),{chant:'"กลายเป็นช็อกโกแลตซะ!" ลำแสงสีชมพูจากเสาอากาศบนหัว',anim:'candybeam',col:'#f6a0b8',lv:.4,dk:6}),
+];
+const DBFORMS={ssj:['#fee761','spiky'],ssj2:['#fee761','spiky'],ssg:['#e43b44','spiky'],uiform:['#c0cbdc','spiky']};
+let DBFORM=null;
+{const ci1=cutIn;cutIn=function(t,ch,anim){if(DBFORMS[anim])DBFORM=anim;return ci1.apply(this,arguments);};}
+{const ms1=meSpec;meSpec=function(){const o=ms1.apply(this,arguments);if(W?.id==='db'&&DBFORM&&(typeof BT!=='undefined'&&BT.on||document.querySelector('.cutin'))){o.hair=DBFORMS[DBFORM][0];o.st=DBFORMS[DBFORM][1];}return o;};}
+{const bt1=battle;battle=async function(){const r=await bt1.apply(this,arguments);DBFORM=null;return r;};}
+CIUNDER.push('ssj','ssj2','ssg','uiform','kaioken','oozaru');
+const disc2=(px,x,y,r,col)=>{for(let j=-r;j<=r;j++){const w=Math.sqrt(r*r-j*j);px(x-w,y+j,w*2,1,col);}};
+Object.assign(ANIM,{
+  kiblast(px,tt,hx,hy){for(let i=0;i<5;i++){const q=((tt/500)+i*.2)%1;disc2(px,hx+8+q*130,hy+((i*7)%9)-4,2.5,'#fee761');px(hx+6+q*130,hy+((i*7)%9)-4,2,1,'#fff');}},
+  kamehameha(px,tt,hx,hy,col,LW){const ch=Math.min(1,tt/1100);disc2(px,hx+6,hy,2+ch*5,'#5fcde4');disc2(px,hx+6,hy,1+ch*3,'#e8f4ff');if(tt>1100){const w=Math.min(LW,(tt-1100)/1.6);px(hx+6,hy-6,w,12,'rgba(95,205,228,.8)');px(hx+6,hy-3,w,6,'#e8f4ff');disc2(px,hx+6+w,hy,8,'#5fcde4');}},
+  kienzan(px,tt,hx,hy){const p=tt<800?0:Math.min(1,(tt-800)/600),x=hx+p*130,y=hy-24+p*20;for(let j=-9;j<=9;j++)px(x-9+Math.abs(j)*.2,y+j*.25,18-Math.abs(j),1,j%2?'#fee761':'#fff8c0');px(x,y,1,1,'#fff');},
+  taiyoken(px,tt,hx,hy,col,LW,LH){const a=tt<700?tt/700:Math.max(0,1-(tt-700)/900);px(0,0,LW,LH,`rgba(255,255,255,${(a*.9).toFixed(2)})`);for(let i=0;i<16;i++)px(hx-2+Math.cos(i)*a*40,hy-14+Math.sin(i)*a*30,2,2,'#fff8c0');},
+  kikoho(px,tt,hx,hy,col,LW,LH,gy){px(hx+2,hy-6,1,8,'#fee761');px(hx+2,hy-6,8,1,'#fee761');px(hx+2,hy+2,8,1,'#fee761');if(tt>700){const x=hx+80;px(x-20,gy-40,40,40,'rgba(254,231,97,.55)');for(let i=0;i<5;i++)px(x-20,gy-40+i*8,40,1,'#fff8c0');px(x-24,gy-2,48,3,'#8a7a5a');}},
+  kaioken(px,tt,hx,hy,col,LW,LH,gy){const f=(tt/70|0)%2;for(let i=0;i<14;i++){const h=20+((i*7)%14)+f*3;px(hx-14+i*2,gy-h-6,2,h,i%2?'rgba(228,59,68,.7)':'rgba(255,120,120,.5)');}for(let j=0;j<6;j++)px(hx+20+((tt/2+j*40)%150),hy-14+j*5,14,1,'rgba(255,255,255,.4)');},
+  genkidama(px,tt,hx,hy,col,LW,LH){const r=Math.min(26,4+tt/50);disc2(px,hx-2,hy-30-r*.3,r,'rgba(95,205,228,.75)');disc2(px,hx-2,hy-30-r*.3,r*.6,'#e8f4ff');for(let i=0;i<12;i++){const q=((tt/700)+i/12)%1;px(hx-2+Math.cos(i)*(60-q*60),hy-30+Math.sin(i)*(40-q*40)-r*.3,1.5,1.5,'#e8f4ff');}if(tt>1800){const q=(tt-1800)/700;disc2(px,hx+q*140,hy-30+q*20,r,'rgba(95,205,228,.8)');}},
+  galick(px,tt,hx,hy,col,LW){const ch=Math.min(1,tt/900);disc2(px,hx+4,hy,2+ch*4,'#b55088');if(tt>900){const w=Math.min(LW,(tt-900)/1.6);px(hx+4,hy-5,w,10,'rgba(181,80,136,.8)');px(hx+4,hy-2,w,4,'#f6a0b8');}},
+  masenko(px,tt,hx,hy,col,LW){disc2(px,hx-2,hy-18,2+Math.min(5,tt/180),'#fee761');if(tt>900){const w=Math.min(LW,(tt-900)/1.6);px(hx,hy-22,w,9,'rgba(254,231,97,.8)');px(hx,hy-19,w,3,'#fff8c0');}},
+  makanko(px,tt,hx,hy,col,LW){if(tt<900){for(let a=0;a<10;a++)px(hx-1+Math.cos(a+tt/60)*4,hy-16+Math.sin(a+tt/60)*4,1,1,'#fee761');return;}const w=Math.min(LW,(tt-900)/1.4);px(hx,hy-17,w,2,'#fee761');for(let x=0;x<w;x+=2)px(hx+x,hy-16+Math.sin(x/4+tt/40)*5,2,2,'#b55088');},
+  shunkan(px,tt,hx,hy,col,LW,LH,gy){const ph=(tt%1200)/1200;if(ph<.4){px(hx-2,hy-18,3,6,'#e8b796');for(let a=0;a<8;a++)px(hx+Math.cos(a)*8*ph*2,hy-14+Math.sin(a)*8*ph*2,1,1,'#c0cbdc');}else{const x=hx+120;for(let i=0;i<4;i++)px(x-6+i*4,gy-30,1,26,'rgba(192,203,220,.6)');px(x,gy-20,10,4,'#fee761');}},
+  ssj(px,tt,hx,hy,col,LW,LH,gy){const f=(tt/60|0)%3;for(let i=0;i<18;i++){const h=24+((i*7+f*5)%16);px(hx-20+i*2.2,gy-h-4,2,h,i%2?'rgba(254,231,97,.75)':'rgba(255,248,192,.55)');}if(tt<300)px(0,0,LW,LH,`rgba(255,248,192,${(.6-tt/500).toFixed(2)})`);for(let i=0;i<8;i++){const q=((tt/500)+i/8)%1;px(hx-16+i*4,gy-q*40,1,3,'#fff8c0');}},
+  ssj2(px,tt,hx,hy,col,LW,LH,gy){ANIM.ssj(px,tt,hx,hy,col,LW,LH,gy);if(tt%300<120){let x=hx-16,y=gy-44;for(let s=0;s<8;s++){const nx=x+((s*5)%7)-3,ny=y+5;px(Math.min(x,nx),y,Math.abs(nx-x)+1,5,'#9fe2ff');x=nx;y=ny;}}},
+  ssg(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<16;i++){const h=20+((i*5+(tt/80|0))%12);px(hx-18+i*2.4,gy-h-4,2,h,i%2?'rgba(228,59,68,.55)':'rgba(254,174,52,.35)');}for(let i=0;i<10;i++){const q=((tt/900)+i/10)%1;px(hx-16+i*3.4,gy-8-q*40,1,2,'#feae34');}},
+  uiform(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<20;i++){const a=i/20*6.283+tt/400,r=22+Math.sin(tt/200+i)*3;px(hx-4+Math.cos(a)*r,gy-20+Math.sin(a)*r*.9,1.5,1.5,i%3?'#c0cbdc':'#9fd3e8');}px(0,0,LW,LH,'rgba(40,40,80,.18)');if(tt%900<200)for(let j=0;j<5;j++)px(hx+30+j*20,hy-10+j*3,14,1,'rgba(232,244,255,.7)');},
+  oozaru(px,tt,hx,hy,col,LW,LH,gy){const s=1.15;const P=(a,b,w,h,c)=>px(hx-30+a*s,gy-b*s,w*s,h*s,c);P(-10,40,34,26,'#7a5a32');P(-14,48,42,10,'#5a4020');P(-4,60,22,14,'#7a5a32');P(0,56,14,6,'#c49a7a');P(2,57,3,2,'#e43b44');P(9,57,3,2,'#e43b44');P(-16,40,8,26,'#7a5a32');P(26,40,8,26,'#7a5a32');P(-6,14,10,16,'#7a5a32');P(12,14,10,16,'#7a5a32');if(tt%600<200)P(4,50,8,2,'#f4f4f4');},
+  candybeam(px,tt,hx,hy,col,LW,LH,gy){const p=Math.min(1,tt/800);px(hx-2,hy-22,1,4,'#f6a0b8');px(hx-2,hy-22,p*150,2,'#f6a0b8');if(p>=1){const x=hx+140;px(x-6,gy-14,12,10,'#5a3a2a');px(x-6,gy-14,12,2,'#7a5a3a');for(let i=0;i<6;i++)px(x-10+((tt/9+i*7)%20),gy-20-((tt/7+i*5)%10),2,2,'#f6a0b8');}},
+  shenron(px,tt,hx,hy,col,LW,LH,gy){px(0,0,LW,LH,'rgba(10,20,10,.55)');for(let i=0;i<40;i++){const x=20+i*4.5,y=60-Math.sin(i/5+tt/600)*22-i*.6;px(x,y,7,7,'#3e8948');px(x+1,y+5,5,2,'#a8d8a0');}const hx2=20+40*4.5,hy2=60-Math.sin(8+tt/600)*22-24;px(hx2,hy2-6,14,10,'#3e8948');px(hx2+10,hy2-4,2,2,'#e43b44');px(hx2+2,hy2-10,2,5,'#c9a227');px(hx2+8,hy2-10,2,5,'#c9a227');for(let i=0;i<7;i++){const a=i/7*6.283+tt/500;disc2(px,110+Math.cos(a)*30,64+Math.sin(a)*5,3,'#feae34');}},
+});
+/* the seven balls, the radar, the senzu tower, the masters */
+const dbWish=async()=>{const dead=[...(S.killed||[]).map(id=>({n:CAST[W.id][id],f(){S.killed=S.killed.filter(x=>x!==id);}})),...['dad','mom'].map(r=>S.fam[r]).filter(p=>p&&!p.alive).map(p=>({n:p.n,f(){p.alive=true;}})),...(S.sibs||[]).filter(s=>!s.alive).map(s=>({n:s.n,f(){s.alive=true;}}))].slice(0,4);
+  const C=[...dead.map(d=>({l:`ชุบชีวิต ${d.n}`,g:'kind hero',f(S){d.f();say(`เทพมังกรตาแดงวาบ "พรของเจ้าเป็นจริงแล้ว" ${d.n}ลืมตาขึ้นอีกครั้ง`,'good');}})),
+    {l:'ขอเป็นอมตะ',g:'selfish dark',f(S){S.flags.immortal=1;dk(10);say('เทพมังกรตาแดงวาบ "เจ้าจะไม่มีวันแก่ตาย" คุณรู้สึกว่าเวลาไม่มีความหมายอีกต่อไป','power');}},
+    {l:'ขอพลังที่แข็งแกร่ง',g:'brave',f(S){st('fit',25);skill('fight',25);say('พลังไหลเข้าร่าง แต่เทพมังกรบอกว่าให้ได้แค่ไม่เกินพลังของผู้สร้างตัวเอง','good');}},
+    {l:'ขอเงินมหาศาล',g:'selfish',f(S){mon(500);say('แคปซูลเงินร้อยใบตกลงมาจากฟ้า','good');}},
+    {l:'ขอครองโลก',g:'dark',f(S){S.flags.wishWorld=1;dk(40);fm(30);say('เทพมังกรเงียบไปนาน แล้วพูดว่า "นั่นไม่ใช่พรที่ข้าทำได้ทั้งหมด แต่ข้าจะทำให้ทุกคนกลัวเจ้า"','bad');}},
+    {l:'ขอกางเกงในของสาวสวย',g:'curious',f(S){st('joy',8);fm(-3);say('กางเกงในตัวหนึ่งตกลงมาจากฟ้า ทุกคนรอบตัวมองคุณด้วยสายตาเหยียดหยาม คุณกลายเป็นตำนานในแบบที่ไม่มีใครอยากเป็น','plain');}}];
+  await ask('เทพมังกรเซนรอน','"ผู้ที่รวบรวมดราก้อนบอลครบเจ็ดลูก จงกล่าวพรของเจ้ามา ข้าจะให้หนึ่งข้อ"',C,'power');S.flags.wished=1;S.flags.dbCool=S.year+1;cutIn({n:'เทพมังกรเซนรอน',col:'#3e8948'},'ดราก้อนบอลกลายเป็นหิน แล้วกระจายไปทั่วโลกอีกครั้ง','shenron');};
+{const lt0=legTry;legTry=async function(q){if(q.id!=='dballs')return lt0.apply(this,arguments);useFt();S.leg=S.leg||{};const pr=S.leg.dballs||0;if(!chance(q.p())){say('เรดาร์ไม่ส่งสัญญาณอะไรเลยทั้งเดือน','plain');render();return;}
+  if(pr+1<7){S.leg.dballs=pr+1;say(`คุณพบดราก้อนบอล${['หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด'][pr]}ดาว (${pr+1}/7)${pr===3?' แต่ทหารกองทัพริบบอนแดงก็ตามมาด้วย':''}`,'good');render();return;}
+  S.leg.dballs=0;await dbWish();remember('ขอพรกับเทพมังกร','ดราก้อนบอลครบเจ็ดลูก','power',3);render();};}
+LEGS.db=[
+  LQ('dballs','รวบรวมดราก้อนบอลทั้งเจ็ด','ครบเจ็ดลูกแล้วเทพมังกรจะออกมาให้พรหนึ่งข้อ',{need:S=>S.age>=8&&(S.flags.dbCool||0)<=S.year,steps:7,p:()=>S.flags.radar?.7:.3}),
+  LQ('radar','ดราก้อนเรดาร์จากแคปซูลคอร์ป','เครื่องที่บุลมาประดิษฐ์ หาดราก้อนบอลได้ทั่วโลก',{need:S=>!S.flags.radar&&S.age>=10,steps:2,cost:15,win(){S.flags.radar=1;say('คุณได้ดราก้อนเรดาร์มา จุดสีส้มเจ็ดจุดกะพริบบนจอ','good');}}),
+  LQ('korin','ปีนหอคอยคาริน','หอคอยสูงเสียดฟ้า บนยอดมีแมวเซียนกับถั่วเซียนซึ',{need:S=>S.age>=10,steps:3,p:()=>.35+(S.st.fit||0)/300,win(){S.flags.senzu=(S.flags.senzu||0)+3;st('fit',5);say('ท่านคารินให้ถั่วเซียนซึสามเม็ด กินหนึ่งเม็ดอิ่มสิบวัน หายเจ็บทันที','good');}}),
+  LQ('roshi','ฝึกกับผู้เฒ่าเต่า','ส่งนม ขุดดิน อ่านหนังสือ แล้วจึงได้เรียนวิชาสำนักเต่า',{need:S=>S.age>=8&&!hp_('db_kame'),steps:3,win(){if(!hp_('db_ki'))gainPower('db_ki','คุณควบคุมคิได้แล้ว');gainPower('db_kame','"คาเมฮาเมฮะ!" ลำแสงแรกของคุณระเบิดต้นปาล์มทั้งแถว');}}),
+  LQ('crane','สำนักกระเรียน','วิชาของเซียนกระเรียน แรงแต่เลือดเย็น',{need:S=>S.age>=10&&!hp_('db_kikoho'),steps:3,win(){dk(8);gainPower('db_taiyo','คุณใช้ไทโยเคนได้แล้ว');gainPower('db_kikoho','สามเหลี่ยมจากมือคุณกดก้อนหินจมดิน');}}),
+  LQ('krillin','เรียนคิเอ็นซันจากคุริริน','จานพลังที่ตัดได้แม้แต่หางของฟรีเซอร์',{need:S=>S.year>=762&&S.age>=12&&!hp_('db_kienzan')&&hp_('db_ki'),steps:2,win(){gainPower('db_kienzan','จานพลังหมุนบนมือคุณ เสียงหวีดดังแสบหู');}}),
+  LQ('fly','เรียนบุคูจุตสึ','ปล่อยคิออกจากตัวให้ร่างลอยขึ้น',{need:S=>S.age>=8&&!hp_('db_fly')&&hp_('db_ki'),steps:2,win(){gainPower('db_fly','เท้าของคุณลอยพ้นพื้น');}}),
+  LQ('yardrat','ดาวยาร์ดแรต: ชุนคันอิโด','ชาวยาร์ดแรตสอนการเคลื่อนย้ายในพริบตา',{need:S=>S.year>=762&&(S.sk?.fight||0)>=55&&!hp_('db_shunkan'),steps:4,p:()=>.3,win(){gainPower('db_shunkan','สองนิ้วแตะหน้าผาก แล้วคุณก็อยู่อีกฝั่งของโลก');}}),
+  LQ('htc','ห้องกาลเวลา','หนึ่งวันข้างนอกคือหนึ่งปีข้างใน',{need:S=>S.year>=767&&(S.sk?.fight||0)>=45,steps:2,cost:0,win(){st('fit',12);skill('fight',20);if(saiyan(S)&&!hp_('db_ssj')&&chance(.5))gainPower('db_ssj','ในความเงียบของห้องกาลเวลา ผมของคุณกลายเป็นสีทอง');else say('คุณออกมาพร้อมพลังที่ทิ้งทุกคนไว้ข้างหลัง','good');}}),
+  LQ('whis','ฝึกกับวิสบนดาวของบิรุส','ทูตสวรรค์ผู้ฝึกเทพแห่งการทำลาย',{need:S=>S.year>=778&&hp_('db_ssj')&&!hp_('db_ssg'),steps:4,p:()=>.25,guard:{n:'บิรุส เทพแห่งการทำลาย',pow:99},win(){gainPower('db_ssg','บิรุสหาวแล้วพูดว่า "พอใช้ได้" ผมของคุณกลายเป็นสีแดง');}}),
+  LQ('ui','อัลตร้าอินสติงต์','ร่างกายขยับเองโดยไม่ผ่านความคิด',{need:S=>hp_('db_ssg')&&!hp_('db_ui'),steps:5,p:()=>.15,win(){gainPower('db_ui','ผมของคุณกลายเป็นสีเงิน ทุกหมัดของศัตรูช้าลงในสายตา');}}),
+  LQ('babidi','ยอมรับตราจอมมารของบาบีดี้','แลกจิตวิญญาณกับพลังที่ปลดล็อกความชั่วร้ายทั้งหมด',{need:S=>S.year>=774&&S.year<=775&&!hp_('db_majin'),steps:2,win(){dk(40);gainPower('db_majin','ตัว M ปรากฏบนหน้าผากคุณ ความเกลียดทุกอย่างในใจกลายเป็นพลัง');}}),
+];
+ACTV.db=[['กินไดโนเสาร์ย่างกับเพื่อน',{joy:3},['ไดโนเสาร์หนึ่งตัวหมดในสิบนาที'],[.1,'เด็กผมชี้มีหางกินคนเดียวครึ่งตัว แล้วถามว่ายังมีอีกไหม']],['ดูศึกชิงเจ้ายุทธภพ',{joy:3,m:-1},['เสียงกรี๊ดดังไปทั้งสนาม'],[.12,'มิสเตอร์ซาตานโพสท่าแล้วบอกว่าทุกอย่างคือ "กลลวงด้วยแสง"']],
+  ['ฝึกในห้องแรงโน้มถ่วง',{fit:2,sk:['fight',3]},['แรงโน้มถ่วงร้อยเท่ากดจนหายใจไม่ออก'],[.08,'เสียงคนตะโกน "คาคาร็อต!" ดังมาจากห้องข้างๆ']],['ช่วยงานแคปซูลคอร์ป',{m:3,iq:1},['คุณประกอบแคปซูลได้สามอัน'],[.08,'คุณบังเอิญเห็นพิมพ์เขียวไทม์แมชชีนบนโต๊ะทำงาน']],
+  ['ตกปลายักษ์ในแม่น้ำ',{joy:2,m:1},['ปลาตัวใหญ่กว่าคุณ'],[.06,'มีคนใช้หางตัวเองเป็นเหยื่อตกปลาอยู่ข้างๆ']],['เยี่ยมบ้านคาเมะ',{joy:3},['บ้านสีชมพูมีชายแก่นั่งดูทีวีอยู่'],[.1,'ผู้เฒ่าเต่าถามว่า "ขอ... ดูหน่อยได้ไหม" แล้วโดนสาวผมฟ้าตบ']]];
+DRESS.db=[['ชุดกี่สีส้มสำนักเต่า',{out:'#f77622'}],['ชุดสู้ของชาวไซย่า',{out:'#3a4466',vest:1}],['เสื้อคลุมแบบพิคโกโร่',{robe:'#f0ece0'}],['ชุดแคปซูลคอร์ป',{coat:'#3a4466'}],['ชุดแบบเกรทไซย่าแมน',{out:'#3e8948',bandana:'#e43b44'}]];
+EGG.db=['ใครบางคนตะโกนว่า "มันมากกว่า 9000!" แล้วบีบสเกาเตอร์แตก','มีเสียงประกาศว่า "ตอนหน้าในดราก้อนบอล..." ดังมาจากไหนไม่รู้','ยามชาในท่านอนตายถูกวาดเป็นกราฟฟิตี้บนกำแพง'];
+/* senzu in battle */
+{const bt2=battle;battle=function(E,o){if(S&&(S.flags.senzu||0)>0&&typeof document!=='undefined'&&typeof document.getElementById==='function'){let n=0;const iv=setInterval(()=>{try{n++;const d=document.getElementById('btl');if(!d){if(n>4)clearInterval(iv);return;}const acts=d.querySelector('.btacts');if(!acts||(S.flags.senzu||0)<=0||acts.querySelector('.senzu')||!acts.children.length)return;
+  const b=document.createElement('button');b.type='button';b.className='alt senzu';b.innerHTML='<span>กินถั่วเซียนซึ</span><small></small>';b.lastChild.textContent=`เหลือ ${S.flags.senzu} เม็ด · หายเจ็บทั้งหมด`;b.onclick=()=>{S.flags.senzu--;BT.heal=1;b.remove();};acts.append(b);}catch(e){clearInterval(iv);}},400);}return bt2.apply(this,arguments);};}
+/* power level easter egg */
+{const sx0=DB.statusX;DB.statusX=S=>{const r=sx0(S);const pl=Math.round(Math.pow(Math.max(1,myPow()),2.15));if(pl>9000&&!S.flags.over9000){S.flags.over9000=1;setTimeout(()=>{try{say('สเกาเตอร์ของใครบางคนระเบิดตอนวัดพลังคุณ "มัน... มากกว่า 9000!"','power');}catch(e){}},0);}return r;};}
+{const die0=die;die=function(cause){if(S&&S.flags.immortal&&W.id==='db'&&!/ผนึก|ลบ|ทำลายล้าง/.test(cause)){say(`คุณควรจะตาย (${cause}) แต่ร่างกายอมตะประกอบตัวเองกลับมา`,'power');S.st.hp=Math.max(S.st.hp,30);return;}return die0.apply(this,arguments);};}
+SERVERS.push({id:'db-1',w:'db',n:'ยุคตามหาดราก้อนบอล',start:737,span:22},{id:'db-2',w:'db',n:'ยุคชาวไซย่าถึงจอมมารบู',start:755,span:25});
+{const PW={kiblast:'db_ki',kame:'db_kame',kienzan:'db_kienzan',taiyo:'db_taiyo',kikoho:'db_kikoho',kaioken:'db_kaioken',genki:'db_genki',galick:'db_galick',masenko:'db_masenko',makanko:'db_namek',shunkan:'db_shunkan',ssj:'db_ssj',ssj2:'db_ssj2',ssg:'db_ssg',ui:'db_ui',oozaru:'db_oozaru',candy:'db_majin'};for(const d of TECHDEF.db)if(PW[d.id])d.pw=PW[d.id];NOTECH.push('db_fly');}
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
