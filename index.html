@@ -8679,7 +8679,7 @@ const onTxt=(v,n)=>String(v??'').replace(/[\u0000-\u001f​-‏‪-‮⁠-⁯]/g
 const onlineNow=()=>!!(S&&S.online&&ON.room);
 const myP=()=>ON.peers.find(p=>p.isMe&&p.sameTab);
 const others=()=>ON.peers.filter(p=>!(p.isMe&&p.sameTab)&&p.presence&&p.presence.g==='el1');
-const inMyWorld=()=>others().filter(p=>p.presence.on&&p.presence.w===W?.id);
+const inMyWorld=()=>others().filter(p=>p.presence.on&&p.presence.w===W?.id&&(p.presence.sv||'')===((typeof ON!=='undefined'&&ON.sv&&S?.online)?ON.sv.id:(p.presence.sv||'')));
 /* ---- what I publish ---- */
 function myPresence(){if(!S)return{g:'el1',on:0};const p={g:'el1',on:S.online?1:0,w:W.id,wt:onTxt(W.title,40),by:S.birth,yr:S.year,a:S.age,n:onTxt(S.name,40),pl:onTxt(placeName(S),40),job:onTxt(S.job?.n||'',40),al:S.alive?1:0,
   sx:S.sex,fit:Math.round(S.st.fit+((S.sk?.fight||0)+(S.sk?.gear||0))*.25+powB()),fame:S.fame||0,dk:S.dark||0,pt:S.partner?.online?onTxt(S.partner.n,40):'',cause:S.alive?'':onTxt(S.cause,80),look:{h:S.look.hair[1],s:S.look.skin}};
@@ -8890,6 +8890,12 @@ JJK.mini.push(...[
     {l:'เดินหนี',g:'safe',f(S){say('คุณลุกขึ้นเดินไป แต่สายตาของเขาตามหลังคุณมาจนพ้นประตู','plain');}}]};}},
 ]);
 
+/* generic powers in the technique list use the animation of what they actually are */
+const PANIM={katon:'fire',futon:'wind',suiton:'water',doton:'wall',raiton:'bolt',yoton:'fire',futton:'water',ranton:'bolt',shakuton:'fire',jiton:'ironsand',jinton:'cube',amaterasu:'blackfire',susanoo:'susanoo',tsukuyomi:'eye',kamui:'swirl',kotoamatsukami:'eye',sharingan:'eye',mangekyo:'eye',rinnegan:'repulse',byakugan:'palms',sand:'sand',wood:'wood',shadow:'shadow',
+  haki_arm:'blackarm',haki_king:'king',haki_obs:'foresight',df_logia:'logia',df_zoan:'zoan',df_para:'aura',rokushiki:'shigan',fishkarate:'punch',santoryu:'threeswords',bl_kido:'redball',bl_shikai:'shikai',bl_bankai:'bankai',bl_hollow:'mask',bl_flash:'blink',bl_full:'fullbring',bl_quincy:'arrows',
+  jo_stand:'standrush',jo_req:'requiem',jo_hamon:'hamon',jo_spin:'spin',titanShifter:'titan',thunderSpear:'spear',ackerman:'odm',kiriblade:'bigsword',jj_limitless:'infinity',jj_shadows:'dogs',jj_project:'frames',jj_blood:'bloodbeam',jj_speech:'speech',jj_rika:'rika',jj_domain:'domain',jj_rct:'heal',jj_curse:'curses',hn_shiki:'paper',hn_vow:'vow',gates:'gates',sage:'rasengan',summon:'summon',chains:'chains',bones:'boneForest',ice:'mirrors'};
+{const tl0=techList;techList=function(S){const L=tl0.apply(this,arguments);for(const t of L)if(String(t.id).startsWith('p_')&&(!t.anim||t.anim==='aura')){const a=PANIM[t.pw];if(a&&ANIM[a])t.anim=a;}return L;};}
+
 /* ===== turn-based battles: every fight choice opens a duel where both sides lose HP. You pick a technique, talk,
    feint or run; the enemy hits back. Winning or losing then plays the event's own outcome, so the text still fits. ===== */
 const BT={on:false};
@@ -8917,6 +8923,7 @@ const CASTANIM={naruto:'rasengan',sasuke:'chidori',kakashi:'chidori',itachi:'fir
   luffy:'punch',zoro:'threeswords',sanji:'punch',ace:'fire',akainu:'fire',aokiji:'ice',kizaru:'bolt',whitebeard:'punch',mihawk:'slash',shanks:'slash',
   ichigo:'whitebeam',rukia:'ice',byakuya:'bankai',kenpachi:'slash',aizen:'bankai',ulquiorra:'redball',grimmjow:'redball',uryu:'arrows',
   eren:'titan',reiner:'titan',bertholdt:'titan',annie:'titan',zeke:'titan',levi:'odm',mikasa:'odm'};
+const ENAN={rasengan:'กระสุนวงจักร',chidori:'จิโดริ',fire:'คาถาไฟ',sand:'ทรายพันธนาการ',palms:'ฝ่ามืออ่อนโยน',gates:'แปดประตู',repulse:'ชินระเทนเซย์',susanoo:'ซูซาโนะโอะ',water:'คาถาน้ำ',clay:'ระเบิดดินเหนียว',puppetA:'หุ่นเชิด',curses:'คำสาปบงการ',wind:'คาถาลม',purple:'สีม่วง',slashes:'แยกส่วน',dogs:'สุนัขอสูร',rika:'ริกะ',swapclap:'สลับตำแหน่ง',ratio:'อัตราส่วน 7:3',speech:'วาจาสาป',nails:'หุ่นฟาง',bloodbeam:'ลำแสงเลือด',staff:'อาวุธต้องสาป',standrush:'สแตนด์รัวหมัด',standability:'พลังสแตนด์',punch:'หมัด',threeswords:'สามดาบ',bolt:'สายฟ้า',slash:'ฟันดาบ',whitebeam:'เก็ตสึงะ',bankai:'บังไค',redball:'เซโร่',arrows:'ธนูควินซี',titan:'ร่างไททัน',odm:'เครื่องเคลื่อนย้าย',tstomp:'ตะปบ',cero:'เซโร่',tendril:'หนวดคำสาป',gun:'ยิง',cursed:'พลังคำสาป'};
 function enAnim(E){if(E.id&&CASTANIM[E.id]&&ANIM[CASTANIM[E.id]])return CASTANIM[E.id];if(E.titan)return'tstomp';if(E.mask)return'cero';if(E.curse)return'tendril';
   const n=E.n||'';if(W.id==='jojo')return'standrush';if(W.id==='naruto')return /แยกตัว/.test(n)?'bolt':'fire';if(W.id==='op')return /ทหารเรือ/.test(n)?'gun':'slash';if(W.id==='aot')return'gun';if(W.id==='bleach')return'slash';if(['jjk','heian','jjedo'].includes(W.id))return'cursed';return'punch';}
 Object.assign(ANIM,{
@@ -8926,47 +8933,55 @@ Object.assign(ANIM,{
 });
 const btBar=(el,v,m)=>{if(!el)return;const p=Math.max(0,Math.min(100,v/m*100));el.style.width=p+'%';el.classList.toggle('cr',p<25);el.classList.toggle('lo',p>=25&&p<50);};
 function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='undefined'||!document.body||!S){done({r:'skip'});return;}
-  BT.on=true;const L=techList(S),mx=100,st0=S.st.hp;let fx=null,dash=0;let me=Math.max(8,S.st.hp|0),en=100,trick=0,lastT=null,lock=false,flashE=0,flashM=0,turn=0;
+  BT.on=true;const L=techList(S),mx=100,st0=S.st.hp;let fx=null,dash=0;const nums=[],parts=[];let shake=0,flash=0,banner=null;let me=Math.max(8,S.st.hp|0),en=100,trick=0,lastT=null,lock=false,flashE=0,flashM=0,turn=0;
   const d=document.createElement('div');d.id='btl';d.innerHTML='<div class="bx"><canvas width="240" height="120"></canvas><div class="bthud"><div><b class="nm"></b><small class="hpm"></small><div class="btbar"><i class="bm"></i></div></div><div style="text-align:right"><b class="ne"></b><small class="hpe"></small><div class="btbar"><i class="be"></i></div></div></div><p class="btlog" aria-live="polite"></p><div class="btacts"></div></div>';
   document.body.append(d);const bm=d.querySelector('.bm'),be=d.querySelector('.be');const cv=d.querySelector('canvas'),c=cv.getContext('2d'),log=d.querySelector('.btlog'),acts=d.querySelector('.btacts');
   d.querySelector('.nm').textContent=S.name;d.querySelector('.ne').textContent=E.n;
   const hud=()=>{setTimeout(()=>{try{paint();}catch(e){}},0);btBar(bm,me,mx);btBar(be,en,100);d.querySelector('.hpm').textContent=`HP ${Math.max(0,me|0)}/${mx} · ฝีมือ ${Math.round(myPow())}`;d.querySelector('.hpe').textContent=`HP ${Math.max(0,en|0)}/100 · ฝีมือ ${Math.round(E.pow)}`;};
+  const boom=(who,v,col,big)=>{const now=performance.now(),x=who==='en'?178:64,y=who==='en'?66:84;nums.push({x,y,v,t0:now,col:big?'#fee761':who==='me'?'#ff8a8a':'#fff'});for(let i=0;i<(big?28:16);i++)parts.push({x,y,vx:(Math.random()-.5)*3.2,vy:-Math.random()*2.6-.4,t0:now,col:i%3?col:'#fff'});shake=now+(big?420:220);flash=now+(big?150:70);};
+  let bgImg=null,bgCrop=null;try{if(typeof sceneCache!=='undefined'&&sceneCache){const hr=CLOCK.h,v=S.mood&&sceneCache[S.mood]?S.mood:(hr<5||hr>=19.5?'night':hr<7?'dawn':hr<17.5?'day':'dusk');const b=sceneCache[v]||sceneCache.day||Object.values(sceneCache)[0];
+    if(b&&b.width){const r=Math.max(240/b.width,120/b.height),sw=240/r,sh=120/r;bgImg=b;bgCrop={sx:(b.width-sw)/2,sy:Math.max(0,b.height-sh),sw,sh};}}}catch(e){}
   const t0=performance.now();let raf;
   const fxc=document.createElement('canvas');fxc.width=220;fxc.height=72;const fxx=fxc.getContext('2d');
   const draw=()=>{if(!d.isConnected)return;raf=requestAnimationFrame(draw);paint();};
-  const paint=()=>{if(!d.isConnected)return;const now=performance.now();try{const t=now-t0;c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=false;
-    const g=c.createLinearGradient(0,0,0,120);const sky=W.id==='jjk'||W.id==='bleach'?['#262b44','#5a4a6a']:W.id==='op'?['#5fcde4','#3a6aa8']:W.id==='naruto'?['#9fd3a0','#5a8a5a']:['#9fc0d4','#c8b88a'];g.addColorStop(0,sky[0]);g.addColorStop(1,sky[1]);c.fillStyle=g;c.fillRect(0,0,240,120);
+  const paint=()=>{if(!d.isConnected)return;const now=performance.now();if(window.BTSTOP&&fx&&now-fx.t0>window.BTSTOP)return;try{const t=now-t0;const sk=now<shake?((now/32|0)%2?2:-2):0;c.setTransform(1,0,0,1,sk,0);c.imageSmoothingEnabled=false;
+    const g=c.createLinearGradient(0,0,0,120);const sky=W.id==='jjk'||W.id==='bleach'?['#262b44','#5a4a6a']:W.id==='op'?['#5fcde4','#3a6aa8']:W.id==='naruto'?['#9fd3a0','#5a8a5a']:['#9fc0d4','#c8b88a'];g.addColorStop(0,sky[0]);g.addColorStop(1,sky[1]);c.fillStyle=g;c.fillRect(0,0,240,120);if(bgImg){c.drawImage(bgImg,bgCrop.sx,bgCrop.sy,bgCrop.sw,bgCrop.sh,0,0,240,120);c.fillStyle='rgba(10,8,16,.18)';c.fillRect(0,0,240,120);}
     const px=(x,y,w,h,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};px.c=c;px.k=1;
     const p2=(x,y,w,h,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(Math.round(x)*2,Math.round(y)*2,w*2,h*2);};p2.c=c;p2.k=2;
-    c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(178,62,34,7,0,0,6.283);c.fill();c.beginPath();c.ellipse(64,108,38,8,0,0,6.283);c.fill();
+    c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(178,93,30,6,0,0,6.283);c.fill();c.beginPath();c.ellipse(64,108,38,8,0,0,6.283);c.fill();
     const shE=now<flashE?((now/40|0)%2?2:-2):0,shM=now<flashM?((now/40|0)%2?2:-2):0,bob=Math.round(Math.sin(t/300));
-    if(!(now<flashE&&(now/80|0)%2)){if(E.titan)titanBody(px,178+shE,62,48,E.n==='ไททัน'?{}:TLOOK.attack);
-      else if(E.curse)curseBlob(px,178+shE,62,30+bob,t,E.mask?'#e8e8e8':'#4a3a5a');
-      else chibi(p2,Math.round((178+shE)/2),31,{...(E.spec||{}),dir:-1,pose:'arm',md:'angry'});}
+    if(!(now<flashE&&(now/80|0)%2)){if(E.titan)titanBody(px,186+shE,96,96,E.n==='ไททัน'?{}:TLOOK.attack);
+      else if(E.curse)curseBlob(px,178+shE,93,30+bob,t,E.mask?'#e8e8e8':'#4a3a5a');
+      else chibi(p2,Math.round((178+shE)/2),46,{...(E.spec||{}),dir:-1,pose:'arm',md:'angry'});}
     const dx=now<dash?Math.round(Math.sin((1-(dash-now)/450)*3.1416)*80):0;
     if(!(now<flashM&&(now/80|0)%2))chibi(p2,Math.round((64+shM+dx)/2),54,{...meSpec(),dir:1,pose:'arm',md:'angry'});
-    if(dx>60)for(let a=0;a<8;a++)px(170+Math.cos(a)*10,44+Math.sin(a)*10,3,3,'#fee761');
+    if(dx>60)for(let a=0;a<8;a++)px(170+Math.cos(a)*10,74+Math.sin(a)*10,3,3,'#fee761');
     if(fx&&now<fx.end&&now>=fx.t0){const A=ANIM[fx.anim]||ANIM.punch,tt=(now-fx.t0)*fx.k;fxx.setTransform(1,0,0,1,0,0);fxx.clearRect(0,0,220,72);fxx.imageSmoothingEnabled=false;
       const q1=(x,y,w,h,col)=>{if(!col)return;fxx.fillStyle=col;fxx.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};q1.c=fxx;q1.k=1;const q2=(x,y,w,h,col)=>{if(!col)return;fxx.fillStyle=col;fxx.fillRect(Math.round(x)*2,Math.round(y)*2,w*2,h*2);};q2.c=fxx;q2.k=2;
       try{fxx.save();A(q1,tt,62,38,fx.col||'#feae34',220,72,68,q2);fxx.restore();}catch(e){}
-      c.save();c.setTransform(1,0,0,1,0,0);if(fx.who==='me')c.drawImage(fxc,2,40);else{c.translate(240,0);c.scale(-1,1);c.drawImage(fxc,0,-6);}c.restore();}
+      c.save();c.setTransform(1,0,0,1,0,0);if(fx.who==='me')c.drawImage(fxc,2,40);else{c.translate(240,0);c.scale(-1,1);c.drawImage(fxc,0,24);}c.restore();}
     if(trick)px(4,4,60,9,'rgba(254,174,52,.85)'),c.fillStyle='#181425',c.font='8px sans-serif',c.fillText('ศัตรูตายใจ',8,11);
+    c.setTransform(1,0,0,1,0,0);
+    for(let i=parts.length-1;i>=0;i--){const q=parts[i],a=(now-q.t0)/700;if(a>1){parts.splice(i,1);continue;}c.globalAlpha=1-a;c.fillStyle=q.col;c.fillRect(Math.round(q.x+q.vx*a*40),Math.round(q.y+q.vy*a*30+a*a*24),2,2);}c.globalAlpha=1;
+    for(let i=nums.length-1;i>=0;i--){const n=nums[i],a=(now-n.t0)/1100;if(a>1){nums.splice(i,1);continue;}c.globalAlpha=1-a*a;c.font='bold 12px sans-serif';c.fillStyle='#181425';c.fillText('-'+n.v,n.x-7,n.y-a*20+1);c.fillStyle=n.col;c.fillText('-'+n.v,n.x-8,n.y-a*20);}c.globalAlpha=1;
+    if(now<flash){c.fillStyle='rgba(255,255,255,.38)';c.fillRect(0,0,240,120);}
+    if(banner&&now<banner.end){const a=Math.min(1,(now-banner.t0)/150,(banner.end-now)/250);c.globalAlpha=Math.max(0,a);c.fillStyle='rgba(10,8,16,.75)';c.fillRect(0,4,240,15);c.fillStyle=banner.col;c.fillRect(0,4,240,1);c.fillRect(0,18,240,1);c.font='bold 10px sans-serif';c.fillStyle='#fff';c.textAlign='center';c.fillText(banner.n,120,15);c.textAlign='left';c.globalAlpha=1;}
     }catch(e){}};raf=requestAnimationFrame(draw);
   let lastAct=performance.now();const say2=x=>{log.textContent=x;lastAct=performance.now();};
   const wd=setInterval(()=>{if(!d.isConnected){clearInterval(wd);return;}if(!lock&&!acts.children.length&&performance.now()-lastAct>6000){if(en<=0)finish('win');else if(me<=0)finish('lose');else menu();}},1500);
   const finish=r=>{cancelAnimationFrame(raf);BT.on=false;setTimeout(()=>{d.remove();},r==='win'||r==='lose'?900:200);if(r!=='lose')S.st.hp=Math.max(1,Math.min(st0,Math.round(me)));lock=true;acts.innerHTML='';done({r,t:lastT,hp:me});};
-  const enemyTurn=(mul=1)=>{if(en<=0)return;const an=enAnim(E);fx={who:'en',anim:an,col:E.titan?'#c4875e':E.curse?'#68386c':'#e43b44',t0:performance.now(),end:performance.now()+1100,k:1.6};say2(`${E.n} โจมตี!`);setTimeout(()=>enemyHit(mul),900);};
+  const enemyTurn=(mul=1)=>{if(en<=0)return;const an=enAnim(E);banner={n:`${E.n} · ${ENAN[an]||'โจมตี'}`,col:'#e43b44',t0:performance.now(),end:performance.now()+1500};fx={who:'en',anim:an,col:E.titan?'#c4875e':E.curse?'#68386c':'#e43b44',t0:performance.now(),end:performance.now()+1100,k:1.6};say2(`${E.n} โจมตี!`);setTimeout(()=>enemyHit(mul),900);};
   const enemyHit=(mul=1)=>{if(en<=0||!d.isConnected)return;let dmg=Math.round((6+E.pow*.24-myPow()*.08)*(.75+Math.random()*.5)*mul);dmg=Math.max(3,Math.min(42,dmg));const crit=chance(.1);if(crit)dmg=Math.round(dmg*1.6);
-    me-=dmg;flashM=performance.now()+420;if(typeof sfx==='function')sfx('bad');say2(`${E.n} โจมตีกลับ${crit?' ถูกจุดสำคัญ!':''} คุณเสีย HP ${dmg}`);hud();
+    me-=dmg;flashM=performance.now()+420;boom('me',dmg,'#e43b44',crit);if(typeof sfx==='function')sfx('bad');say2(`${E.n} โจมตีกลับ${crit?' ถูกจุดสำคัญ!':''} คุณเสีย HP ${dmg}`);hud();
     if(me<=0){say2(`คุณล้มลง... ${E.n} ยืนอยู่เหนือร่างคุณ`);setTimeout(()=>finish('lose'),700);return;}setTimeout(menu,650);};
   const hit=(t)=>{lastT=t;turn++;S.tm=S.tm||{};S.tm[t.id]=(S.tm[t.id]||0)+1;let anim=tval(t.anim,S),mul=1;const ch=tval(t.chant,S);
     if(t.hp)me-=t.hp;if(t.dk)dk(t.dk);
     if(t.jj&&chance(hasP('jj_flash')?.12:.05)){mul=2.5;anim='blackflash';if(!hasP('jj_flash'))gainPower('jj_flash','แบล็กแฟลชครั้งแรกเกิดกลางการต่อสู้');}
     if(trick){mul*=1.7;trick=0;}
     const free=t.isFull&&chance(.5);
-    if(t.id!=='basic'){cutIn(t,ch,anim);fx={who:'me',anim,col:t.col,t0:performance.now()+900,end:performance.now()+2300,k:1.4};}else dash=performance.now()+450;
+    banner={n:t.id==='basic'?'โจมตีระยะประชิด':t.n,col:t.col||'#fee761',t0:performance.now(),end:performance.now()+(t.id==='basic'?900:2300)};if(t.id!=='basic'){cutIn(t,ch,anim);fx={who:'me',anim,col:t.col,t0:performance.now()+900,end:performance.now()+2300,k:1.4};}else dash=performance.now()+450;
     let dmg=Math.round((10+(t.lv||0)*120+(myPow()-E.pow)*.3)*(.8+Math.random()*.4)*mul);dmg=Math.max(4,Math.min(95,dmg));
-    setTimeout(()=>{en-=dmg;flashE=performance.now()+480;if(typeof sfx==='function')sfx('power');say2(`${t.id==='basic'?'คุณพุ่งเข้าใส่':t.n} · ${mul>=2.5?'แบล็กแฟลช! ':mul>1?'โจมตีตอนเผลอ! ':''}${E.n} เสีย HP ${dmg}`);hud();
+    setTimeout(()=>{en-=dmg;flashE=performance.now()+480;boom('en',dmg,t.col||'#fee761',mul>1||dmg>=40);if(typeof sfx==='function')sfx('power');say2(`${t.id==='basic'?'คุณพุ่งเข้าใส่':t.n} · ${mul>=2.5?'แบล็กแฟลช! ':mul>1?'โจมตีตอนเผลอ! ':''}${E.n} เสีย HP ${dmg}`);hud();
       if(en<=0){setTimeout(()=>{say2(`${E.n} ล้มลง คุณชนะ!`);finish('win');},600);return;}setTimeout(()=>enemyTurn(free?1.3:1),700);},t.id==='basic'?230:2000);};
   const alt=(k)=>{turn++;
     if(k==='talk'){const p=Math.min(.85,.12+(S.sk?.charm||0)/180+(E.id&&bd(E.id)>20?.3:0)+(o.lethal?0:.2)-(E.curse||E.titan?1:0));if(chance(p)){say2(`คุณพูดจนอีกฝ่ายลดอาวุธลง`);setTimeout(()=>finish('talk'),700);}else{say2(E.curse||E.titan?`${E.n} ไม่เข้าใจคำพูดของมนุษย์`:`${E.n} ไม่ฟังคุณเลย`);setTimeout(()=>enemyTurn(),600);}}
@@ -9023,6 +9038,7 @@ function townPanel(){if(!S||!S.alive)return;if(busy){toast('รอให้เ�
 /* ===== online, part two: a server list like a game lobby, a live window onto another player's life, actions with
    honest odds (spar, date, co-op quests, murder with self-defence), and cutscenes that put both of you in frame ===== */
 ON.tab='server';
+const svLabel=pr=>onTxt(pr.wt||pr.w,24)+(typeof SERVERS!=='undefined'&&pr.sv?' · '+(SERVERS.find(x=>x.id===pr.sv)?.n||''):'');
 const oclamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const OWT={aot:'#8b7762',naruto:'#63c74d',jjk:'#8a5ac8',heian:'#c9a227',jjedo:'#b55088',op:'#5fcde4',bleach:'#262b44',jojo:'#feae34'};
 const myFit=()=>Math.round(S.st.fit+((S.sk?.fight||0)+(S.sk?.gear||0))*.25+powB());
@@ -9069,7 +9085,7 @@ function olView(peer){const old=document.getElementById('olv');if(old)old.remove
     if(!pr.al){px(104,80,32,10,'#8b9bb4');px(116,64,8,16,'#c0cbdc');}
     else{const fight=pr.fg||/ต่อสู้|ปะทะ|รบ|ไททัน|คำสาป/.test(pr.now||''),wx=fight?120:110+Math.round(Math.sin(t/900)*16);chibi(p2,Math.round(wx/2),46,{...sp,dir:Math.cos(t/900)>0?1:-1,pose:fight?'arm':'stand',md:fight?'angry':'happy'});
       if(fight&&t%800<120)px(150,60,10,10,'#fff');}
-    c.fillStyle='rgba(0,0,0,.45)';c.fillRect(0,0,240,13);c.fillStyle='#fff';c.font='9px sans-serif';c.fillText(`${onTxt(pr.wt||pr.w,24)} · ${onTxt(pr.pl,24)} · ${String(hr).padStart(2,'0')}:00`,4,9);
+    c.fillStyle='rgba(0,0,0,.45)';c.fillRect(0,0,240,13);c.fillStyle='#fff';c.font='9px sans-serif';c.fillText(`${svLabel(pr)} · ${onTxt(pr.pl,24)} · ${String(hr).padStart(2,'0')}:00`,4,9);
     const sig=JSON.stringify([pr.now,pr.a,pr.al,pr.hp,pr.job,pr.fame,pr.ev?.t,S?.alive,S?.online,W?.id]);if(sig!==OLV.sig){OLV.sig=sig;olInfo(p);}
     requestAnimationFrame(fr);};requestAnimationFrame(fr);}
 function olOdds(pr){const a=myFit(),b=pr.fit|0;return{spar:oclamp(.5+(a-b)/90,.05,.95),kill:oclamp(.5+(a-b)/120,.08,.92),back:oclamp(.25+(b-a)/150,.03,.8),quest:oclamp(.35+(a+b)/250,.15,.92)};}
@@ -9127,9 +9143,348 @@ function questResolve(pr,seed,qi,mine){if(!S.alive)return;const n=onTxt(pr.n,40)
   const all=ON.peers.filter(p=>p.presence?.g==='el1');const h=document.createElement('div');h.textContent=`ในเซิร์ฟเวอร์ตอนนี้ ${all.length} คน · กดชื่อเพื่อดูว่าเขากำลังทำอะไร`;body.append(h);
   all.sort((a,b)=>(b.isMe&&b.sameTab)-(a.isMe&&a.sameTab)||((b.presence.w===W?.id)-(a.presence.w===W?.id)));
   for(const p of all){const pr=p.presence,me=p.isMe&&p.sameTab;const b=document.createElement('button');b.type='button';b.className='srv';const av=document.createElement('span');av.className='av';av.style.background=OWT[pr.w]||'#5a6988';av.textContent=(onTxt(pr.n,40)||'?').slice(0,1);
-    const t=document.createElement('span');const nb=document.createElement('b');nb.textContent=onTxt(pr.n,40)||(pr.on?'ผู้เล่น':'กำลังสร้างตัวละคร');const sm=document.createElement('small');sm.textContent=!pr.on?'อยู่หน้าสร้างตัวละคร / เล่นคนเดียว':pr.al?`${onTxt(pr.wt||pr.w,24)} · อายุ ${pr.a|0} · ${onTxt(pr.now,40)||onTxt(pr.pl,30)}`:`เสียชีวิตแล้ว · ${onTxt(pr.wt||pr.w,24)}`;t.append(nb,sm);b.append(av,t);
+    const t=document.createElement('span');const nb=document.createElement('b');nb.textContent=onTxt(pr.n,40)||(pr.on?'ผู้เล่น':'กำลังสร้างตัวละคร');const sm=document.createElement('small');sm.textContent=!pr.on?'อยู่หน้าสร้างตัวละคร / เล่นคนเดียว':pr.al?`${svLabel(pr)} · อายุ ${pr.a|0} · ${onTxt(pr.now,40)||onTxt(pr.pl,30)}`:`เสียชีวิตแล้ว · ${svLabel(pr)}`;t.append(nb,sm);b.append(av,t);
     if(me){const m=document.createElement('span');m.className='me';m.textContent='คุณ';b.append(m);}else if(pr.w===W?.id&&pr.on){const m=document.createElement('span');m.className='me';m.textContent='โลกเดียวกัน';b.append(m);}
     b.onclick=()=>{if(!me)olView(p.peer);};body.append(b);}}catch(e){}};}
+
+/* ===== phones: nothing wider than the screen, the header buttons scroll sideways, the action bar folds into a drawer
+   and every floating panel sits above it instead of under it ===== */
+(function(){try{const st=document.createElement('style');st.textContent=`html,body{overflow-x:hidden;max-width:100%}
+#mobMenu{display:none}
+@media (max-width:700px){
+ .idbar .inner{flex-wrap:wrap;gap:2px 10px;padding-block:6px}
+ .who{flex:1 1 0;min-width:0}.nm{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}.meta{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .yr{font-size:16px}.age{font-size:11px}
+ .hbtns.mrow{display:flex;flex-wrap:nowrap;overflow-x:auto;width:100%;gap:6px;margin:2px 0 0;padding:0 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.hbtns.mrow::-webkit-scrollbar{display:none}.hbtns.mrow button{flex:none;min-height:32px}
+ .actbar .inner{gap:6px}.autorow{gap:6px 8px}
+ #mobMenu{display:inline-flex;align-items:center;gap:4px;padding:8px 12px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:inherit;font:inherit;font-size:14px;cursor:pointer}
+ .actbar.mmin .acts,.actbar.mmin .agrp,.actbar.mmin .tog,.actbar.mmin #yearSec{display:none!important}
+ .actbar.mmin .actrow{flex-direction:row}.actbar.mmin #ageBtn{width:auto;flex:1;padding:9px 10px}
+ .acts{grid-template-columns:repeat(3,minmax(0,1fr))!important}.act{min-height:38px}
+ .board{padding-bottom:calc(var(--abh,220px) + 16px)!important}
+ #scene{height:200px}
+ #onBtn{bottom:calc(var(--abh,140px) + 8px)!important;right:8px!important;padding:6px 10px!important;font-size:13px}
+ #onPanel{right:8px!important;left:8px;width:auto!important;bottom:calc(var(--abh,140px) + 50px)!important;max-height:calc(100vh - var(--abh,140px) - 130px)!important}
+ .toasts{top:calc(env(safe-area-inset-top,0px) + 96px)}
+ .scrim{padding:6px!important}.dlg{max-height:calc(100vh - 12px);overflow:auto;padding:12px!important}
+ #btl{padding:6px}#btl .bx{max-height:calc(100vh - 12px);overflow:auto}#btl .btacts{grid-template-columns:1fr 1fr}#btl .btacts button{min-height:44px}
+ .townp,#olv{max-height:calc(100vh - 16px)!important}
+ .cutin{top:12%}.cutin .ci-t{max-width:72%}
+ .choice{min-height:44px}
+}`;document.head.append(st);}catch(e){}})();
+const MOB={q:typeof matchMedia==='function'?matchMedia('(max-width:700px)'):null};
+function mobLayout(){try{const on=!!MOB.q?.matches,hb=document.querySelector('.hbtns'),bar=document.querySelector('.idbar'),clock=document.querySelector('.clock');
+  if(hb&&bar&&clock){if(on&&hb.parentNode!==bar){bar.append(hb);hb.classList.add('mrow');}else if(!on&&hb.parentNode!==clock){clock.append(hb);hb.classList.remove('mrow');}}
+  const ab=document.querySelector('.actbar');if(!ab)return;let b=document.getElementById('mobMenu');
+  if(!b){const row=ab.querySelector('.autorow');if(row){b=document.createElement('button');b.type='button';b.id='mobMenu';b.onclick=()=>{ab.classList.toggle('mmin');try{localStorage.setItem('el-mmin',ab.classList.contains('mmin')?'1':'0');}catch(e){}mobText();mobPad();};row.append(b);
+    let pref='1';try{pref=localStorage.getItem('el-mmin')??'1';}catch(e){}if(on&&pref==='1')ab.classList.add('mmin');}}
+  if(!on)ab.classList.remove('mmin');mobText();mobPad();}catch(e){}}
+function mobText(){const b=document.getElementById('mobMenu'),ab=document.querySelector('.actbar');if(b&&ab)b.textContent=ab.classList.contains('mmin')?'☰ เมนู':'✕ ย่อ';}
+function mobPad(){try{const ab=document.querySelector('.actbar');if(ab&&!ab.closest('[hidden]'))document.documentElement.style.setProperty('--abh',ab.offsetHeight+'px');}catch(e){}}
+(function(){try{MOB.q?.addEventListener?.('change',mobLayout);mobLayout();if(typeof ResizeObserver==='function'){const ab=document.querySelector('.actbar');if(ab)new ResizeObserver(mobPad).observe(ab);}setInterval(mobPad,2000);}catch(e){}})();
+{const sg0=showGame;showGame=function(){const r=sg0.apply(this,arguments);setTimeout(mobLayout,0);return r;};}
+/* world actions live in the action bar, the header keeps only settings */
+const WACTS=[['townBtn','คนในเมือง',()=>townPanel()],['legBtn','ตามหาตำนาน',()=>legendMenu()],['actvBtn','กิจกรรม',()=>actMenu()],['dressBtn','แต่งตัว',()=>dressMenu()],['treeBtn','สายตระกูล',()=>famTree()]];
+function wActs(){try{for(const [id] of WACTS){const h=document.querySelector('.hbtns #'+id);if(h)h.remove();}const box=document.getElementById('acts');if(!box||!S||box.querySelector('.wact'))return;
+  const g=document.createElement('span');g.className='agrp wact';g.textContent='โลกรอบตัว';box.append(g);
+  for(const [id,n,f] of WACTS){const b=document.createElement('button');b.type='button';b.className='act wact';b.dataset.w=id;b.textContent=n;b.disabled=!S.alive;b.onclick=f;box.append(b);}}catch(e){}}
+{const rd0=render;render=function(){const r=rd0.apply(this,arguments);wActs();return r;};}
+
+/* ===== the nine titans, each with its own silhouette; pure titans get the goofy grin and the belly ===== */
+for(const k of Object.keys(TLOOK))TLOOK[k].kind=k;
+function tHum(P,q){const L=q.leg,T=q.torso,top=L+T,lean=q.lean||0;
+  P(-q.waist/2,L,q.legW,L,q.sk2);P(q.waist/2-q.legW,L,q.legW,L,q.sk);P(-q.waist/2-1,2,q.legW+1.5,2,q.sk2);P(q.waist/2-q.legW,2,q.legW+1.5,2,q.sk);
+  for(let i=0;i<4;i++){const w=q.waist+(q.shoulder-q.waist)*(i/3);P(-w/2+lean*i/3,L+T*(i+1)/4,w,T/4+.6,q.sk);}
+  P(-q.shoulder/2-q.armW+1+lean,top-1,q.armW,q.arm,q.sk2);P(q.shoulder/2-1+lean,top-1,q.armW,q.arm,q.sk);
+  P(-q.shoulder/2-q.armW+lean,top-q.arm+2,q.armW+1,3,q.sk2);P(q.shoulder/2-1+lean,top-q.arm+2,q.armW+1,3,q.sk);
+  const hx=lean*1.4;P(-2+hx,top+q.neck,4,q.neck+.5,q.sk2);const hy=top+q.neck+q.head;P(-q.head*.45+hx,hy,q.head*.9,q.head,q.sk);
+  return{top,hy,hx,L,T};}
+const TDRAW={
+  attack(P,g){const q={leg:24,torso:18,waist:9,shoulder:16,legW:4,arm:20,armW:3.5,neck:2,head:9,sk:'#c4875e',sk2:'#a86a48'},r=tHum(P,q),h=r.hy;
+    P(-.5,r.top-3,1,q.torso-5,'#a86a48');P(-6,r.top-2,5,1,'#a86a48');P(1,r.top-2,5,1,'#a86a48');for(let i=0;i<3;i++)P(-3,r.top-7-i*3,6,.7,'#a86a48');
+    P(-5,h+1.5,10,3,'#2a1a1a');P(-5.5,h,2,12,'#2a1a1a');P(3.5,h,2,12,'#2a1a1a');P(-4.6,h-2,1,2,'#c4875e');P(3.6,h-2,1,2,'#c4875e');
+    P(-3,h-3,2,1.3,'#63c74d');P(1,h-3,2,1.3,'#63c74d');P(-3,h-6,6,1.6,'#f4f4f4');for(let i=0;i<5;i++)P(-2.6+i*1.3,h-6,.35,1.6,'#a86a48');P(-3.5,h-7.3,7,.6,'#7a3a2a');},
+  armored(P,g){const q={leg:22,torso:19,waist:12,shoulder:21,legW:5.5,arm:19,armW:5,neck:2,head:9,sk:'#c49a7a',sk2:'#a8806a'},r=tHum(P,q),h=r.hy,A='#e8e0d0',B='#9a9080';
+    P(-8.5,r.top-1,17,8,A);P(-8.5,r.top-9,17,.6,B);P(-.4,r.top-1,.8,8,B);for(let i=0;i<3;i++){P(-6,r.top-10-i*3,5,2.4,A);P(1,r.top-10-i*3,5,2.4,A);}
+    P(-13,r.top+1,6,5,A);P(7,r.top+1,6,5,A);P(-14,r.top-9,5,7,A);P(9,r.top-9,5,7,A);P(-6,r.L-3,5.5,8,A);P(.5,r.L-3,5.5,8,A);P(-6,r.L-12,5.5,.6,B);P(.5,r.L-12,5.5,.6,B);
+    P(-4,h+1,8,2.5,'#e4c08a');P(-4,h-1.5,8,7,A);P(-3,h-3,2,1,'#fee761');P(1,h-3,2,1,'#fee761');P(-.4,h-1.5,.8,7,B);P(-3,h-7,6,1,B);},
+  colossal(P,g){const q={leg:25,torso:19,waist:8,shoulder:15,legW:3.5,arm:21,armW:3,neck:3,head:9,sk:'#a22633',sk2:'#7a1a26'},r=tHum(P,q),h=r.hy;
+    for(let a=-7;a<=7;a+=2)P(a,r.top-1,.6,q.torso-1,'#e43b44');for(let a=-3;a<=2;a+=2){P(a,r.L,.5,r.L-2,'#e43b44');}P(-8.5,r.top-2,.6,q.arm-3,'#e43b44');P(8.5,r.top-2,.6,q.arm-3,'#e43b44');
+    for(let i=0;i<5;i++)P(-6,r.top-3-i*2.2,12,.7,'#5a0f18');P(-4,h,8,9,'#8a1a26');P(-3,h-3,2,2,'#fff');P(1,h-3,2,2,'#fff');P(-3.5,h-6,7,2,'#f0e8d8');for(let i=0;i<6;i++)P(-3.2+i*1.2,h-6,.3,2,'#7a1a26');
+    for(let i=0;i<6;i++){const sx=-10+i*4+(g.t?Math.sin(g.t/300+i)*1.5:0),sy=h+2+((i*7)%5)+(g.t?((g.t/40+i*13)%12):0);P(sx,sy,3,2,'rgba(240,240,240,.55)');}},
+  female(P,g){const q={leg:25,torso:16,waist:7,shoulder:12,legW:3,arm:19,armW:2.5,neck:2.5,head:8.5,sk:'#e8b796',sk2:'#c9967a'},r=tHum(P,q),h=r.hy;
+    P(-3,r.top-3,2.5,2,'#d9a582');P(.5,r.top-3,2.5,2,'#d9a582');P(-3.8,r.L+2,7.6,2,'#c9967a');
+    for(const sx of [-1,1]){P(sx*7-.3,r.top-4,.6,8,'#c06060');P(sx*2.4-.3,r.L-4,.6,9,'#c06060');}
+    P(-7.5,r.top-q.arm+2,3.5,3,'#9fe2ff');P(4.6,r.top-q.arm+2,3.5,3,'#9fe2ff');
+    P(-4.3,h+1.5,8.6,3,'#e4c08a');P(-4.3,h,1.5,5,'#e4c08a');P(3.2,h-1,2.6,2.6,'#e4c08a');P(-2.8,h-3,1.8,1,'#5fcde4');P(1,h-3,1.8,1,'#5fcde4');P(-2.6,h-4.6,.5,2,'#c06060');P(2.1,h-4.6,.5,2,'#c06060');P(-1.4,h-6.4,2.8,.6,'#a05a4a');},
+  beast(P,g){const q={leg:14,torso:22,waist:13,shoulder:23,legW:5,arm:33,armW:5.5,neck:0,head:9,sk:'#7a5a32',sk2:'#5a4020',lean:3},r=tHum(P,q),h=r.hy,hx=r.hx;
+    for(let i=0;i<26;i++){const a=-11+((i*7.3)%22),b=r.L+2+((i*5.1)%(q.torso-2));P(a,b,1,2.2,'#9a7a4a');}
+    for(let i=0;i<10;i++){P(-16+((i*3)%4),r.top-3-i*3,1,2,'#9a7a4a');P(13+((i*3)%4),r.top-3-i*3,1,2,'#9a7a4a');}
+    P(-5+hx,h+1,10,3,'#5a4020');P(-2.5+hx,h-4,5,4,'#c49a7a');P(-2.5+hx,h-2.5,1.5,1,'#181425');P(1+hx,h-2.5,1.5,1,'#181425');P(-1+hx,h-5.5,2,1,'#3a2a1a');P(-3+hx,h-8,6,2,'#5a4020');},
+  jaw(P,g){const q={leg:12,torso:15,waist:12,shoulder:17,legW:4.5,arm:20,armW:3.5,neck:1,head:10,sk:'#d9a07a',sk2:'#b27352'},r=tHum(P,q),h=r.hy,hx=r.hx;
+    for(const sx of [-1,1])for(let i=0;i<3;i++)P(sx<0?-q.shoulder/2-q.armW+i*1.3:q.shoulder/2-1+i*1.3,r.top-q.arm-.5,.6,2.6,'#f4f4f4');
+    P(-5.2+hx,h+1.5,10.4,3.5,'#e4c08a');P(-5.4+hx,h,2,8,'#e4c08a');P(-3+hx,h-3,2,1,'#181425');P(1+hx,h-3,2,1,'#181425');
+    P(-4.6+hx,h-4.5,9.2,5.5,'#e8e0d0');P(-4.6+hx,h-7.5,9.2,.6,'#9a9080');for(let i=0;i<6;i++)P(-4+hx+i*1.5,h-6.6,.8,1.6,'#9a9080');},
+  cart(P,g){const sk='#b27352',sk2='#8a5a3a';for(const lx of [-14,-8,6,11])P(lx,13,4,13,lx<0?sk2:sk);for(const lx of [-14,-8,6,11])P(lx-.5,2,5,2,sk2);
+    P(-16,24,32,12,sk);P(-16,14,32,2,sk2);P(15,29,10,10,sk);P(15,31,10,3,'#3e2731');P(18,25,2,1,'#181425');P(22,25,2,1,'#181425');P(18,22,6,1,'#7a3a2a');
+    P(-14,27,26,3,'#5a4a3a');P(-12,31,10,4,'#8a7a5a');P(0,30,9,2,'#3a3a50');P(8,30.5,4,1,'#262b44');P(-8,34,1,3,'#5a4a3a');},
+  warhammer(P,g){const q={leg:26,torso:17,waist:7,shoulder:12,legW:3,arm:20,armW:2.5,neck:3,head:8,sk:'#d8cfc0',sk2:'#b8ad9a'},r=tHum(P,q),h=r.hy,C='#e8f4fb',D='#9fd3e8';
+    P(-6,h+4,12,3,C);P(-7,h+1,2,9,C);P(5,h+1,2,9,C);P(-8,h-8,3,18,D);P(5,h-8,3,18,D);P(-2.6,h-3,1.8,1,'#c06060');P(1,h-3,1.8,1,'#c06060');
+    P(9.5,r.top+6,1.6,33,D);P(5,r.top+10,11,7,C);P(5,r.top+3.3,11,.6,D);for(let i=0;i<4;i++)P(-12-i*2,r.top-8-i*6,2,4,'#c06060');
+    for(let i=0;i<5;i++)P(-q.shoulder/2-3-i*.6,r.top+2-i*3,1,2.5,C);},
+  founding(P,g){const B='#e8e0d0',D='#3a2a2a';P(-1.8,60,3.6,42,B);for(let i=0;i<7;i++){const w=26-i*1.6;P(-w/2,52-i*4,w,1.8,B);P(-w/2+1,50.2-i*4,w-2,1.8,D);}
+    for(const sx of [-1,1]){P(sx*5-1.5,22,3,21,B);P(sx*5-2,2,4,2,B);P(sx*5-2,12,4,1.5,D);}P(-6,24,12,3,B);
+    P(-7,72,14,11,'#f0e8d8');P(-5,67,3.5,3,D);P(1.5,67,3.5,3,D);P(-4.5,63,9,1.6,B);for(let i=0;i<6;i++)P(-4.2+i*1.5,63,.4,1.6,D);P(-8,73,16,2.5,'#2a1a1a');P(-9,72,2,14,'#2a1a1a');P(7,72,2,14,'#2a1a1a');
+    for(let i=0;i<8;i++){const a=-14+i*4;P(a,1,2,1,'rgba(200,200,200,.4)');}},
+  pure(P,g){const q={leg:15,torso:17,waist:15,shoulder:15,legW:5,arm:17,armW:4,neck:0,head:14,sk:'#e0a882',sk2:'#c08860'},r=tHum(P,q),h=r.hy;
+    P(-8,r.top-6,16,9,'#e8b796');P(-.4,r.top-10,.8,1,'#c08860');P(-5,h-4,3,2.5,'#fff');P(2,h-4,3,2.5,'#fff');P(-4,h-4.6,1.4,1.4,'#181425');P(3,h-4.6,1.4,1.4,'#181425');
+    P(-5.5,h-9,11,2.2,'#f4f4f4');P(-6,h-8.6,1,1,'#c08860');P(5,h-8.6,1,1,'#c08860');for(let i=0;i<7;i++)P(-5+i*1.6,h-9,.3,2.2,'#c08860');P(-6,h+1,12,2,'#5a3a2a');},
+};
+const TH={attack:55,armored:55,colossal:62,female:56,beast:56,jaw:45,cart:42,warhammer:60,founding:86,pure:52};
+{const tb0=titanBody;titanBody=function(px,x,gy,h,o={}){const k=o&&o.kind&&TDRAW[o.kind]?o.kind:o&&Object.keys(o).length?null:'pure';if(!k)return tb0.apply(this,arguments);
+  const s=h/TH[k],P=(a,b,w,hh,c)=>px(x+a*s,gy-b*s,Math.max(1,w*s),Math.max(1,hh*s),c);try{TDRAW[k](P,{t:o.t||(typeof ANIMT!=='undefined'?ANIMT:0)});}catch(e){}};}
+
+/* ===== the other worlds get the techniques their stories are known for, each drawn its own way ===== */
+const shiftIs=k=>S=>hp_('titanShifter')&&S.flags.shiftId===k;
+Object.assign(ANIM,{
+  shotgun(px,tt,hx,hy){px(hx+2,hy-1,14,3,'#5a6988');px(hx+14,hy-2,3,5,'#3a4466');const f=tt%700;if(f<110){px(hx+17,hy-4,8,9,'#feae34');px(hx+19,hy-2,6,5,'#fee761');}if(f<500)for(let i=0;i<9;i++){const q=f/500;px(hx+20+q*120,hy+(i-4)*q*6,2,1,'#c0cbdc');}},
+  levispin(px,tt,hx,hy,col,LW,LH,gy){const cx=hx+30+Math.min(80,tt/12),r=12;for(let a=0;a<24;a++){const an=a/24*6.283+tt/40;px(cx+Math.cos(an)*r,hy+Math.sin(an)*r*.5,2,1,a%3?'#c0cbdc':'#fff');}px(cx-2,hy-3,4,6,'#3e5c3a');px(hx+4,hy-1,cx-hx-8,1,'rgba(192,203,220,.5)');px(hx+4,hy+2,cx-hx-8,1,'rgba(192,203,220,.4)');},
+  harden(px,tt,hx,hy,col,LW,LH,gy){const p=Math.min(1,tt/800);for(let i=0;i<10;i++){const x=hx-10+i*5,h=6+((i*13)%9);if(i/10<p){px(x,gy-h*p-14,4,h*p,'#9fe2ff');px(x+1,gy-h*p-14,1,h*p,'#e8f4ff');}}if(tt>800){const q=Math.min(1,(tt-800)/500);px(hx+20,gy-10,q*110,4,'#9fe2ff');px(hx+20+q*110,gy-14,6,12,'#e8f4ff');}},
+  scream(px,tt,hx,hy,col,LW){for(let i=0;i<6;i++){const r=((tt/4)+i*24)%140;for(let a=-8;a<=8;a++){const an=a/16;px(hx+4+Math.cos(an)*r,hy-6+Math.sin(an)*r*.7,1,2,i%2?'rgba(95,205,228,.8)':'rgba(255,255,255,.7)');}}if(tt%300<150)for(let j=0;j<4;j++)px(hx+40+j*30,12+j*4,1,30,'rgba(95,205,228,.35)');},
+  rockthrow(px,tt,hx,hy,col,LW,LH,gy){const f=tt%1100,q=f/1100;for(let i=0;i<5;i++){const x=hx+10+q*150+i*8,y=hy-30+q*q*40+i*3-Math.sin(q*3.14)*18;px(x,y,5,4,'#8a7a5a');px(x+1,y,2,1,'#c8b88a');}px(hx-6,hy-20,12,10,'#7a5a32');},
+  bite(px,tt,hx,hy,col,LW,LH,gy){const p=Math.min(1,tt/500),x=hx+10+p*110,o=Math.abs(Math.sin(tt/90))*6;px(x,hy-8-o,16,6,'#e8e0d0');px(x,hy+2+o,16,6,'#e8e0d0');for(let i=0;i<5;i++){px(x+i*3,hy-2-o,1.5,2,'#fff');px(x+i*3,hy+o,1.5,2,'#fff');}if(p>=1&&tt%400<100)for(let a=0;a<10;a++)px(x+8+Math.cos(a)*10,hy+Math.sin(a)*8,2,2,'#e43b44');},
+  steamblast(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<30;i++){const q=((tt/900)+i/30)%1,a=(i*2.4);px(hx+Math.cos(a)*q*120,hy-10+Math.sin(a)*q*50,4+q*6,3+q*4,`rgba(240,240,240,${(.8-q*.7).toFixed(2)})`);}px(hx-4,hy-14,8,8,'#a22633');},
+  crystalspike(px,tt,hx,hy,col,LW,LH,gy){const n=Math.min(9,Math.floor(tt/120));for(let i=0;i<n;i++){const x=hx+20+i*13,h=12+((i*11)%14);px(x,gy-h,4,h,'#9fe2ff');px(x+1,gy-h-3,2,3,'#e8f4ff');px(x+1,gy-h,1,h,'#e8f4ff');}},
+  rumbling(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<7;i++){const x=((tt/12)+i*34)%(LW+40)-20,h=26+((i*7)%10);px(x,gy-h,8,h,'#c4875e');px(x+1,gy-h-6,6,6,'#a86a48');px(x-1,gy-h+4,10,6,'#7a1a26');}for(let i=0;i<20;i++)px((i*13+tt/5)%LW,gy-1-((i*5)%4),3,2,'#8a7a5a');},
+  airblade(px,tt,hx,hy,col,LW){for(let k=0;k<3;k++){const p=((tt/600)+k*.33)%1,x=hx+10+p*150;for(let j=-6;j<=6;j++)px(x+Math.abs(j)*.8,hy+j*1.5,2,1,'rgba(232,244,255,.85)');}},
+  ryuo(px,tt,hx,hy,col,LW){for(let i=0;i<3;i++){const r=((tt/6)+i*30)%90;for(let a=0;a<20;a++){const an=a/20*6.283;px(hx+8+Math.cos(an)*r,hy+Math.sin(an)*r*.6,2,1,'#181425');}}px(hx+2,hy-4,10,8,'#181425');if(tt%250<120)for(let j=0;j<5;j++)px(hx+12+j*16,hy-14+((j*7)%20),12,1,'#e43b44');},
+  getsuga(px,tt,hx,hy,col,LW,LH){const p=Math.min(1,tt/1100),x=hx+12+p*140;for(let j=-12;j<=12;j++){const w=Math.max(2,6-Math.abs(j)*.4);px(x-Math.abs(j)*.9,hy+j*1.6,w,2,Math.abs(j)<4?'#e8f4ff':j%2?'#181425':'#5fcde4');}for(let i=0;i<6;i++)px(x-20-i*6,hy-10+i*4,6,1,'rgba(95,205,228,.5)');},
+  sokatsui(px,tt,hx,hy){const p=Math.min(1,tt/900);px(hx+6,hy-6,p*150,12,'rgba(0,153,219,.75)');px(hx+6,hy-3,p*150,6,'#9fe2ff');for(let i=0;i<10;i++)px(hx+6+((tt/3+i*17)%150)*p,hy-8+((i*5)%16),3,2,'#e8f4ff');},
+  kurohitsugi(px,tt,hx,hy,col,LW,LH,gy){const p=Math.min(1,tt/1000),x=hx+110;for(let i=0;i<8;i++){const a=i/8*6.283,r=26*(1-p)+10;px(x+Math.cos(a)*r,gy-24+Math.sin(a)*r,6,6,'#181425');}if(p>=1){px(x-12,gy-44,24,40,'#181425');for(let i=0;i<6;i++)px(x-14+((tt/7+i*9)%28),gy-46+i*7,4,2,'#68386c');}},
+  petals(px,tt,hx,hy,col,LW){for(let i=0;i<60;i++){const q=((tt/1300)+i/60)%1,a=i*.7;px(hx+8+q*150+Math.sin(a+tt/200)*14,hy-20+((i*13)%40)+Math.cos(a+tt/250)*8,2,1,i%3?'#f6a0b8':'#ffd0dc');}},
+  timestop(px,tt,hx,hy,col,LW,LH){const p=Math.min(1,tt/700);const r=p*160;for(let a=0;a<40;a++){const an=a/40*6.283;px(hx+Math.cos(an)*r,hy+Math.sin(an)*r*.6,2,2,'rgba(254,231,97,.8)');}if(tt>700){px(0,0,LW,LH,'rgba(40,20,80,.35)');px(hx+30,hy-26,26,40,'rgba(254,231,97,.6)');for(let i=0;i<6;i++){const q=((tt-700)/600+i/6)%1;px(hx+60+q*90,hy-8+i*3,6,4,'#fee761');}}},
+  ripplecut(px,tt,hx,hy,col,LW){const p=Math.min(1,tt/500);px(hx+6,hy-1,p*150,2,'#9fe2ff');px(hx+6,hy,p*150,1,'#fff');if(p>=1)for(let a=0;a<10;a++)px(hx+156+Math.cos(a)*6,hy+Math.sin(a)*6,2,2,'#fee761');},
+  simpledomain(px,tt,hx,hy,col,LW,LH,gy){const r=18+Math.sin(tt/200)*1;for(let a=0;a<48;a++){const an=a/48*3.1416;px(hx-4+Math.cos(an)*r*1.4,gy-Math.sin(an)*r,1,1,'#c0cbdc');}px(hx-4-r*1.4,gy-1,r*2.8,1,'#c0cbdc');if(tt%500<200)px(hx+20,gy-12,4,4,'#fff');},
+});
+CIUNDER.push('harden','steamblast','simpledomain');
+TECHDEF.aot.push(
+  T('levi','ท่าหมุนตัวฟันแบบรีไวล์',S=>hp_('ackerman')||(S.sk?.gear||0)>=45,{chant:'ยิงสมอเกี่ยวสองข้าง หมุนตัวเป็นเกลียวดาบ ฟันลึกถึงต้นคอ',anim:'levispin',col:'#c0cbdc',lv:.3}),
+  T('harden','แข็งตัวผิว',S=>hp_('titanShifter')&&['armored','female','warhammer','attack'].includes(S.flags.shiftId),{chant:'คริสตัลขาวไหลออกมาคลุมกำปั้นและผิวหนังของไททัน',anim:'harden',col:'#9fe2ff',lv:.32}),
+  T('steam','พ่นไอน้ำร้อนของไททันมหึมา',shiftIs('colossal'),{chant:'เผาผลาญกล้ามเนื้อทั้งตัวเป็นไอร้อนพันองศา ไม่มีใครเข้าใกล้ได้',anim:'steamblast',col:'#f4f4f4',lv:.36,hp:6}),
+  T('rock','ขว้างหินแบบไททันวานร',shiftIs('beast'),{chant:'กำหินแตกละเอียดเต็มฝ่ามือ เหวี่ยงแขนยาวๆ ปาเหมือนลูกปืนใหญ่',anim:'rockthrow',col:'#8a7a5a',lv:.34}),
+  T('bite','กรามที่ขบทุกอย่างแตก',shiftIs('jaw'),{chant:'กรามที่แข็งที่สุดในเก้าไททัน ขบได้แม้แต่ผิวแข็งตัว',anim:'bite',col:'#e8e0d0',lv:.33}),
+  T('wham','หนามคริสตัลค้อนศึก',shiftIs('warhammer'),{chant:'สร้างอาวุธจากผิวแข็งตัว หนามคริสตัลแทงขึ้นจากพื้น',anim:'crystalspike',col:'#9fe2ff',lv:.35}),
+  T('cartgun','ปืนใหญ่บนหลังไททันรถลาก',shiftIs('cart'),{chant:'ทหารมาร์เลย์บนหลังเล็งปืนกลหนัก ไททันรถลากวิ่งเร็วไม่หยุด',anim:'cannon',col:'#5a6988',lv:.3}),
+  T('scream','เสียงคำรามแห่งพิกัด',S=>hp_('royal')||S.flags.shiftId==='founding',{chant:'ตะโกนผ่านเส้นทางที่เชื่อมชาวเอลเดียทุกคน ไททันไร้สติหันมาทำตามคำสั่ง',anim:'scream',col:'#5fcde4',lv:.4,dk:3}),
+  T('rumble','เดินทัพแห่งแผ่นดินถล่ม',S=>S.flags.shiftId==='founding'&&hp_('royal'),{chant:'ปลดผนึกกำแพงสามชั้น ไททันมหึมานับล้านตัวเดินออกมาเหยียบโลกให้ราบ',anim:'rumbling',col:'#c4875e',lv:.6,dk:40}));
+for(const d of TECHDEF.aot)if(d.id==='antigun')d.anim='shotgun';
+TECHDEF.op.push(
+  T('rankyaku','รังเคียคุ: เตะใบมีดลม',S=>hp_('rokushiki'),{chant:'เตะด้วยความเร็วจนอากาศกลายเป็นใบมีดพุ่งออกไป',anim:'airblade',col:'#e8f4ff',lv:.27}),
+  T('soru','โซรุ: เคลื่อนที่ดุจหายตัว',S=>hp_('rokushiki'),{chant:'ถีบพื้นสิบครั้งในพริบตาเดียว ร่างหายไปจากสายตา',anim:'afterimage',col:'#c0cbdc',lv:.22}),
+  T('ryuo','ริวโอ: ปล่อยฮาคิเกราะทะลุ',S=>hp_('haki_arm')&&(S.sk?.fight||0)>=55,{chant:'ฮาคิเกราะขั้นสูงที่ไหลออกไปนอกร่าง ทำลายจากข้างใน',anim:'ryuo',col:'#181425',lv:.4}),
+  T('kingcoat','เคลือบฮาคิราชันย์',S=>hp_('haki_king')&&(S.fame||0)>=60,{chant:'ห่อหมัดด้วยฮาคิราชันย์ สายฟ้าสีดำแตกออกโดยไม่ต้องแตะตัวกัน',anim:'king',col:'#e43b44',lv:.48}));
+TECHDEF.bleach.push(
+  T('getsuga','เก็ตสึงะ เทนโช',S=>hp_('bl_shikai')||hp_('bl_bankai'),{chant:'เหวี่ยงดาบปล่อยพลังวิญญาณเป็นคลื่นจันทร์เสี้ยว',anim:'getsuga',col:'#5fcde4',lv:.34}),
+  T('sokatsui','ทางทำลายที่ 33: เปลวไฟน้ำเงินร่วงหล่น',S=>hp_('bl_kido'),{chant:'"จงตกลงมาเถิด เปลวไฟน้ำเงิน..." ฝ่ามือปล่อยไฟสีน้ำเงินกวาดทุกอย่าง',anim:'sokatsui',col:'#0099db',lv:.26}),
+  T('kuro','ทางทำลายที่ 90: โลงศพดำ',S=>hp_('bl_kido')&&(S.sk?.gear||0)>=60,{chant:'"ความขุ่นมัวที่รั่วไหล ภาชนะแห่งความบ้าคลั่ง..." โลงสีดำปิดรอบศัตรูแล้วแหลกละเอียด',full:'ร่ายบทเต็มของโลงศพดำ พลังที่แท้จริงที่แม้แต่ไอเซ็นยังชม',anim:'kurohitsugi',col:'#68386c',lv:.44,hp:4}),
+  T('senbon','ซากุระพันกลีบ',S=>hp_('bl_bankai')&&S.flags.zanType==='petal',{chant:'"บังไค... เซ็มบงซากุระ คาเงะโยชิ" ใบมีดนับพันล้านปลิวดุจกลีบซากุระ',anim:'petals',col:'#f6a0b8',lv:.5}),
+  T('cero','เซโร่',S=>hp_('bl_hollow'),{chant:'ปลดพลังฮอลโลว์ ลำแสงสีแดงรวมตัวที่หน้ากาก',anim:'cero',col:'#e43b44',lv:.36,dk:2}));
+TECHDEF.jojo.push(
+  T('ripcut','ลมปราณใบมีดน้ำ',S=>hp_('jo_hamon'),{chant:'อัดน้ำในปากแล้วพ่นผ่านลมปราณจนคมเหมือนใบมีด',anim:'ripplecut',col:'#9fe2ff',lv:.25}),
+  T('zawarudo','หยุดเวลา',S=>hp_('jo_req')||S.flags.timestop,{chant:'"เดอะเวิลด์!" โลกทั้งใบหยุดนิ่ง มีแค่คุณที่ขยับได้ไม่กี่วินาที',anim:'timestop',col:'#fee761',lv:.55}));
+for(const w of ['jjk','heian','jjedo'])if(TECHDEF[w]&&!TECHDEF[w].some(d=>d.id==='simple'))TECHDEF[w].push(T('simple','อาณาเขตแบบง่าย',S=>(S.sk?.fight||0)>=30&&hp_('jj_sight'),{chant:'กางวงกลมเล็กๆ รอบตัว อะไรที่เข้ามาในวงจะถูกตอบโต้อัตโนมัติ',anim:'simpledomain',col:'#c0cbdc',lv:.18}));
+
+/* ===== the nine tailed beasts drawn as themselves, the full-beast transformation, the tailed-beast bomb,
+   and a lore hunt: find a jinchuriki, beat them, seal what comes out ===== */
+const BIJ=[null,
+  {n:'ชูคาคุ',full:'หนึ่งหาง ชูคาคุ',c1:'#c28569',c2:'#e4c08a',mk:'#262b44',host:y=>y<50?['บุนปุคุ','suna']:y<66?['กาอาระ','suna']:null},
+  {n:'มาตาทาบิ',full:'สองหาง มาตาทาบิ',c1:'#124e89',c2:'#0099db',mk:'#2ce8f5',host:y=>y<66?['ยูกิโตะ นี','kumo']:null},
+  {n:'อิโซบุ',full:'สามหาง อิโซบุ',c1:'#5a6988',c2:'#8b9bb4',mk:'#c0cbdc',host:y=>y<62?['ยางุระ','kiri']:y<64?['(ไร้ผู้ครอง) ทะเลสาบ','kiri']:null},
+  {n:'ซนโกคู',full:'สี่หาง ซนโกคู',c1:'#a22633',c2:'#e43b44',mk:'#63c74d',host:y=>y<66?['โรชิ','iwa']:null},
+  {n:'โคคุโอ',full:'ห้าหาง โคคุโอ',c1:'#c0cbdc',c2:'#ffffff',mk:'#e43b44',host:y=>y<66?['ฮัน','iwa']:null},
+  {n:'ไซเค็น',full:'หกหาง ไซเค็น',c1:'#b8b0d0',c2:'#e8e4f4',mk:'#feae34',host:y=>y<66?['อุตาคาตะ','kiri']:null},
+  {n:'โชเม',full:'เจ็ดหาง โชเม',c1:'#265c42',c2:'#2ce8f5',mk:'#fee761',host:y=>y<66?['ฟู','taki']:null},
+  {n:'กิวกิ',full:'แปดหาง กิวกิ',c1:'#68386c',c2:'#b86f50',mk:'#f4f4f4',host:y=>y<68?['คิลเลอร์บี','kumo']:null},
+  {n:'คุรามะ',full:'เก้าหาง คุรามะ',c1:'#f77622',c2:'#feae34',mk:'#181425',host:y=>y<20?['อุซึมากิ มิโตะ','konoha']:y<50?['อุซึมากิ คุชินะ','konoha']:y<68?['อุซึมากิ นารูโตะ','konoha']:null}];
+const bijIdx=s=>{s=String(s||'');for(let i=1;i<=9;i++)if(s.includes(BIJ[i].n))return i;return 9;};
+function bijuBody(px,x,gy,h,n,t){const B=BIJ[n]||BIJ[9],s=h/40,P=(a,b,w,hh,c)=>px(x+a*s,gy-b*s,Math.max(1,w*s),Math.max(1,hh*s),c),sw=k=>Math.sin((t||0)/400+k)*3;
+  const tails=(cnt,ax,ay,len,col,thick=2.5)=>{for(let k=0;k<cnt;k++){const sp=(k-(cnt-1)/2)*(cnt>1?16/cnt:0);for(let j=0;j<len;j++){const u=j/len;P(ax-u*8+sp*u*.8+sw(k+j*.2)*u,ay+u*len*.9+sp*.3*u,thick*(1-u*.5),thick,col);}}};
+  const eye=(a,b,c='#fee761')=>{P(a,b,2.2,1.4,c);P(a+.8,b,.6,1.4,'#181425');};
+  ({1(){tails(1,-10,18,16,B.c1,5);P(-9,24,18,20,B.c1);P(-7,20,14,14,B.c2);P(-7,30,14,10,B.c1);for(let i=0;i<5;i++)P(-8+i*3.5,20-i%2*3,1,8,B.mk);P(-11,22,4,10,B.c1);P(7,22,4,10,B.c1);P(-8,4,5,4,B.c1);P(3,4,5,4,B.c1);P(-6,33,3,4,B.c1);P(3,33,3,4,B.c1);eye(-5,28,'#fee761');eye(1,28,'#fee761');P(-4,24,8,1.5,'#181425');},
+   2(){tails(2,-12,16,18,B.c2,3);P(-12,18,22,10,B.c1);P(-12,10,4,10,B.c1);P(-4,10,4,10,B.c1);P(4,10,4,10,B.c1);P(8,26,10,10,B.c1);P(8,30,3,4,B.c2);P(15,30,3,4,B.c2);eye(10,23,'#fee761');eye(14,23,'#63c74d');for(let i=0;i<8;i++)P(-12+i*3,20+((i*7+((t||0)/80|0))%5),1.5,2,B.c2);},
+   3(){tails(3,-14,8,14,B.c1,3);P(-14,22,26,14,B.c1);for(let i=0;i<7;i++)P(-13+i*3.8,26,2,4,B.mk);P(-12,10,5,5,B.c2);P(5,10,5,5,B.c2);P(10,20,9,9,B.c2);eye(14,16,'#e43b44');P(-14,9,26,1.5,'#3a4466');},
+   4(){tails(4,-9,14,16,B.c1,3);P(-8,30,16,18,B.c1);P(-7,27,14,10,B.mk);P(-12,30,4,18,B.c1);P(8,30,4,18,B.c1);P(-6,12,5,12,B.c1);P(1,12,5,12,B.c1);P(-6,38,12,8,B.c1);P(-7,40,2,4,'#f4f4f4');P(5,40,2,4,'#f4f4f4');eye(-4,35,'#fee761');eye(1,35,'#fee761');P(-3,32,6,1.5,'#f4f4f4');},
+   5(){tails(5,-14,16,15,B.c2,2.5);P(-14,22,24,11,B.c1);P(-13,11,4,11,B.c1);P(-6,11,4,11,B.c1);P(2,11,4,11,B.c1);P(10,32,10,12,B.c1);P(12,22,7,3,B.c2);P(11,36,2,5,B.mk);P(17,36,2,5,'#0099db');eye(13,30,'#e43b44');},
+   6(){tails(6,-12,8,12,B.c2,2.5);P(-14,18,30,13,B.c1);P(-12,22,26,4,B.c2);P(10,24,8,10,B.c1);eye(12,21,'#fee761');for(let i=0;i<5;i++)P(-12+i*6,19,2,2,B.mk);for(let i=0;i<4;i++){const q=(((t||0)/600)+i*.25)%1;P(-14+i*8,18+q*14,2,2,'rgba(232,228,244,.6)');}},
+   7(){P(-8,24,18,16,B.c1);P(-6,22,14,6,B.c2);for(let i=0;i<3;i++){P(-20,30-i*5,12,3,'rgba(44,232,245,.55)');P(10,30-i*5,12,3,'rgba(44,232,245,.55)');}tails(1,-8,12,12,B.c2,3);P(8,32,6,6,B.c1);P(12,38,2,8,B.mk);eye(9,29,'#fee761');for(let i=0;i<6;i++)P(-8+i*3,8,1.5,6,B.c1);},
+   8(){for(let k=0;k<8;k++){const a=-14+k*4;for(let j=0;j<12;j++)P(a+sw(k+j*.3)*(j/12),20-j*1.6,2.5,2,k%2?B.c1:B.c2);}P(-9,34,18,16,B.c1);P(-7,30,14,6,B.c2);P(-14,46,6,3,B.mk);P(8,46,6,3,B.mk);P(-15,48,3,5,B.mk);P(12,48,3,5,B.mk);eye(-5,42,'#fee761');eye(2,42,'#fee761');P(-3,38,6,2,'#3a2a2a');},
+   9(){tails(9,-10,16,20,B.c1,3);P(-10,30,20,18,B.c1);P(-8,26,16,8,B.c2);P(-6,10,5,10,B.c1);P(1,10,5,10,B.c1);P(-14,28,5,16,B.c1);P(9,28,5,16,B.c1);P(-7,40,14,10,B.c1);P(-8,45,4,6,B.c1);P(4,45,4,6,B.c1);P(-7,49,2,4,B.c1);P(5,49,2,4,B.c1);
+     P(-6,37,4,1,B.mk);P(2,37,4,1,B.mk);eye(-5,39,'#e43b44');eye(2,39,'#e43b44');P(-4,33,8,2,'#f4f4f4');for(let i=0;i<4;i++)P(-3.5+i*2,33,.4,2,B.c1);P(-11,36,3,.8,B.mk);P(8,36,3,.8,B.mk);}})[n]();}
+/* full-beast mode draws the beast with you at its brow, instead of a ring of tails */
+{const bm0=PFX.bijumode;PFX.bijumode=function(px,a,t,lw,lh,gy,me,m){const n=bijIdx(m?.biju||S?.biju);try{bijuBody(px,a.cx-2,gy,Math.min(lh-8,46),n,t);}catch(e){bm0.apply(this,arguments);}};}
+ANIM.bijuu=function(px,tt,hx,hy,col,LW,LH,gy){const n=bijIdx(S?.biju);bijuBody(px,hx-14,gy,62,n,tt);const ch=Math.min(1,tt/900),bx=hx+14+(tt>1200?(tt-1200)/2.2:0),r=2+ch*7;
+  for(let a=0;a<18;a++){const an=a/18*6.283+tt/80;px(bx+Math.cos(an)*r,hy-14+Math.sin(an)*r,1.5,1.5,a%2?'#181425':'#68386c');}px(bx-r*.6,hy-14-r*.6,r*1.2,r*1.2,'#262b44');
+  if(tt>1900){const q=(tt-1900)/600;for(let a=0;a<20;a++)px(200+Math.cos(a)*q*30,gy-16+Math.sin(a)*q*18,3,3,a%2?'#feae34':'#f4f4f4');}};
+for(const d of TECHDEF.naruto||[])if(d.id==='biju'){const a0=d.anim;d.anim=S=>hasP('bijumode')?'bijuu':a0;}
+TECHDEF.naruto.push(T('bijudama','ระเบิดสัตว์หาง',S=>hp_('bijumode')||hp_('bijufriend'),{pw:'bijumode',chant:'รวมจักระดำกับขาวในอัตราแปดต่อสอง กลืนลงไปแล้วพ่นออกมาเป็นลูกบอลที่ทำลายภูเขาได้',anim:'bijuu',col:'#262b44',lv:.42,hp:8}));
+/* the hunt */
+const HUNTVIL={suna:'ซึนะ',kumo:'คุโมะ',kiri:'คิริ',iwa:'อิวะ',taki:'ทากิ',konoha:'โคโนฮะ'};
+function bijuQuests(){const y=S.year,out=[];for(let n=1;n<=9;n++){const B=BIJ[n],h=B.host(y);out.push({n,B,h});}return out;}
+async function bijuHunt(n){const B=BIJ[n],h=B.host(S.year);S.hunt=S.hunt||{};const st=S.hunt[n]||0;useFt();
+  if(!h){/* after the war the beasts are free: you can only earn their trust */
+    if(chance(.35+(S.sk?.charm||0)/200)){S.hunt[n]=(st||0)+1;if(S.hunt[n]>=3&&!hasP('bijufriend')&&!S.biju){S.biju=B.full;gainPower('bijufriend',`${B.n}ยอมรับคุณเป็นเพื่อน และให้คุณยืมจักระของมัน`);remember(`ได้รับการยอมรับจาก${B.n}`,'สัตว์หาง','power',3);}else say(`คุณได้พบ${B.n}ในป่าลึก มันมองคุณอยู่นาน (ความไว้ใจ ${S.hunt[n]}/3)`,'good');}
+    else say(`${B.n}ไม่ยอมปรากฏตัวให้คุณเห็น`,'plain');render();return;}
+  if(st<2){const p=Math.min(.85,.3+(S.sk?.gear||0)/150+(S.flags.outlaw||S.job?.id==='akatsuki'?.2:0));if(chance(p)){S.hunt[n]=st+1;say(st===0?`คุณได้ข่าวว่า${B.full}ถูกผนึกอยู่ในตัว${h[0]}แห่ง${HUNTVIL[h[1]]||h[1]}`:`คุณสะกดรอยจนรู้เส้นทางประจำวันของ${h[0]} ถึงเวลาลงมือแล้ว`,'plain');}else{say('เบาะแสขาดหายกลางทาง','plain');if(chance(.15)){st&&0;say('นินจาลาดตระเวนจับได้ว่าคุณสืบเรื่องพลังสถิต คุณต้องหนีเอาตัวรอด','bad');S.st.hp=Math.max(5,S.st.hp-12);}}render();return;}
+  const E={n:`${h[0]} (พลังสถิต${B.n})`,pow:Math.max(70,Math.min(96,62+n*3.5)),spec:btSpecOf(null,pick(['m','f']),h[0])};const r=await battle(E,{lethal:true,title:`ล่า${B.full}`});
+  if(r.r==='lose'){if(!live(.35,`ถูก${h[0]}ร่างสัตว์หางสังหาร`))return;S.st.hp=4;say(`${B.n}ในร่างของ${h[0]}ซัดคุณกระเด็น คุณรอดมาได้อย่างหวุดหวิด`,'bad');render();return;}
+  if(r.r!=='win'){say('คุณถอยกลับมาก่อน การล่าต้องเริ่มใหม่','plain');S.hunt[n]=1;render();return;}
+  dk(25);fm(20);const can=bloodOf(S).includes('uzumaki')||hasP('chains')||S.job?.id==='akatsuki';
+  if(S.biju){say(`คุณเอาชนะ${h[0]}ได้ แต่ร่างคุณมีสัตว์หางอยู่แล้ว คุณได้แต่ปล่อยให้${B.n}หนีไป`,'bad');S.hunt[n]=3;render();return;}
+  if(chance(can?.75:.25)){S.biju=B.full;gainPower('jinchuriki',`คุณผนึก${B.full}ไว้ในร่างตัวเอง ${h[0]}ไม่รอดจากการถอดสัตว์หาง`);S.hunt[n]=9;remember(`ผนึก${B.full}`,`จาก${h[0]}`,'power',3);say(`ข่าวสะเทือนทั้งห้าแคว้น: ${h[0]}ถูกล่า และ${B.n}หายไปพร้อมกับผู้ล่า`,'news');}
+  else{S.hunt[n]=0;S.st.hp=Math.max(3,S.st.hp-20);say(`การผนึกล้มเหลว ${B.n}ที่หลุดออกมาอาละวาดทำลายป่าไปครึ่งแถบก่อนหายไป คุณเกือบตาย`,'bad');}render();}
+
+/* ===== go after legends yourself: devil fruits, cursed tools, sage mode, the stand arrow... each in steps, with a guardian
+   at the end. Plus dressing up, a long list of things to do in every world, and the story's easter eggs ===== */
+const hasDF=()=>powersOf(S).some(p=>/^df_/.test(p));
+const LQ=(id,n,d,o)=>({id,n,d,steps:3,p:()=>.45,cost:0,...o});
+const JJL=[
+  LQ('rct','ฝึกวิชาย้อนกลับพลังคำสาป','คูณพลังลบด้วยพลังลบให้เป็นบวก รักษาร่างตัวเองได้',{need:S=>hp_('jj_sight')&&!hp_('jj_rct')&&!S.flags.hr,steps:4,p:()=>.25+(S.st.iq||50)/400,win(){gainPower('jj_rct','ร่างกายของคุณซ่อมตัวเองได้แล้ว');}}),
+  LQ('dom','ขยายอาณาเขต','สร้างโลกในใจออกมาครอบศัตรู ยอดของไสยศาสตร์',{need:S=>hp_('jj_tech')&&!hp_('jj_domain'),steps:5,p:()=>.2+(S.sk?.fight||0)/300,win(){gainPower('jj_domain','อาณาเขตของคุณกางออกได้เป็นครั้งแรก');}}),
+  LQ('katana','ดาบแยกวิญญาณ','อาวุธต้องสาปที่ฟันวิญญาณโดยไม่สนเนื้อหนัง',{need:S=>S.age>=16&&!S.flags.katana,guard:{n:'ผู้คุมคลังอาวุธต้องสาป',pow:62},win(){S.flags.katana=1;say('ดาบแยกวิญญาณอยู่ในมือคุณแล้ว ใบดาบเย็นเฉียบ','good');}}),
+  LQ('rope','เชือกดำ','อาวุธต้องสาปที่ลบล้างวิชาที่มันสัมผัส',{need:S=>S.age>=18&&!S.flags.rope,steps:4,cost:20,win(){S.flags.rope=1;say('เชือกดำขดอยู่ในกระเป๋าคุณ เส้นเชือกขยับเองเหมือนมีชีวิต','good');}}),
+  LQ('finger','ตามเก็บนิ้วสุคุนะ','ของต้องสาประดับพิเศษ ยี่สิบนิ้วที่กระจายไปทั่วญี่ปุ่น',{need:S=>W.id==='jjk'&&S.year>=1950&&S.age>=15&&!S.flags.ateFinger,guard:{n:'คำสาปที่กินนิ้วสุคุนะเข้าไป',pow:78,curse:1},win(){S.flags.fingers=(S.flags.fingers||0)+1;fm(8);say(`คุณเก็บนิ้วสุคุนะได้ ${S.flags.fingers} นิ้ว มันเต้นตุบๆ อยู่ในกล่องผนึก`,'good');}}),
+  LQ('prison','กล่องคุกยมโลก','วัตถุต้องสาปที่ขังได้ทุกสิ่งในหนึ่งนาที',{need:S=>W.id==='jjk'&&S.year>=2017&&S.age>=18&&!S.flags.prison,steps:4,p:()=>.25,guard:{n:'ผู้ติดตามของเคนจาคุ',pow:80},win(){S.flags.prison=1;fm(15);dk(10);say('กล่องคุกยมโลกกระพริบตามองคุณ แล้วหลับลงไปอีกครั้ง','good');}}),
+];
+const LEGS={
+  op:[LQ('dfm','ผลปีศาจในตลาดมืด','เงินก้อนโต แลกกับพลังที่ต้องเสียทะเลไปตลอดชีวิต',{need:S=>S.age>=14&&!hasDF(),steps:2,cost:25,win(){const f=pick(DFRUIT);S.flags.df=f[0];gainPower(f[2],`${f[0]}: ${f[1]} (ว่ายน้ำไม่ได้อีกตลอดชีวิต)`);remember(`กิน${f[0]}`,f[1],'power',3);}}),
+    LQ('mera','ผลเมระเมระ: ชิงรางวัลในโคลอสเซียมเดรสโรซ่า','ผลไฟของเอซที่เกิดใหม่หลังเขาตาย',{need:S=>S.year>=1524&&!hasDF()&&!S.flags.mera,steps:2,guard:{n:'นักสู้แชมป์โคลอสเซียม',pow:80},win(){S.flags.mera=1;S.flags.df='ผลเมระเมระ';gainPower('df_logia','ผลเมระเมระ: ร่างกายกลายเป็นเปลวไฟ');}}),
+    LQ('haki','ฝึกฮาคิบนเกาะรุสไกนะ','ร้อยวันบนเกาะที่สัตว์ร้ายที่สุดในโลกอาศัยอยู่',{need:S=>S.age>=15&&!(hp_('haki_obs')&&hp_('haki_arm')),steps:3,p:()=>.35+(S.sk?.fight||0)/250,win(){if(!hp_('haki_obs'))gainPower('haki_obs','คุณได้ยินเสียงของทุกสิ่ง');else gainPower('haki_arm','แขนของคุณดำเป็นเหล็ก');if((S.fame||0)>=40&&!hp_('haki_king')&&chance(.15))gainPower('haki_king','สัตว์ร้ายบนเกาะหมอบลงเมื่อคุณมองมัน');}}),
+    LQ('meito','ดาบชั้นยอดแห่งวาโนะ','หนึ่งในยี่สิบเอ็ดดาบระดับโอวาซาโมโนะ',{need:S=>S.age>=16&&!S.flags.meito,guard:{n:'ซามูไรแห่งวาโนะ',pow:72},win(){S.flags.meito=1;fm(6);say('คุณได้ดาบชั้นยอด ใบดาบมีลายคลื่นที่ไม่มีช่างคนไหนเลียนแบบได้','good');}}),
+    LQ('poneglyph','ถอดรหัสโพเนกลีฟ','อักษรโบราณที่รัฐบาลโลกห้ามอ่าน',{need:S=>S.age>=18&&!S.flags.poneglyph,steps:4,p:()=>.2+(S.st.iq||50)/300,win(){S.flags.poneglyph=1;fm(10);bounty?.(50000000,'อ่านโพเนกลีฟ');say('คุณอ่านเข้าใจประโยคเดียว: "...ข้าจะนำคำพูดของเหล่าโจฮันไปสู่อนาคต" คุณเริ่มเข้าใจแล้วว่าวันพีซมีอยู่จริง','good');}})],
+  naruto:[LQ('toad','เขาเมียวโบคุ: โหมดเซียน','ซึมซับพลังธรรมชาติ ระวังจะกลายเป็นรูปปั้นคางคก',{need:S=>S.age>=12&&!hp_('sage'),steps:3,p:()=>.3+(S.sk?.gear||0)/200,risk:'กลายเป็นรูปปั้นคางคกที่เขาเมียวโบคุ',win(){gainPower('sage','ขอบตาของคุณเป็นสีส้ม พลังธรรมชาติไหลเข้าร่าง');}}),
+    LQ('snake','ถ้ำริวจิ: โหมดเซียนงู','ดินแดนของงูขาวผู้หยั่งรู้',{need:S=>S.age>=14&&!hp_('sageSnake')&&!hp_('sage'),steps:3,p:()=>.3,win(){dk(10);gainPower('sageSnake','ตาของคุณเป็นสีเหลืองเหมือนงู');}}),
+    LQ('slug','ป่าชิกคตสึ: สัญญาอัญเชิญทาก','ทากยักษ์คัตสึยุผู้รักษา',{need:S=>S.age>=12&&!hp_('slug'),steps:2,win(){gainPower('slug','คัตสึยุขดตัวบนบ่าคุณ "ยินดีที่ได้ทำงานด้วยค่ะ"');}}),
+    LQ('scroll','คัมภีร์ผนึกต้องห้าม','ม้วนคัมภีร์ที่ซ่อนวิชาแยกเงาพันร่าง',{need:S=>S.age>=10&&!hp_('kagebunshin'),steps:2,guard:{n:'ชูนินเฝ้าคัมภีร์',pow:42},win(){dk(8);gainPower('kagebunshin','คุณแยกร่างได้ร้อยร่างในคืนเดียว');}}),
+    LQ('samehada','ดาบซาเมฮาดะ','ดาบที่กินจักระ หนึ่งในเจ็ดดาบแห่งหมอก',{need:S=>S.age>=16&&!hp_('kiriblade'),guard:{n:'นักดาบเจ็ดคนแห่งหมอก',pow:80},win(){gainPower('kiriblade','ซาเมฮาดะยอมรับคุณเป็นเจ้าของ');}})],
+  jjk:JJL,heian:JJL.filter(q=>!['finger','prison'].includes(q.id)),jjedo:JJL.filter(q=>!['finger','prison'].includes(q.id)),
+  aot:[LQ('ack','ปลุกพลังอัคเคอร์แมน','สายเลือดที่ถูกออกแบบมาเพื่อปกป้องกษัตริย์',{need:S=>bloodOf(S).includes('ackerman')&&!hp_('ackerman'),steps:2,win(){gainPower('ackerman','หัวคุณปวดแปลบ แล้วร่างกายก็รู้วิธีต่อสู้ทุกท่าในพริบตา');}}),
+    LQ('tspear','หอกสายฟ้าจากคลังหน่วยสำรวจ','อาวุธที่ทำลายผิวแข็งตัวของไททันเกราะ',{need:S=>S.year>=850&&!hp_('thunderSpear'),steps:2,guard:{n:'ทหารรักษาคลังอาวุธ',pow:45},win(){gainPower('thunderSpear','คุณได้หอกสายฟ้ามาสองลำ');}}),
+    LQ('serum','เซรุ่มไททันจากห้องทดลองมาร์เลย์','กลายเป็นผู้กลายร่าง แลกกับอายุที่เหลือเพียง 13 ปี',{need:S=>S.year>=830&&S.age>=12&&!hp_('titanShifter'),steps:4,p:()=>.25,guard:{n:'ผู้กลายร่างที่ถือพลังอยู่',pow:82,titan:1},win(){const k=pick(['jaw','cart','warhammer','beast','female']);S.flags.shiftId=k;S.flags.ymirEnd=S.year+13;gainPower('titanShifter',`คุณได้พลังของ${{jaw:'ไททันขากรรไกร',cart:'ไททันรถลาก',warhammer:'ไททันค้อนศึก',beast:'ไททันวานร',female:'ไททันหญิง'}[k]} อายุขัยที่เหลือคือ 13 ปี`);dk(20);}}),
+    LQ('base','ห้องใต้ดินบ้านเยเกอร์','สิ่งที่กริชาซ่อนไว้ ความจริงของโลก',{need:S=>S.year>=850&&!S.flags.basement,steps:3,win(){S.flags.basement=1;fm(10);say('คุณอ่านบันทึกของกริชา เยเกอร์จนจบ นอกทะเลมีมนุษย์อยู่ และพวกเขาเรียกคุณว่าปีศาจ','good');}})],
+  bleach:[LQ('shikai','ฟังชื่อดาบฟันวิญญาณ','นั่งสมาธิกับดาบจนได้ยินมันพูด',{need:S=>hp_('bl_sight')&&!hp_('bl_shikai'),steps:3,win(){gainPower('bl_shikai','ดาบบอกชื่อของมันกับคุณ');}}),
+    LQ('bankai','บังไคด้วยเทนชินไทของอุราฮาระ','ทำให้วิญญาณดาบปรากฏตัวแล้วสยบมันในสามวัน',{need:S=>hp_('bl_shikai')&&!hp_('bl_bankai'),steps:4,p:()=>.25+(S.sk?.fight||0)/300,guard:{n:'วิญญาณดาบฟันวิญญาณของคุณ',pow:85},win(){S.flags.zanType=pick(['petal','ice','fire','wind','moon']);gainPower('bl_bankai','"บังไค!" แรงดันวิญญาณของคุณสั่นทั้งเมือง');}}),
+    LQ('kido','ร้านอุราฮาระ: เรียนคิโด','ทางทำลายและทางผูกมัดจากเจ้าของร้านขายของชำ',{need:S=>hp_('bl_sight')&&!hp_('bl_kido'),steps:2,cost:5,win(){gainPower('bl_kido','อุราฮาระยิ้มใต้หมวก "ไม่เลวนี่"');}}),
+    LQ('hogyoku','ฮโยกุ','ลูกแก้วที่ทำลายเส้นแบ่งระหว่างยมทูตกับฮอลโลว์',{need:S=>S.age>=16&&!hp_('bl_hollow'),steps:4,p:()=>.2,guard:{n:'อารันคาร์ผู้เฝ้าลาสโนเชส',pow:84,curse:1,mask:1},win(){dk(30);gainPower('bl_hollow','หน้ากากสีขาวงอกออกมาบนใบหน้าคุณ');}})],
+  jojo:[LQ('arrow','ลูกธนูสแตนด์','ถ้ามันไม่เลือกคุณ คุณตาย',{need:S=>S.age>=12&&!hp_('jo_stand'),steps:3,risk:'ลูกธนูสแตนด์ไม่เลือกคุณ',win(){gainPower('jo_stand','ร่างวิญญาณยืนอยู่ข้างหลังคุณ ゴゴゴゴ');}}),
+    LQ('hamon','ลมปราณกับลิซ่าลิซ่า','หายใจให้ถูกจังหวะ แล้วพลังแสงอาทิตย์จะไหลในเลือด',{need:S=>S.age>=10&&!hp_('jo_hamon'),steps:3,win(){gainPower('jo_hamon','ลมหายใจของคุณส่องแสงสีเหลือง');}}),
+    LQ('mask','หน้ากากหิน','เลือดหยดเดียวแลกกับชีวิตนิรันดร์ ที่ต้องหลบแดดตลอดไป',{need:S=>S.age>=16&&!S.flags.vampire&&!hp_('jo_hamon'),steps:3,win(){S.flags.vampire=1;dk(35);st('fit',25);say('หนามจากหน้ากากทิ่มเข้าสมอง คุณไม่ใช่มนุษย์อีกต่อไป WRYYY','bad');remember('สวมหน้ากากหิน','กลายเป็นแวมไพร์','dark',3);}}),
+    LQ('tstop','ปลุกพลังหยุดเวลา','สแตนด์ของคุณเอื้อมไปแตะโลกที่หยุดนิ่ง',{need:S=>hp_('jo_stand')&&!S.flags.timestop,steps:5,p:()=>.15+(S.sk?.fight||0)/400,win(){S.flags.timestop=1;fm(20);say('"โทกิ โว โทมาเระ!" ทุกอย่างหยุดนิ่งไปสองวินาที','good');}}),
+    LQ('aja','ศิลาแดงแห่งเอเจีย','อัญมณีที่ขยายแสงอาทิตย์ได้ไม่สิ้นสุด',{need:S=>S.age>=18&&!S.flags.aja,steps:4,guard:{n:'มนุษย์เสาหิน',pow:88},win(){S.flags.aja=1;fm(15);say(S.flags.vampire?'คุณสวมหน้ากากพร้อมศิลาแดง ร่างกายกลายเป็นรูปแบบชีวิตขั้นสุดยอด... แล้วก็ลอยออกไปนอกโลก คิดไม่ออกเลยว่าจะทำอะไรต่อ':'คุณถือศิลาแดงแห่งเอเจียไว้ แสงของมันอุ่นเหมือนดวงอาทิตย์','good');}})],
+};
+let LEGP=null;
+async function legendMenu(){if(busy||!S||!S.alive)return;busy=true;try{const L=(LEGS[W.id]||[]).filter(q=>q.need(S)),C=[];S.leg=S.leg||{};
+  for(const q of L){const pr=S.leg[q.id]||0;C.push({l:`${q.n} (${pr}/${q.steps})`,g:'curious brave',ok:ftOf()>0&&S.money>=(q.cost||0),h:`${q.d} · โอกาสต่อครั้ง ${Math.round(q.p()*100)}%${q.cost?` · ${fmt(q.cost)}`:''}${q.guard?` · มีผู้พิทักษ์ ฝีมือ ${q.guard.pow}`:''}${q.risk?' · อาจถึงตาย':''}`,close:1,f(){LEGP=()=>legTry(q);}});}
+  if(W.id==='naruto'&&S.age>=16)for(const b of bijuQuests()){if(S.hunt?.[b.n]>=9)continue;C.push({l:b.h?`ล่า${b.B.full} (${S.hunt?.[b.n]||0}/3)`:`ผูกมิตรกับ${b.B.full} (${S.hunt?.[b.n]||0}/3)`,g:b.h?'dark brave':'kind',ok:ftOf()>0,h:b.h?`ผู้ครอง: ${b.h[0]} · ${HUNTVIL[b.h[1]]||''} · ผนึกได้ดีถ้ามีสายเลือดอุซึมากิ`:'หลังสงคราม สัตว์หางเป็นอิสระ',close:1,f(){LEGP=()=>bijuHunt(b.n);}});}
+  if(!C.length)C.push({l:'ยังไม่มีตำนานให้ตามหาในตอนนี้',skip:1,f(){}});C.push({l:'ปิด',skip:1,f(){}});LEGP=null;
+  await ask('ตามหาตำนาน',`ใช้เวลาว่างออกตามหาสิ่งที่เล่าขานกันในโลกนี้ (เวลาว่างเหลือ ${ftOf()}/${FT_MAX})`,C,'power');
+  if(LEGP){const f=LEGP;LEGP=null;await f();}}finally{busy=false;render();}}
+async function legTry(q){useFt();if(q.cost)mon(-q.cost);S.leg=S.leg||{};const pr=S.leg[q.id]||0;
+  if(!chance(q.p())){say(pick([`คุณตามหา${q.n}ทั้งเดือนแต่ไม่พบเบาะแส`,`ข่าวลือเรื่อง${q.n}กลายเป็นเรื่องโกหก`,`คุณหลงทางระหว่างตามหา${q.n}`]),'plain');if(chance(.2)){S.st.hp=Math.max(3,S.st.hp-R(5,12));say('คุณได้รับบาดเจ็บระหว่างทาง','bad');}render();return;}
+  if(pr+1<q.steps){S.leg[q.id]=pr+1;say(`คุณเข้าใกล้${q.n}ขึ้นอีกขั้น (${pr+1}/${q.steps})`,'good');render();return;}
+  if(q.guard){const r=await battle({...q.guard,spec:q.guard.curse||q.guard.titan?null:btSpecOf(null,'m',q.guard.n)},{lethal:true,title:q.n});if(r.r!=='win'){if(r.r==='lose'&&!live(.5,`ถูก${q.guard.n}สังหารระหว่างชิง${q.n}`))return;S.st.hp=Math.max(3,Math.min(S.st.hp,15));say(`${q.guard.n}ขวางคุณไว้ได้ ต้องเริ่มขั้นสุดท้ายใหม่`,'bad');render();return;}}
+  if(q.risk&&!live(.8,q.risk))return;
+  S.leg[q.id]=0;q.win();remember(q.n,'ตำนานที่คุณตามหาจนเจอ','power',3);render();}
+/* dressing up */
+const DRESS={aot:[['ชุดหน่วยสำรวจ',{mil:'survey',cape:1}],['ชุดพลเรือนในกำแพง',{out:'#8b7762'}],['ชุดทหารมาร์เลย์',{out:'#6a5a3a',band:1}],['ชุดลำลองสีขาว',{out:'#e8e0d0'}]],
+  naruto:[['ชุดโจนินพร้อมเสื้อกั๊ก',{vest:1,band:1}],['ชุดสีส้มแบบนารูโตะ',{out:'#f77622'}],['เสื้อคลุมแสงอุษา',{robe:'#262b44'}],['ชุดกิโมโนงานเทศกาล',{kimono:'#b55088'}],['ชุดหน่วยลับอันบุ',{out:'#c0cbdc',vest:1}]],
+  jjk:[['ชุดนักเรียนไสยศาสตร์',{out:'#262b44'}],['ชุดกิโมโน',{kimono:'#3a4466'}],['ชุดสูทแบบนานามิ',{out:'#c9b48a'}],['ชุดลำลอง',{out:'#5a6988'}]],
+  heian:[['ชุดราชสำนัก',{juni:1}],['หมวกเอโบชิกับชุดขุนนาง',{eboshi:1,kimono:'#3a4466'}],['กิโมโนนักบวช',{kimono:'#f0ece0'}]],jjedo:[['ฮากามะซามูไร',{kimono:'#3a3a44',hakama:'#262b44'}],['กิโมโนสีแดง',{kimono:'#a22633'}],['ชุดชาวบ้าน',{kimono:'#8b7762'}]],
+  op:[['เสื้อโค้ทกัปตัน',{coat:'#a22633'}],['เสื้อโค้ทความยุติธรรม',{coat:'#f0ece0'}],['ผ้าโพกหัวโจรสลัด',{bandana:'#e43b44'}],['ชุดกะลาสี',{out:'#3a6aa8'}]],
+  bleach:[['ชิฮาคุโช ชุดยมทูต',{shihak:1}],['ฮาโอริหัวหน้าหน่วย',{shihak:1,coat:'#f0ece0'}],['ชุดนักเรียนคาราคุระ',{out:'#5a6988'}]],
+  jojo:[['ชุดนักเรียนแบบโจทาโร่',{out:'#262b44'}],['ชุดสีชมพูแบบโจสุเกะ',{out:'#68386c'}],['สูทสีม่วงแบบคิระ',{out:'#5a4a7a'}],['ชุดเด่นหวือหวา',{out:'#feae34'}]]};
+{const ms0=meSpec;meSpec=function(){const o=ms0.apply(this,arguments);if(S?.dress)Object.assign(o,S.dress);return o;};}
+async function dressMenu(){if(busy||!S||!S.alive)return;busy=true;try{const C=(DRESS[W.id]||[]).map(([n,p])=>({l:n,g:'curious',ok:S.money>=2&&S.age>=6,h:fmt(2),f(S){mon(-2);S.dress={...p};say(`คุณเปลี่ยนมาใส่${n}`,'good');st('joy',2);}}));C.push({l:'กลับไปใส่ชุดเดิม',g:'safe',f(S){S.dress=null;say('คุณกลับมาใส่ชุดเดิม','plain');}},{l:'ปิด',skip:1,f(){}});
+  await ask('แต่งตัว','เลือกชุดที่จะใส่ในทุกฉาก',C,'people');}finally{busy=false;render();}}
+/* things to do: ordinary life, with the story's little jokes hidden inside */
+const ACTV={aot:[['ฝึกเครื่องเคลื่อนย้ายสามมิติที่ป่ายักษ์',{fit:2,sk:['gear',3]},['คุณบินผ่านต้นไม้สูงร้อยเมตร ลมตีหน้าจนตาแดง']],['ขี่ม้าเลียบกำแพงโรส',{joy:3},['ม้าของคุณวิ่งแข่งกับพระอาทิตย์ตก']],['ช่วยงานโบสถ์ลัทธิกำแพง',{joy:1,dk:-1},['บาทหลวงนิคบอกว่ากำแพงคือพระเจ้า คุณพยักหน้าแต่ไม่แน่ใจ']],['ซื้อมันฝรั่งนึ่งที่ตลาด',{joy:2,m:-1},['มันฝรั่งร้อนๆ หอมจนคุณเผลอนึกถึงใครบางคน'],[.08,'เด็กสาวผมแดงคนหนึ่งจ้องมันฝรั่งในมือคุณตาเป็นประกาย คุณแบ่งให้ครึ่งหนึ่ง เธอกินหมดในคำเดียว']],['ปีนขึ้นไปดูวิวบนกำแพง',{joy:3},['ไกลออกไปเป็นแผ่นดินที่ไม่มีใครเคยเห็นทะเล'],[.05,'คุณได้ยินเด็กผู้ชายสองคนคุยกันว่า "สักวันฉันจะไปดูทะเลให้ได้" คนหนึ่งผมทอง อีกคนตาเขียวจ้า']],['ทำความสะอาดคอกม้าแบบหัวหน้าหน่วย',{dk:-1},['คุณขัดพื้นจนเงา แต่ก็ยังไม่สะอาดพอสำหรับใครบางคน'],[.1,'ชายตัวเตี้ยหน้าดุเดินมาลากนิ้วบนขอบหน้าต่าง "สกปรก ทำใหม่"']]],
+  naruto:[['กินราเม็งที่อิจิราคุ',{joy:3,m:-1},['เท็จจิใส่ชาชูเพิ่มให้ฟรีหนึ่งชิ้น'],[.08,'เด็กผมทองข้างๆ สั่งชามที่ห้าแล้วตะโกน "ดัตเตบาโยะ!"']],['ฝึกปีนต้นไม้ด้วยจักระ',{sk:['gear',3]},['เท้าของคุณเกาะเปลือกไม้ได้สูงขึ้นอีกสองเมตร']],['แช่บ่อน้ำร้อน',{joy:4,hp:5},['ไอน้ำอุ่นๆ ไล่ความเหนื่อยออกไปหมด'],[.1,'ชายผมขาวยาวกำลังแอบส่องรั้วฝั่งผู้หญิงแล้วจดอะไรบางอย่าง เขายกนิ้วจุ๊ปากใส่คุณ']],['เล่นโชงิที่บ้านนารา',{iq:2},['คุณแพ้ในสิบเจ็ดตา คู่แข่งบ่นว่า "น่ารำคาญจริงๆ"']],['ซื้อดังโงะที่ร้านดังโงะ',{joy:2,m:-1},['ดังโงะสามสีหวานกำลังดี'],[.06,'ชายในเสื้อคลุมเมฆแดงสองคนนั่งโต๊ะข้างๆ คนตัวฟ้าเหมือนฉลามยิ้มให้คุณ']],['ดูหน้าผาโฮคาเงะ',{joy:2},['ใบหน้าหินมองลงมาที่หมู่บ้านอย่างเงียบๆ'],[.07,'ใครบางคนเพิ่งพ่นสีเลอะหน้าผาโฮคาเงะทั้งแถว อิรุกะวิ่งไล่ตามเด็กคนนั้นไปตะโกนไป']]],
+  jjk:[['ร้องคาราโอเกะ',{joy:4,m:-1},['คุณร้องเพลงจนเสียงแหบ']],['ไปเลือกกำไลข้อมือที่ฮาราจุกุ',{joy:2,m:-2,look:1},['ร้านเล็กๆ ในซอยมีของแปลกเต็มไปหมด']],['ทานคิทาคาตะราเม็งกับเพื่อน',{joy:3,m:-1},['เพื่อนคุณบ่นเรื่องงานไสยศาสตร์จนราเม็งอืด']],['แข่งเบสบอลในงานแลกเปลี่ยนเกียวโต',{fit:2,joy:3},['คุณตีลูกโฮมรันหนึ่งลูก'],[.12,'ลูกเบสบอลพุ่งตรงไปที่หัวของคนตัวใหญ่ที่ยืนถามทุกคนว่า "ชอบผู้หญิงแบบไหน"']],['ซื้อขนมคิคุฟุกุที่สถานีเซนได',{joy:3,m:-1},['คิคุฟุกุไส้ถั่วแระครีม หวานจนยิ้ม'],[.15,'ชายผมขาวผ้าปิดตาซื้อไปทั้งถาด "นี่เป็นความลับนะ" เขากระซิบ']],['เดินผ่านสี่แยกชิบุยะ',{joy:1},['คนนับพันเดินสวนกันโดยไม่มีใครเห็นคำสาปที่เกาะหลังพวกเขา'],[.05,'คุณได้ยินเสียงใครบางคนพึมพำ "นาห์ ไอด์ วิน" แล้วหัวเราะ']]],
+  op:[['ดื่มที่บาร์ท่าเรือ',{joy:3,m:-1},['กะลาสีเฒ่าเล่าเรื่องโกลด์ โรเจอร์เป็นครั้งที่ร้อย']],['ตกปลาราชาทะเล',{fit:2,m:2},['คุณได้ปลาตัวใหญ่กว่าเรือ'],[.06,'เด็กหมวกฟางคนหนึ่งช่วยคุณดึงเบ็ด แขนเขายืดยาวเหมือนยาง']],['กินที่ภัตตาคารบาราติเอ',{joy:4,m:-2},['พ่อครัวขาไม้ยืนดูทุกจานด้วยตัวเอง'],[.1,'พ่อครัวผมทองคิ้วม้วนเสิร์ฟจานพิเศษให้คุณฟรีเพราะคุณดูหิว']],['ขุดหาสมบัติบนเกาะร้าง',{m:3,fit:1},['คุณขุดเจอหีบเปล่าหนึ่งใบ กับแผนที่ครึ่งแผ่น']],['อ่านใบประกาศจับ',{iq:1},['ค่าหัวทุกใบสูงขึ้นทุกปี'],[.08,'ใบประกาศจับใบหนึ่งเป็นรูปวาดที่ไม่เหมือนตัวจริงเลยสักนิด ชื่อ "ซันจิ"']],['ฝึกดาบที่ร้านตีดาบ',{sk:['fight',3]},['ช่างตีดาบบอกว่าดาบดีจะเลือกเจ้าของเอง']]],
+  bleach:[['ช่วยงานร้านอุราฮาระ',{m:2},['คุณขนกล่องลูกกวาดวิญญาณ ร้านนี้มีห้องใต้ดินกว้างเกินจริง']],['เดินเล่นงานเทศกาลคาราคุระ',{joy:3,m:-1},['ดอกไม้ไฟสีสวยแตกกลางฟ้า'],[.08,'หนุ่มผมส้มหน้ายุ่งเดินผ่านพร้อมผู้หญิงตัวเล็กที่วาดกระต่ายประหลาดลงในสมุด']],['ฝึกชุนโป',{fit:2,sk:['gear',2]},['คุณขยับเร็วจนลมตามไม่ทัน']],['ชงชาที่หน่วยสี่',{joy:2,hp:4},['หัวหน้าหน่วยสี่ยิ้มอ่อนโยน แต่ทุกคนกลัวเธอมาก']],['ดื่มสาเกกับหน่วยแปด',{joy:3},['หัวหน้าหน่วยแปดอ่านกลอนให้ฟังจนหลับ']],['อ่านหนังสือพิมพ์เซย์เรย์เทย์',{iq:1},['คอลัมน์ "สมาคมสตรียมทูต" เขียนเรื่องหัวหน้าหน่วยหกอีกแล้ว'],[.06,'หัวหน้าหน่วยหกยืนอ่านข้างๆ คุณ หน้านิ่งสนิท แต่หูแดง']]],
+  jojo:[['กินที่ร้านอาหารอิตาเลียนของโทนิโอ',{joy:4,hp:6,m:-2},['ร่างกายคุณรู้สึกดีจนน้ำตาไหลออกมาเป็นลิตร']],['อ่านมังงะ "พิงค์ดาร์กบอย"',{joy:3},['ลายเส้นละเอียดจนน่ากลัว'],[.1,'อาจารย์คิชิเบะ โรฮังมองคุณแล้วพูดว่า "ปฏิเสธ"']],['เดินเล่นในเมืองโมริโอ',{joy:2},['เมืองเล็กๆ ที่ทุกคนดูปกติเกินไป'],[.06,'ชายในสูทสีม่วงคนหนึ่งบอกว่า "ผมแค่อยากใช้ชีวิตอย่างสงบ" แล้วเดินจากไป']],['ฝึกท่ายืนแบบโจโจ้',{look:1,joy:2},['คุณโพสท่าจนหลังจะหัก แต่ดูเท่มาก']],['ชาหอมกับดอนัท',{joy:2,m:-1},['คุณได้ยินเสียง ゴゴゴゴ ดังมาจากไหนก็ไม่รู้']],['ดูการแข่งขันแข่งรถม้า',{joy:3},['ม้าตัวหนึ่งวิ่งเร็วเกินมนุษย์']]],
+  heian:[['เขียนกลอนส่งให้คนรักในวัง',{joy:3,iq:1},['กระดาษที่ปรุงกลิ่นหอมถูกพับอย่างประณีต']],['ชมจันทร์ที่วังหลวง',{joy:3},['ขุนนางเล่นพิณใต้แสงจันทร์']],['ฟังนักบวชสวดขับไล่คำสาป',{iq:1},['เสียงสวดดังไปทั้งคืน']]],
+  jjedo:[['ชาที่ร้านริมทาง',{joy:2,m:-1},['สาวเสิร์ฟยิ้มให้คนเดินทาง']],['ฝึกดาบในสำนัก',{sk:['fight',3],fit:1},['คุณฟันฟางจนมือพอง']],['ดูละครคาบุกิ',{joy:3,m:-1},['นักแสดงหน้าขาวรำได้อ่อนช้อย']]]};
+async function actMenu(){if(busy||!S||!S.alive)return;busy=true;try{const C=(ACTV[W.id]||[]).map(([n,e,lines,egg])=>({l:n,g:'curious kind',ok:ftOf()>0&&S.money>=-(e.m||0)&&S.age>=6,h:Object.entries(e).map(([k,v])=>k==='m'?(v<0?`ใช้ ${fmt(-v)}`:`ได้ ${fmt(v)}`):k==='sk'?`${W.skL?.[v[0]]||v[0]}+`:{joy:'ความสุข',fit:'ร่างกาย',iq:'สติปัญญา',look:'หน้าตา',hp:'สุขภาพ',dk:'ด้านมืด'}[k]+(v>0?'+':'-')).join(' · '),
+    f(S){useFt();for(const [k,v] of Object.entries(e)){if(k==='m')mon(v);else if(k==='sk')skill(v[0],v[1]);else if(k==='dk')dk(v);else st(k,v);}if(egg&&chance(egg[0])){say(egg[1],'good');S.eggs=(S.eggs||0)+1;remember('เรื่องเล็กๆ ที่ไม่ธรรมดา',egg[1].slice(0,60),'stand',2);}else say(pick(lines),'plain');}}));
+  C.push({l:'ปิด',skip:1,f(){}});await ask('กิจกรรม',`ใช้เวลาว่างทำอะไรดี (เหลือ ${ftOf()}/${FT_MAX})`,C,'people');}finally{busy=false;render();}}
+/* small easter eggs in ambient lines */
+const EGG={aot:['มีคนเขียนบนกำแพงว่า "ชินโซ โว ซาซาเกโยะ"','เด็กคนหนึ่งวิ่งไปตะโกนว่า "ทาทากาเอะ!"'],naruto:['เสียงใครบางคนตะโกนว่า "ความเยาว์วัยที่เปล่งประกาย!" ดังไปทั้งสนามฝึก','ห่อหนังสือ "สวรรค์แห่งความเกียจคร้าน" ตกอยู่ข้างทาง'],
+  jjk:['ป้ายโฆษณาร้านคิคุฟุกุติดอยู่ทั่วสถานี','ลูกแมวตัวหนึ่งนั่งมองคุณเหมือนมีอะไรจะพูด แล้วก็พูดว่า "ทูน่า มาโย"'],op:['หนังสือพิมพ์ลงข่าวนกนิวส์คูหยุดงานประท้วงอีกแล้ว','เสียงหัวเราะ "ชิชิชิ" ดังมาจากท่าเรือ'],bleach:['คุณเห็นป้ายร้านขายของชำที่ไม่มีใครเคยเห็นลูกค้าเข้า','วิญญาณนกแก้วตัวหนึ่งพูดซ้ำๆ ว่า "ฮอลโลว์มาแล้ว"'],jojo:['คุณได้ยินเสียง "ゴゴゴゴ" ดังมาจากตรอกมืด','ชายคนหนึ่งตะโกนว่า "นิเกโระดาโยะ!" แล้ววิ่งหนีไป'],heian:['ลมหอบกลีบซากุระมาเต็มลานวัง'],jjedo:['ซามูไรพเนจรคนหนึ่งบ่นว่าดาบของเขาหิวเลือด']};
+{const pa1=pickAmbient;pickAmbient=function(){if(S&&chance(.04)&&EGG[W.id]){S.eggs=(S.eggs||0)+1;return pick(EGG[W.id]);}return pa1.apply(this,arguments);};}
+/* the buttons */
+(function(){try{const hb=document.getElementById('helpBtn');if(!hb||!hb.parentNode)return;for(const [id,n,f] of [['legBtn','ตามหาตำนาน',legendMenu],['actvBtn','กิจกรรม',actMenu],['dressBtn','แต่งตัว',dressMenu]]){const b=document.createElement('button');b.type='button';b.className='ghost sm';b.id=id;b.textContent=n;b.onclick=()=>f();hb.parentNode.insertBefore(b,hb);}}catch(e){}})();
+
+/* ===== when a line says a main character is around doing something, they walk into the live view and do it ===== */
+const CAMACT=[[/กิน|ราเม็ง|ดังโงะ|อาหาร|ข้าว|ขนม/,'eat'],[/ฝึก|ซ้อม|ประลอง/,'train'],[/ต่อสู้|ปะทะ|โจมตี|ฟัน|ชก/,'fight'],[/ร้องไห้|น้ำตา|เศร้า/,'cry'],[/หัวเราะ|ยิ้ม|ล้อเล่น|แกล้ง/,'happy'],[/อ่าน|หนังสือ|มังงะ/,'read'],[/วิ่ง|รีบ|ไล่/,'run'],[/นอน|หลับ|เมฆ/,'sleep']];
+{const sy0=say;say=function(x,k){const r=sy0.apply(this,arguments);try{if(S&&W.castMeta&&typeof x==='string'&&!['pick','death'].includes(k)){const ids=castsIn(x).filter(id=>!castGone(id)&&castSpec(id));
+    if(ids.length){const a=(CAMACT.find(([re])=>re.test(x))||[0,'walk'])[1];LIVE.cameo={id:ids[0],act:a,t:9000,t0:LIVE.t||0,line:x};}}}catch(e){}return r;};}
+{const lf0=liveFrame;liveFrame=function(dt){lf0.apply(this,arguments);try{const cm=LIVE.cameo;if(!cm)return;cm.t-=dt;if(cm.t<=0){LIVE.cameo=null;return;}if(LIVE.inNow||!S)return;
+  const cv=$('#scene'),c=cv.getContext('2d'),k=scenePx*sceneDpr,lw=LIVE.lw,lh=LIVE.lh,gy=Math.floor(lh*.8);const px=(x,y,w,h,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(Math.round(x)*k,Math.round(y)*k,Math.max(1,Math.round(w))*k,Math.max(1,Math.round(h))*k);};px.c=c;px.k=k;
+  const px2=(x,y,w,h,col)=>px(x*2,gy-(gy-y)*2,w*2,h*2,col);
+  const age=9000-cm.t,tx=Math.round(lw*.3),enter=Math.min(1,age/1600),leave=cm.t<1400?1-cm.t/1400:0,x=Math.round(tx+(1-enter)*(lw*.3)+leave*(lw*.35)),walking=enter<1||leave>0;
+  const sp={...castSpec(cm.id),dir:leave>0?1:-1};const pose=walking?'stand':{fight:'arm',train:'arm',happy:'up',run:'stand'}[cm.act]||'stand',md={cry:'sad',fight:'angry',happy:'happy',train:'angry'}[cm.act]||'happy';
+  const bob=walking?Math.abs(Math.sin(age/120))*1:0,lift=cm.act==='train'&&!walking?Math.abs(Math.sin(age/200))*2:0;
+  const a=chibi(px,x,gy-bob-lift,{...sp,pose,md,f:walking?Math.floor(age/160)%2:0});
+  if(!walking){const hx=a?.hx??x+3,hy=a?.hy??gy-6;
+    if(cm.act==='eat'){px(hx,hy-1,4,2,'#c0cbdc');px(hx+1,hy-2,2,1,'#feae34');if(age%600<300)px(hx+1,hy-4,1,1,'rgba(255,255,255,.7)');}
+    if(cm.act==='fight'||cm.act==='train'){if(age%500<120)for(let i=0;i<5;i++)px(hx+2+Math.cos(i)*3,hy+Math.sin(i)*3,1,1,'#fee761');}
+    if(cm.act==='cry')px(x+1,gy-14+(age/200%3),1,1,'#5fcde4');
+    if(cm.act==='read')px(hx-1,hy-1,4,3,'#f4f4f4');
+    if(cm.act==='sleep'){const z=(age/600)%3;c.fillStyle='#fff';c.font=`${Math.round(4*k)}px sans-serif`;c.fillText('z',(x+4)*k,(gy-20-z*2)*k);}}
+  const n=shortN(cm.id);c.font=`bold ${Math.max(9,Math.round(4.2*k))}px sans-serif`;const tw=c.measureText(n).width;const bx=x*k-tw/2,by=(gy-27)*k;
+  c.fillStyle='rgba(24,20,37,.75)';c.fillRect(bx-3*k/2,by-11*k/3,tw+3*k,14*k/3+2);c.fillStyle='#fee761';c.fillText(n,bx,by);}catch(e){}};}
+
+/* ===== online servers: each one is a world at a fixed era with one clock for everybody. The server year comes from the
+   real clock (one game year every 24 seconds, the normal speed), new players are born into the server's current year,
+   and nobody can pause, speed up or skip; a player held up by an event catches up afterwards ===== */
+const SERVERS=[
+  {id:'aot-1',w:'aot',n:'ปาราดีสก่อนกำแพงแตก',start:815,span:30},{id:'aot-2',w:'aot',n:'ยุคกำแพงแตกถึงสงครามปลดปล่อย',start:840,span:25},
+  {id:'nar-1',w:'naruto',n:'ยุคสงครามนินจาครั้งที่ 3',start:20,span:30},{id:'nar-2',w:'naruto',n:'ยุคนารูโตะ',start:45,span:25},
+  {id:'jjk-1',w:'jjk',n:'ยุคเฮอัน ยุคทองของไสยศาสตร์',start:950,span:60},{id:'jjk-2',w:'jjk',n:'ยุคเอโดะ ซามูไรกับคำสาป',start:1600,span:60},{id:'jjk-3',w:'jjk',n:'ยุคโกโจกับเกะโท',start:1985,span:40},
+  {id:'op-1',w:'op',n:'ยุคราชาโจรสลัดโรเจอร์',start:1470,span:30},{id:'op-2',w:'op',n:'ยุคโจรสลัดผู้ยิ่งใหญ่',start:1495,span:35},
+  {id:'bl-1',w:'bleach',n:'ยุคยมทูตแห่งคาราคุระ',start:1975,span:40},
+  {id:'jo-1',w:'jojo',n:'ยุคสตาร์ดัสต์ครูเสดเดอร์ส',start:1960,span:32},{id:'jo-2',w:'jojo',n:'ยุคเพชรแท้ไม่มีวันแตก',start:1975,span:28}];
+const SVEPOCH=Date.UTC(2026,0,1),SVMS=()=>SPEEDS[1].m;
+const svMonths=sv=>Math.floor((Date.now()-SVEPOCH)/SVMS())%(sv.span*12);
+const svYear=sv=>sv.start+Math.floor(svMonths(sv)/12);
+const svOf=id=>SERVERS.find(s=>s.id===id);
+const svCount=id=>ON.peers.filter(p=>p.presence?.g==='el1'&&p.presence.on&&p.presence.sv===id).length;
+function svWorld(sv,y){const w=WORLDS[sv.w];const fw=typeof w.fam==='function'?w.fam(y):sv.w;return WORLDS[fw]?fw:sv.w;}
+function svSave(){try{localStorage.setItem('el-sv',JSON.stringify(ON.sv||null));}catch(e){}}
+try{ON.sv=JSON.parse(localStorage.getItem('el-sv')||'null');}catch(e){ON.sv=null;}
+{const mp1=myPresence;myPresence=function(){const p=mp1();if(S&&S.online&&ON.sv)p.sv=ON.sv.id;return p;};}
+/* picking a server on the setup screen */
+{const os0=onSetupUI;onSetupUI=function(){os0.apply(this,arguments);try{let box=document.getElementById('svRow');const row=document.getElementById('onRow');if(!row)return;
+  if(!cfg.online||!ON.room){if(box)box.remove();return;}if(!box){box=document.createElement('div');box.id='svRow';box.className='svrow';row.after(box);}box.innerHTML='';
+  const h=document.createElement('b');h.textContent='เลือกเซิร์ฟเวอร์ (ทุกคนในเซิร์ฟเวอร์เดียวกันใช้เวลาเดียวกัน)';box.append(h);
+  if(!ON.svPick||!svOf(ON.svPick))ON.svPick=(SERVERS.find(s=>s.w===(WORLDS[cfg.world]?.famOf||cfg.world))||SERVERS[0]).id;
+  for(const sv of SERVERS){const b=document.createElement('button');b.type='button';b.className='svb';b.setAttribute('aria-pressed',ON.svPick===sv.id);const y=svYear(sv);
+    const t=document.createElement('span');t.textContent=sv.n;const sm=document.createElement('small');sm.textContent=`${WORLDS[sv.w].title} · ตอนนี้ปี ${y} · ผู้เล่น ${svCount(sv.id)} คน`;b.append(t,sm);
+    b.onclick=()=>{ON.svPick=sv.id;svApply();setupRender();};box.append(b);}
+  const nt=document.createElement('small');nt.style.opacity='.75';nt.textContent='คุณจะเกิดในปีปัจจุบันของเซิร์ฟเวอร์ เวลาเดินตลอด หยุด เร่ง หรือข้ามปีไม่ได้ ยังแก่และตายได้เหมือนเดิม';box.append(nt);}catch(e){}};}
+function svApply(){const sv=svOf(ON.svPick);if(!sv)return;const y=svYear(sv),fw=svWorld(sv,y);cfg.world=sv.w;cfg.year=y;if(!WORLDS[fw].places[cfg.place])cfg.place=Object.keys(WORLDS[fw].places)[0];}
+setInterval(()=>{try{const su=document.getElementById('setup');if(su&&!su.hidden&&cfg.online&&ON.room&&document.getElementById('svRow')){svApply();onSetupUI();}}catch(e){}},6000);
+(function(){try{const st=document.createElement('style');st.textContent=`.svrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin:6px 0 10px}.svrow>b,.svrow>small{grid-column:1/-1}
+.svb{text-align:left;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line,#444);background:transparent;color:inherit;cursor:pointer}.svb small{display:block;opacity:.7;font-size:12px}.svb[aria-pressed=true]{outline:2px solid #7ad0a0;background:rgba(122,208,160,.08)}`;document.head.append(st);}catch(e){}})();
+{const sg0=startGame;startGame=async function(c){if(c&&c.online&&ON.room){const sv=svOf(ON.svPick)||SERVERS.find(s=>s.w===c.world)||SERVERS[0];const y=svYear(sv);c.year=y;const fw=svWorld(sv,y);c.world=fw;if(!WORLDS[fw].places[c.place])c.place=Object.keys(WORLDS[fw].places)[0];ON.sv={id:sv.id,t0:Date.now(),m0:null};}
+  else if(c&&!c.online)ON.sv=null;const r=await sg0.apply(this,arguments);if(ON.sv&&S&&S.online){ON.sv.m0=S.year*12+(S.mo||0);svSave();}else svSave();return r;};}
+/* one clock: catch up when behind, wait when ahead, never stay paused */
+setInterval(()=>{try{if(!S||!S.online||!ON.sv||ON.sv.m0==null||!S.alive||$('#game').hidden)return;const tgt=ON.sv.m0+(Date.now()-ON.sv.t0)/SVMS(),cur=S.year*12+(S.mo||0)+(S.mt||0),diff=tgt-cur;
+  if(diff>36){ON.sv.t0=Date.now();ON.sv.m0=Math.floor(cur);svSave();onNote('คุณหายไปนาน เวลาของคุณถูกตั้งใหม่ให้เดินพร้อมเซิร์ฟเวอร์');return;}
+  if(diff<-.6){if(AUTO.on){ON.svHold=1;setAuto(false);}return;}
+  if(!AUTO.on&&!busy&&$('#modal').hidden){ON.svHold=0;setAuto(true);}
+  if(diff>1.2&&!busy&&$('#modal').hidden)S.mt=Math.min(.98,(S.mt||0)+Math.min(.45,diff*.06));}catch(e){}},300);
+{const ca1=continueAs;continueAs=function(k){const on=S?.online;const r=ca1.apply(this,arguments);try{if(on&&S){S.online=true;if(ON.sv){ON.sv.t0=Date.now();ON.sv.m0=S.year*12+(S.mo||0);svSave();}}}catch(e){}return r;};}
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
