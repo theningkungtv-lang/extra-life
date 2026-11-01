@@ -8960,7 +8960,7 @@ const BTMOTE={naruto:'254,231,97',jjk:'181,80,136',heian:'181,80,136',jjedo:'181
 const btBar=(el,v,m)=>{if(!el)return;const p=Math.max(0,Math.min(100,v/m*100));el.style.width=p+'%';el.classList.toggle('cr',p<25);el.classList.toggle('lo',p>=25&&p<50);const g=el.previousElementSibling;if(g&&g.tagName==='U')g.style.width=p+'%';};
 function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='undefined'||!document.body||!S){done({r:'skip'});return;}{const pb=document.createElement('b');pb.innerHTML='<i></i>';if(!pb.firstChild){done({r:'skip'});return;}}
   BT.on=true;const L=techList(S),mx=100,st0=S.st.hp,boss=!!(o.boss||E.boss||(E.id&&E.pow>=70)||E.pow>=82),emx=o.pool?o.pool.max:boss?140:100,EN=BTEN[W.id]||'พลัง',Q=BTQ,calm=typeof REDUCED!=='undefined'&&REDUCED;
-  let fx=null,dash=0,adash=0;const nums=[],parts=[],rings=[],motes=[];let shake=0,flash=0,flashRGB='255,255,255',banner=null,zoom=null,endFx=null;
+  let fx=null,dash=0,adash=0,edash=0;const nums=[],parts=[],rings=[],motes=[];let shake=0,flash=0,flashRGB='255,255,255',banner=null,zoom=null,endFx=null;
   let me=Math.max(8,S.st.hp|0),en=o.pool?Math.max(1,o.pool.left()):Math.round(emx*(o.hp0||1)),ep=60,trick=0,charge=0,guard=0,combo=0,lastT=null,lock=false,flashE=0,flashM=0,turn=0,dealt=0,phase=1,intent='atk',qte=null;
   const stM={},stE={},estat=btStatOf(enAnim(E))||(E.curse?'curse':null),mc=BTMOTE[W.id]||'255,255,255';
   for(let i=0;i<28;i++)motes.push({x:Math.random()*240,y:Math.random()*120,v:.04+Math.random()*.1,s:.4+Math.random()*1.1,ph:Math.random()*6});
@@ -8997,8 +8997,8 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
     if(phase>1)aura(178,70,44,'228,59,68',.35+.1*Math.sin(t/150));
     const exE=Math.round((1-it)*110),exM=-Math.round((1-it)*110);const gone=endFx&&endFx.r==='win'&&now-endFx.t0>350;
     if(!gone&&!(now<flashE&&(now/80|0)%2)){c.save();if(endFx&&endFx.r==='win')c.globalAlpha=Math.max(0,1-(now-endFx.t0)/350);
-      if(E.titan)titanBody(px,186+shE+exE,96,96,E.n==='ไททัน'?{}:TLOOK.attack);else if(E.biju&&typeof bijuBody==='function')bijuBody(px,180+shE+exE,96,70,E.biju,t);else if(E.curse)curseBlob(px,178+shE+exE,93,30+bob,t,E.mask?'#e8e8e8':'#4a3a5a');
-      else chibi(p2,Math.round((178+shE+exE)/2),46,{...(E.spec||{}),dir:-1,pose:'arm',md:'angry'});c.restore();}
+      if(E.titan)titanBody(px,186+shE+exE,96,96,E.n==='ไททัน'?{}:TLOOK.attack);else if(E.biju&&typeof bijuBody==='function')bijuBody(px,180+shE+exE,96,70,E.biju,t);else if(E.curse||E.beast)curseBlob(px,178+shE+exE,93,30+bob,t,E.beast?(E.bcol||'#5a7a3a'):E.mask?'#e8e8e8':'#4a3a5a');
+      else chibi(p2,Math.round((178+shE+exE-(now<edash?Math.round(Math.sin((1-(edash-now)/450)*3.1416)*80):0))/2),46,{...(E.spec||{}),dir:-1,pose:'arm',md:'angry'});c.restore();}
     if(charge||combo>=5)aura(64,86,30,combo>=5?'254,231,97':'139,211,255',.45+.15*Math.sin(t/120));
     if(o.ally){const ax=now<adash?Math.round(Math.sin((1-(adash-now)/450)*3.1416)*100):0;chibi(p2,Math.round((30+exM+ax)/2),55,{...(o.ally.spec||{}),dir:1,pose:'arm',md:'angry'});}
     const dx=now<dash?Math.round(Math.sin((1-(dash-now)/450)*3.1416)*80):0;
@@ -9033,7 +9033,7 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
   const key=e=>{if(lock)return;if(qte&&!qte.done&&(e.key===' '||e.key==='Enter')){e.preventDefault();qpress();return;}const n=+e.key;if(n>=1&&n<=9){const b=[...acts.querySelectorAll('button:not(:disabled)')][n-1];if(b){e.preventDefault();b.click();}}};document.addEventListener('keydown',key);
   const finish=r=>{if(lock)return;lock=true;BT.on=false;clearInterval(wd);document.removeEventListener('keydown',key);hideQte();endFx={r,t0:performance.now()};intEl.textContent='';if(r==='win'&&typeof sfx==='function')sfx('good');
     setTimeout(()=>{cancelAnimationFrame(raf);d.remove();},r==='win'||r==='lose'?1500:700);if(r!=='lose')S.st.hp=Math.max(1,Math.min(st0,Math.round(me)));S.btN=(S.btN||0)+1;if(r==='win')S.btW=(S.btW||0)+1;acts.innerHTML='';done({r,t:lastT,hp:me,dealt});};
-  const hitEn=v=>{en-=v;dealt+=v;try{o.pool&&o.pool.hit(v);}catch(e){}};
+  const hitEn=v=>{if(typeof btModOut==='function')v=btModOut(v);en-=v;dealt+=v;try{o.pool&&o.pool.hit(v);}catch(e){}};
   const win=()=>setTimeout(()=>{say2(`${E.n} ล้มลง คุณชนะ!`);finish('win');},600);
   const lose=()=>{say2(`คุณล้มลง... ${E.n} ยืนอยู่เหนือร่างคุณ`);setTimeout(()=>finish('lose'),700);};
   const hideQte=()=>{if(qb)qb.hidden=true;if(qte)qte.done=1;};
@@ -9050,10 +9050,10 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
   const enemyTurn=(mul=1)=>{if(en<=0||lock||!d.isConnected)return;if(dots())return;
     if(stE.stun>0){stE.stun--;say2(`${E.n} ตัวชา ขยับไม่ได้ไปหนึ่งตา`);hud();setTimeout(nextRound,800);return;}
     const an=enAnim(E),heavy=intent==='heavy',stt=intent==='status'?estat:null;mul*=heavy?2.1:stt?.8:1;if(phase>1)mul*=1.25;const now=performance.now();
-    banner={n:`${E.n} · ${heavy?'ท่าหนัก ':''}${ENAN[an]||'โจมตี'}`,col:'#e43b44',t0:now,end:now+1500,big:heavy};fx={who:'en',anim:an,col:E.titan?'#c4875e':E.curse?'#68386c':'#e43b44',t0:now,end:now+1100,k:1.6};
+    banner={n:`${E.n} · ${heavy?'ท่าหนัก ':''}${ENAN[an]||'โจมตี'}`,col:'#e43b44',t0:now,end:now+1500,big:heavy};fx={who:'en',anim:an,col:E.titan?'#c4875e':E.curse?'#68386c':'#e43b44',t0:now,end:now+1100,k:1.6};if(typeof BTMELEE==='function'&&BTMELEE())edash=now+450;
     if(heavy)zoom={t0:now,end:now+1100,a:.1,x:120,y:70};say2(`${E.n} ${heavy?'ปล่อยท่าที่รวบรวมพลังไว้!':'โจมตี!'}${guard?'':' (กด "หลบ!" ตอนวงแหวนเป็นสีเขียว)'}`);if(!guard)startQte(heavy?260:400);
     setTimeout(()=>enemyHit(mul,stt,heavy),1000);};
-  const enemyHit=(mul,stt,heavy)=>{if(en<=0||lock||!d.isConnected)return;let dmg=Math.round((6+E.pow*.24-myPow()*.08)*(.75+Math.random()*.5)*mul);dmg=Math.max(3,Math.min(heavy?60:42,dmg));const crit=!heavy&&chance(.1);if(crit)dmg=Math.round(dmg*1.6);
+  const enemyHit=(mul,stt,heavy)=>{if(en<=0||lock||!d.isConnected)return;let dmg=Math.round((6+E.pow*.24-myPow()*.08)*(.75+Math.random()*.5)*mul);dmg=Math.max(3,Math.min(heavy?60:42,dmg));if(typeof btModIn==='function')dmg=btModIn(dmg,heavy);const crit=!heavy&&chance(.1);if(crit)dmg=Math.round(dmg*1.6);
     let note='',cd=0;const dodged=qte&&qte.ok===1;hideQte();qte=null;const now=performance.now();
     if(dodged){dmg=0;note='คุณหลบได้หวุดหวิด!';combo=Math.min(5,combo+1);ep=Math.min(100,ep+15);cd=R(4,9);rings.push({...POS.me,t0:now,col:'#63c74d'});}
     else if(guard){dmg=Math.round(dmg*(heavy?.2:.4));note=heavy?'ตั้งการ์ดรับท่าหนักไว้ได้พอดี แล้วสวนกลับ!':'คุณตั้งการ์ดรับไว้';if(heavy)cd=R(8,15);}
@@ -9070,7 +9070,7 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
     if(trick){mul*=1.7;trick=0;}if(charge){mul*=1.35;charge=0;}if(ult){mul*=2.4;combo=0;}if(stE.frost>0)mul*=1.15;
     const free=t.isFull&&!ult&&chance(.5),now=performance.now();
     banner={n:ult?`ท่าไม้ตาย · ${t.id==='basic'?'หมัดเต็มแรง':t.n}`:basic?'โจมตีระยะประชิด':t.n,col:ult?'#fee761':t.col||'#fee761',t0:now,end:now+(basic?900:2300),big:ult};if(ult)zoom={t0:now+800,end:now+2600,a:.2,x:178,y:66};
-    if(!basic){cutIn(t,ch,anim);fx={who:'me',anim,col:t.col,t0:now+900,end:now+2300,k:1.4};}else dash=now+450;
+    if(!basic){cutIn(t,ch,anim);fx={who:'me',anim,col:t.col,t0:now+900,end:now+2300,k:1.4};if(typeof BTMELEE==='function'&&BTMELEE())setTimeout(()=>{dash=performance.now()+450;},900);}else dash=now+450;
     let dmg=Math.round((10+(t.lv||0)*120+(myPow()-E.pow)*.3)*(.8+Math.random()*.4)*mul);dmg=Math.max(4,Math.min(ult?150:95,dmg));
     setTimeout(()=>{if(lock||!d.isConnected)return;hitEn(dmg);flashE=performance.now()+480;boom('en',dmg,t.col||'#fee761',mul>1||dmg>=40);if(typeof sfx==='function')sfx('power');combo=ult?0:Math.min(5,combo+1);
       let extra='';const s=!basic&&btStatOf(anim);if(s&&en>0&&chance(ult?.8:.4)){stE[s]=Math.max(stE[s]||0,BTST[s][3]);extra=` · ${E.n}${BTST[s][0]}!`;}
@@ -10217,7 +10217,7 @@ ARC('db',762,[
   {id:'db_vegeta1',mo:0,t:'เบจิต้าแปลงร่างลิงยักษ์',mood:'red',cap:'ใต้ดวงจันทร์ปลอม',
    n:'เบจิต้าสร้างดวงจันทร์ปลอมด้วยลูกพลัง แปลงร่างเป็นลิงยักษ์แล้วบีบโกคูจนกระดูกแตก ยาจิโรเบตัดหางมัน โกฮังกลายเป็นลิงยักษ์ทับเบจิต้า คุริรินปาลูกบอลพลังที่โกคูรวบรวมไว้ เบจิต้าคลานกลับยาน',
    x:'ลิงยักษ์ตาแดงยืนเต็มฟ้า คุริรินถือลูกพลังสีฟ้าตะโกน "ใครก็ได้ดึงความสนใจมันที!"',
-   c:[K('ดึงความสนใจลิงยักษ์','brave hero',{foe:['เบจิต้า (ลิงยักษ์)',86,'b'],p:.3,d:'ถูกลิงยักษ์เบจิต้าเหยียบ',fm:20,sk:8,b:{krillin:10},s:'วินาทีที่มันหันมาหาคุณ ลูกพลังของคุริรินกระแทกหลังมันพอดี',m:'สู้กับลิงยักษ์'}),
+   c:[K('สู้ล่อความสนใจลิงยักษ์','brave hero',{foe:['เบจิต้า (ลิงยักษ์)',86,'b'],p:.3,d:'ถูกลิงยักษ์เบจิต้าเหยียบ',fm:20,sk:8,b:{krillin:10},s:'วินาทีที่มันหันมาหาคุณ ลูกพลังของคุริรินกระแทกหลังมันพอดี',m:'สู้กับลิงยักษ์'}),
       K('ส่งพลังให้ลูกบอลพลังของโกคู','kind',{fm:6,pw:'db_genki',pwx:'คุณยกมือขึ้นส่งพลังให้ลูกบอลสีฟ้า แล้วจำความรู้สึกนั้นได้',s:'ลูกบอลพลังใหญ่ขึ้นอีกนิดเพราะคุณ'})]},
   {id:'db_namekgo',mo:3,t:'ยานสู่ดาวนาเม็ก',mood:'day',cap:'ฐานปล่อยยานของแคปซูลคอร์ป',
    n:'บุลมา คุริริน และโกฮัง ขึ้นยานเก่าของพระเจ้าไปดาวนาเม็ก เพื่อหาดราก้อนบอลชุบชีวิตทุกคน ส่วนโกคูฝึกในยานแรงโน้มถ่วงร้อยเท่าระหว่างตามไป',
@@ -10271,7 +10271,7 @@ ARC('db',774,[
    n:'โกคูกลับจากโลกหลังความตายหนึ่งวันเพื่อลงแข่ง ไคโอชินปรากฏตัวในสนาม สปอปอวิชลูกน้องบาบิดี้ดูดพลังของโกฮัง เพื่อปลุกจอมมารบูที่ถูกผนึกมาห้าล้านปี',
    x:'ในรอบเยาวชน คุณได้คู่กับเด็กผมตั้งที่มีพลังผิดปกติ ส่วนในรอบผู้ใหญ่ ชายตัวใหญ่ตาว่างเปล่าบีบคอวีเดลอยู่กลางเวที',
    c:[K('ขึ้นเวทีหยุดสปอปอวิช','brave hero',{foe:['สปอปอวิช',58],p:.6,d:'ถูกสปอปอวิชบีบหัวแตก',fm:12,sk:6,b:{videl:8},s:'กรรมการหยุดการแข่งเพราะคุณ แต่ผู้ชมโห่เพราะไม่รู้ว่าวีเดลเกือบตาย'}),
-      K('ลงแข่งรอบเยาวชนกับเด็กผมตั้ง','brave',{foe:['ทรังคซ์ (เด็ก)',62],p:.95,sk:5,fm:6,s:'เขาเตะคุณออกนอกเวทีแล้วยิ้มเหมือนเบจิต้า'})]},
+      K('ลงสนามสู้กับเด็กผมตั้ง','brave',{foe:['ทรังคซ์ (เด็ก)',62],p:.95,sk:5,fm:6,s:'เขาเตะคุณออกนอกเวทีแล้วยิ้มเหมือนเบจิต้า'})]},
   {id:'db_majin',mo:3,t:'มาจินเบจิต้า',mood:'fire',cap:'อัฒจันทร์สนามแข่ง',
    n:'บาบิดี้ควบคุมใจเบจิต้าที่ยอมให้เพราะอยากสู้กับโกคูจริงๆ เบจิต้ายิงใส่อัฒจันทร์ฆ่าคนดูหลายร้อย แล้วระเบิดตัวเองเพื่อหยุดบู ก่อนตาย เขากอดลูกชาย',
    x:'ลำแสงสีทองพุ่งลงอัฒจันทร์ที่คุณนั่ง คนข้างๆ หายไปพร้อมเก้าอี้',
@@ -10636,7 +10636,7 @@ Object.assign(POWERS,{lk_body2:{n:'ร่างที่สอง',cat:'ปร�
 const LK={
   id:'lookism',title:'ลุคิซึม',sub:'Lookism (มันฮวาเกาหลี)',style:'jp',gi:1,blurb:'เกิดในโซลยุคที่หน้าตาตัดสินทุกอย่าง และถนนทุกสายมีเจ้าของ ตั้งแต่ตำนานรุ่น 0 ของคิม กัปรยอง ถึงแก๊งของเด็กมัธยมรุ่น 2 บริษัทเวิร์กเกอร์ส และยากูซ่ายามาซากิที่รออยู่อีกฝั่งทะเล',
   cur:'วอน',mult:10000,yl:y=>`ปี ${y}`,range:[1970,2040],def:1997,fitL:'ฝีมือข้างถนน',trainL:'ซ้อมต่อสู้',jobMin:15,originL:'บ้านเกิด',postY:2030,
-  keyEvents:['lk_gen0','lk_gapdeath','lk_twobody','lk_big4'],firstWord:'ฮยอง',tlNote:'คุณรู้อนาคต ตัวละครของคุณไม่รู้',cloth:'#262b44',
+  keyEvents:['lk_yamawar','lk_gapdeath','lk_twobody','lk_big4'],firstWord:'ฮยอง',tlNote:'คุณรู้อนาคต ตัวละครของคุณไม่รู้',cloth:'#262b44',
   ruins:'ตึกร้างที่แก๊งใช้เป็นฐาน',promo:'ได้เลื่อนตำแหน่ง',street:'คุณนอนในร้านเกมเปิดยี่สิบสี่ชั่วโมง',exec:'ถูกยากูซ่าโยนลงแม่น้ำฮัน',
   gifts:['รองเท้าผ้าใบรุ่นลิมิเต็ด','กล่องข้าวจากร้านสะดวกซื้อ','บัตรสมาชิกยิมมวย','แจ็กเก็ตของแก๊ง','โทรศัพท์รุ่นใหม่'],
   food:S=>pick(['รามยอนในร้านสะดวกซื้อ','ต๊อกบกกีข้างถนน','ไก่ทอดกับเบียร์','ข้าวกล่องคิมบับ','หมูย่างซัมกยอบซัล']),
@@ -10673,15 +10673,10 @@ const LK={
   ],
   mil:[{id:'kmil',n:'ทหารเกณฑ์',pay:4,mil:1,train:1}],
   special(S){const o=[];if(S.sex==='m'&&S.age>=19&&S.age<=28&&!S.flags.served&&!isMil(S))o.push({l:'เข้ารับราชการทหาร',h:'ผู้ชายเกาหลีทุกคนต้องเป็นทหารสิบแปดเดือน',f(S){S.flags.served=1;setJob('kmil');st('fit',4);say('คุณโกนหัวแล้วขึ้นรถไปค่ายทหาร','plain');}});
-    if(S.age>=15&&lkF(S)&&!S.job)o.push({l:'เข้าร่วมแก๊ง',h:'มีพวกพ้อง มีศัตรู และได้เงินนิดหน่อย',f(S){setJob('crewm');S.flags.crew=pick(['บิ๊กดีล','โฮสเทล','ก็อดด็อก','เบิร์นนัคเคิลส์']);say(`คุณได้แจ็กเก็ตของแก๊ง${S.flags.crew}`,'good');}});
+    if(S.year>=2010&&S.age>=15&&lkF(S)&&!S.job)o.push({l:'เข้าร่วมแก๊ง',h:'มีพวกพ้อง มีศัตรู และได้เงินนิดหน่อย',f(S){setJob('crewm');S.flags.crew=pick(['บิ๊กดีล','โฮสเทล','ก็อดด็อก','เบิร์นนัคเคิลส์']);say(`คุณได้แจ็กเก็ตของแก๊ง${S.flags.crew}`,'good');}});
     if(hasB('yamazaki')&&S.age>=16&&S.job?.id!=='yakuza')o.push({l:'กลับไปรับใช้ตระกูลยามาซากิ',h:'เลือดของคุณเรียกหา',f(S){dk(15);if(S.place!=='osaka'){S.place='osaka';}setJob('yakuza');say('ชายสวมสูทดำโค้งให้คุณที่สนามบินคันไซ "ยินดีต้อนรับกลับบ้าน"','bad');}});return o;},
   isWhere(j,S){return(!j.where||j.where===S.place)&&(!j.y||S.year>=j.y);},
   canon:[
-    {id:'lk_gen0',y:1985,mo:3,t:'ยุครุ่น 0',major:true,play(S){news(this.t,'ชายชื่อคิม กัปรยอง และเพื่อนอีกไม่กี่คนคุมถนนทั้งโซลโดยไม่ใช้อาวุธและไม่ยุ่งกับยาเสพติด คนเรียกยุคนี้ว่ารุ่น 0 ใครที่โดนกัปรยองต่อยไม่เคยลุกมาท้าซ้ำ');
-      if(S.age>=15&&S.place==='seoul')return{text:'ชายตัวไม่ใหญ่แต่ไหล่กว้างยืนขวางแก๊งยี่สิบคนที่กำลังรุมเด็กคนหนึ่ง เขาหันมามองคุณ "จะช่วยหรือจะดู?"',choices:[
-        {l:'ร่วมสู้ข้างคิม กัปรยอง',g:'brave hero',foe:['อันธพาลยุค 80',40],f(S){if(live(.8+fitb(250),'ถูกแก๊งรุมในซอยโซล')){bond('gapryong',14);fm(8);skill('fight',5);say('เขาตบไหล่คุณครั้งเดียว "ใช้ได้" แล้วเดินไปซื้อโซจู','good');}}},
-        {l:'ดูอยู่ห่างๆ',g:'safe',f(S){say('ยี่สิบคนล้มภายในสองนาที ไม่มีใครตาย ไม่มีใครลุกได้','plain');}}]};}},
-    {id:'lk_yama0',y:1993,mo:6,t:'รุ่น 0 กับตระกูลยามาซากิ',major:true,play(S){news(this.t,'ตระกูลยามาซากิจากโอซาก้าพยายามขยายอิทธิพลเข้าโซล แต่ชนกับกลุ่มของคิม กัปรยอง ชินเก็น ยามาซากิ ต้องถอยกลับญี่ปุ่น และสัญญาว่าจะไม่แตะโซลตราบที่กัปรยองยังมีชีวิต');}},
     {id:'lk_imf',y:1997,mo:11,t:'วิกฤตไอเอ็มเอฟ',major:true,play(S){news(this.t,'เกาหลีใต้เข้าสู่วิกฤตการเงิน บริษัทล้มละลายทั่วประเทศ คนตกงานหลายล้าน ชาร์ลส์ ชเว ใช้วิกฤตนี้กว้านซื้อบริษัทจนสร้างเครือ HNH ขึ้นมา');if(S.age>=18&&!S.job?.mil){mon(-Math.min(S.money||0,10));say('เงินเก็บของคุณหายไปครึ่งหนึ่งในเดือนเดียว','bad');}}},
     {id:'lk_gen1',y:2006,mo:4,t:'ราชาแห่งรุ่น 1',major:true,play(S){news(this.t,'รุ่นใหม่ขึ้นมาแทน เจมส์ ลี ถูกยกให้เป็นคนที่แข็งแกร่งที่สุดของรุ่น 1 มีพัค จงกอนกับคิม กูเป็นตำนานคู่ขนาน และมา แทซูเป็นราชาของอันซาน');}},
     {id:'lk_gapdeath',y:2010,mo:10,t:'ตำนานจากไป',major:true,play(S){news(this.t,'คิม กัปรยองเสียชีวิต คนทั้งวงการถนนมางานศพโดยไม่มีใครต่อยกัน หลังจากนั้นแก๊งใหญ่สี่แก๊งเริ่มก่อตัวขึ้นในหมู่เด็กมัธยม และตระกูลยามาซากิก็เริ่มนับวันกลับมา');st('joy',-2);if((S.bonds?.gapryong||0)>=10){trauma(10);say('คุณยืนหน้ารูปของเขาอยู่นาน จำวันที่เขาตบไหล่คุณได้','bad');}}},
@@ -10873,6 +10868,221 @@ ARC('lookism',2021,[
 ]);
 Object.assign(CASTANIM,{gun:'lk_copy',goo:'slash',hyungseok:'lk_ui',vasco:'lk_combo',jake:'lk_gap',johan:'lk_copy',eli:'lk_combo',gapryong:'lk_gap',shingen:'lk_gap',samuel:'lk_combo',warren:'lk_combo',james:'lk_ui',taesoo:'lk_gap'});
 
+/* ===================== LOOKISM by the lore: the five masteries (경지) with their manhwa aura colours (strength red, speed blue,
+   endurance green, technique pink, overcome purple) and One's Own Path; legendary bloodlines (pure Yamazaki with the Obsidian
+   Skeleton, the Yamazaki affiliate families, the Magami karate family, Jin Moojin's ssireum line, the Iron Boxing temple);
+   the Pre-Generation, First Generation regional kings and Second Generation crews, each era with its own city, jobs and events ===================== */
+const LKM={str:['lk_m_str','พลัง','#e43b44','255,70,70','쾅!'],spd:['lk_m_spd','ความเร็ว','#3b8ae4','90,160,255','슉!'],end:['lk_m_end','ความทนทาน','#3ec46b','80,220,120','버텨!'],
+  tec:['lk_m_tec','เทคนิค','#f06bb0','255,120,190','휙!'],ovc:['lk_m_ovc','การเอาชนะ','#9a5ae4','170,100,255','극복!']};
+const lkEra=y=>y<1995?0:y<2013?1:2;
+const lkHas=k=>hasP(LKM[k][0]);
+const lkMN=S=>Object.keys(LKM).filter(k=>hasP(LKM[k][0])).length;
+Object.assign(POWERS,Object.fromEntries(Object.values(LKM).map(([id,n])=>[id,{n:`เคียงจี (경지) แห่ง${n}`,cat:'경지 มาสเตอรี',c:30,fame:10}])));
+Object.assign(POWERS,{lk_path:{n:'เส้นทางของตัวเอง (자신만의 길)',cat:'경지 มาสเตอรี',c:44,fame:20},lk_bone:{n:'โครงกระดูกออบซิเดียน (흑골)',cat:'สายเลือด',c:20,fame:4},
+  lk_ssireum:{n:'ซิรึมสายจินมูจิน',cat:'ศิลปะการต่อสู้',c:18},lk_iron:{n:'หมัดเหล็กสายวัดของจีกงซอบ',cat:'ศิลปะการต่อสู้',c:16},lk_magami:{n:'คาราเต้เคียวคุชินสายมากามิ',cat:'ศิลปะการต่อสู้',c:20,fame:4}});
+Object.assign(AURA,Object.fromEntries(Object.values(LKM).map(v=>[v[0],v[2]])),{lk_path:'#fee761',lk_bone:'#262b44',lk_ssireum:'#e8b796',lk_iron:'#8b9bb4',lk_magami:'#f0ece0'});
+const lkPathName=S=>{const t=S.traits||[];return t.includes('kind')||t.includes('loyal')?'หมัดที่มีไว้ปกป้องคนอื่น':t.includes('brave')?'ไม่ถอยแม้แต่ก้าวเดียว':t.includes('dark')?'ทุกอย่างคือเหยื่อของหมัด':pick(['หมัดที่ยังไม่มีชื่อ','ความเป็นไปได้ที่ไม่สิ้นสุด','ร่างกายที่ไม่ยอมล้ม']);};
+function lkGain(k,why){if(!S||lkHas(k))return;const [id,n]=LKM[k];gainPower(id,`${why} คุณทะลุกำแพงของตัวเอง ออร่าสี${{str:'แดง',spd:'ฟ้า',end:'เขียว',tec:'ชมพู',ovc:'ม่วง'}[k]}ลุกขึ้นรอบตัว นี่คือเคียงจีแห่ง${n}`);remember(`เคียงจีแห่ง${n}`,why,'power',3);
+  if(lkMN(S)>=2&&!hasP('lk_path')&&(S.sk?.fight||0)>=80)setTimeout(()=>{try{if(!hasP('lk_path')){S.flags.lkPath=lkPathName(S);gainPower('lk_path',`คุณรู้แล้วว่าจะใช้หมัดทำอะไร เส้นทางของคุณคือ "${S.flags.lkPath}"`);}}catch(e){}},0);}
+/* battle: masteries change the numbers, and fighting back from the edge is how a wall breaks in the manhwa */
+const btModOut=v=>{if(!S||W?.id!=='lookism')return v;let m=1;if(lkHas('str'))m*=1.25;if(lkHas('tec')&&chance(.25))m*=1.5;if(hasP('lk_path'))m*=1.15;if(hasP('lk_gap'))m*=1.2;if(hasP('lk_unc')&&(S.flags.uncCtl||0)>=5)m*=1.15;return Math.round(v*m);};
+const btModIn=(d,heavy)=>{if(!S||W?.id!=='lookism')return d;let m=1;if(lkHas('end'))m*=.72;if(hasP('lk_bone'))m*=.85;if(lkHas('spd')&&chance(.18))m=0;return Math.round(d*m);};
+{const b0=battle;battle=async function(E,o){const r=await b0.apply(this,arguments);try{if(S&&W?.id==='lookism'&&r&&r.r!=='skip'){const low=r.hp!=null&&r.hp<=Math.max(12,(S.st.hp||60)*.25);
+  if(r.r==='lose'&&lkHas('ovc')&&chance(.35)){r.r='win';say('ร่างกายของคุณควรจะล้มไปแล้ว แต่ออร่าสีม่วงลุกขึ้นอีกครั้ง คุณยังยืนอยู่ และคนที่ล้มคืออีกฝ่าย','power');}
+  if(r.r==='win'&&low&&(E?.pow||0)>=myPow()-5&&chance(.3)){const opts=Object.keys(LKM).filter(k=>!lkHas(k));if(opts.length){const k=r.hp<8?'ovc':pick(opts.filter(x=>x!=='ovc').concat(opts.includes('ovc')?['ovc']:[]));lkGain(k,`การต่อสู้กับ${E?.n||'คู่ต่อสู้'}ดันคุณไปถึงขีดสุด`);}}}}catch(e){}return r;};}
+/* the five walls as training quests */
+LEGS.lookism.push(
+  LQ('lkw_str','กำแพงแห่งพลัง','ต่อยจนกระสอบขาดทุกวัน จนกระดูกมือจำน้ำหนักของหมัดได้',{need:S=>(S.sk?.fight||0)>=50&&S.st.fit>=60&&!lkHas('str'),steps:4,p:()=>.3+(S.st.fit||0)/400,win(){lkGain('str','หมัดของคุณทุบกำแพงอิฐพังในครั้งเดียว');}}),
+  LQ('lkw_spd','กำแพงแห่งความเร็ว','วิ่งไล่รถไฟใต้ดินจนขาแทบขาด',{need:S=>(S.sk?.fight||0)>=45&&S.st.fit>=65&&!lkHas('spd'),steps:4,p:()=>.3+(S.st.fit||0)/400,win(){lkGain('spd','คุณออกหมัดได้ก่อนที่อีกฝ่ายจะกะพริบตา');}}),
+  LQ('lkw_end','กำแพงแห่งความทนทาน','ยืนให้คนรุมต่อยร้อยหมัดโดยไม่ล้ม',{need:S=>(S.sk?.fight||0)>=45&&(S.trauma||0)>=10&&!lkHas('end'),steps:4,p:()=>.3+(S.st.fit||0)/400,win(){lkGain('end','หมัดที่เคยทำให้คุณล้มตอนนี้แค่ทำให้คุณยิ้ม');}}),
+  LQ('lkw_tec','กำแพงแห่งเทคนิค','ดูคลิปการต่อสู้ทุกคลิปที่มีแล้วตัดทุกการเคลื่อนไหวที่เปล่าประโยชน์',{need:S=>(S.sk?.fight||0)>=50&&(S.st.iq||0)>=60&&!lkHas('tec'),steps:4,p:()=>.3+(S.st.iq||0)/400,win(){lkGain('tec','ทุกท่าของคุณไม่มีส่วนเกินเหลืออยู่เลย');}}),
+  LQ('lkw_ovc','กำแพงแห่งการเอาชนะ','รู้ให้ได้ว่าจะใช้หมัดเพื่ออะไร',{need:S=>(S.sk?.fight||0)>=60&&(S.trauma||0)>=30&&!lkHas('ovc'),steps:5,p:()=>.22,win(){lkGain('ovc','คุณลุกขึ้นจากพื้นทั้งที่ร่างกายบอกให้ยอมแพ้');}}),
+  LQ('lk_jiwon','วัดหมัดเหล็กในแทกู','พระจีกงซอบ ราชาแห่งแทกู สอนหมัดเหล็กให้ลูกศิษย์ที่ทนการฝึกได้',{need:S=>S.year>=1995&&S.place==='daegu'&&!hasP('lk_iron'),steps:3,win(){gainPower('lk_iron','กำปั้นของคุณแข็งเหมือนเหล็กหล่อ');}}),
+  LQ('lk_magd','โดโจคาราเต้สายมากามิ','คาราเต้เคียวคุชินที่ตระกูลมากามิสืบทอด ฝึกในโอซาก้า',{need:S=>S.place==='osaka'&&!hasP('lk_magami'),steps:4,p:()=>.35,win(){gainPower('lk_magami','คุณได้คาราเต้สายมากามิ ท่ายืนรับทุกหมัดแล้วสวนด้วยเซย์เคนสึกิ');}}));
+/* techniques with the manhwa look: coloured aura, speed lines, impact flash and Korean SFX */
+const lkSfx=(px,x,y,txt,col,tt)=>{const c=px.c;if(!c||!c.fillText)return;c.save();c.font=`900 ${Math.round(14*(px.k||1))}px sans-serif`;c.lineWidth=3*(px.k||1);c.strokeStyle='#000';c.fillStyle=col;const s=1+Math.max(0,.4-tt/1200);c.translate(x*(px.k||1),y*(px.k||1));c.scale(s,s);c.rotate(-.12);c.strokeText(txt,0,0);c.fillText(txt,0,0);c.restore();};
+const lkAura=(px,hx0,gy,rgb,tt,n=14)=>{const hx=hx0-11,c=px.c,k=px.k||1;if(c&&c.createRadialGradient){const g=c.createRadialGradient(hx*k,(gy-22)*k,2*k,hx*k,(gy-22)*k,30*k);g.addColorStop(0,`rgba(${rgb},.45)`);g.addColorStop(1,`rgba(${rgb},0)`);c.fillStyle=g;c.fillRect((hx-32)*k,(gy-60)*k,64*k,64*k);}
+  for(let i=0;i<n*2;i++){const q=((tt/380)+i/(n*2))%1,side=i%2?1:-1,x=hx+side*(6+((i*5)%10))+Math.sin(tt/120+i)*2,h=8+((i*7)%14);px(x,gy-4-q*48,3,h*(1-q*.7),`rgba(${rgb},${(.85*(1-q)).toFixed(2)})`);if(i%3===0)px(x+side,gy-6-q*48,1,h*(1-q),`rgba(255,255,255,${(.5*(1-q)).toFixed(2)})`);}};
+Object.assign(ANIM,{
+  lkm_str(px,tt,hx,hy,col,LW,LH,gy){lkAura(px,hx,gy,LKM.str[3],tt);const p=Math.min(1,tt/600);px(hx+6,hy-4,p*110,8,'rgba(255,70,70,.85)');px(hx+6,hy-1,p*110,2,'#fff');if(p>=1){for(let a=0;a<20;a++){const r=8+((tt-600)/14)%26;px(hx+116+Math.cos(a)*r,hy+Math.sin(a)*r*.7,3,3,'#ffd0d0');}px(0,0,LW,LH,`rgba(255,80,80,${Math.max(0,.35-(tt-600)/1400).toFixed(2)})`);lkSfx(px,hx+96,hy-14,LKM.str[4],'#ff4646',tt-600);}},
+  lkm_spd(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<16;i++)px(((tt/2+i*53)%LW),gy-50+((i*13)%46),20,1,'rgba(160,200,255,.6)');for(let i=0;i<4;i++)px(hx+20+i*22,gy-34,8,26,`rgba(90,160,255,${(.5-i*.1).toFixed(2)})`);if(tt>500)lkSfx(px,hx+80,hy-18,LKM.spd[4],'#5aa0ff',tt-500);},
+  lkm_end(px,tt,hx,hy,col,LW,LH,gy){lkAura(px,hx,gy,LKM.end[3],tt,18);for(let i=0;i<5;i++){const q=((tt/500)+i/5)%1;px(hx+60-q*50,hy-10+i*4,8,3,'rgba(255,255,255,.7)');}if(tt>400)lkSfx(px,hx+18,hy-6,LKM.end[4],'#50dc78',tt-400);},
+  lkm_tec(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<6;i++){const q=Math.min(1,Math.max(0,(tt-i*120)/300));px(hx+10,hy-14+i*5,q*120,1,'rgba(255,120,190,.9)');}if(tt>700)lkSfx(px,hx+90,hy-20,LKM.tec[4],'#ff78be',tt-700);},
+  lkm_ovc(px,tt,hx,hy,col,LW,LH,gy){px(0,0,LW,LH,'rgba(40,10,60,.3)');lkAura(px,hx,gy,LKM.ovc[3],tt,22);lkAura(px,hx,gy-6,'255,255,255',tt*1.3,6);if(tt>600)lkSfx(px,hx+18,hy-6,LKM.ovc[4],'#b070ff',tt-600);},
+  lkm_path(px,tt,hx,hy,col,LW,LH,gy){const ks=Object.keys(LKM).filter(k=>S&&lkHas(k));ks.forEach((k,i)=>lkAura(px,hx-6+i*4,gy,LKM[k][3],tt+i*90,8));const p=Math.min(1,tt/800);px(hx+6,hy-5,p*130,10,'rgba(254,231,97,.85)');px(hx+6,hy-2,p*130,4,'#fff');if(p>=1)lkSfx(px,hx+80,hy-18,'길!','#fee761',tt-800);},
+});
+CIUNDER.push('lkm_str','lkm_end','lkm_ovc','lkm_path');
+TECHDEF.lookism.push(
+  T('lkm_str','เคียงจีแห่งพลัง',S=>lkHas('str'),{pw:'lk_m_str',chant:'ออร่าสีแดงพุ่งขึ้นจากไหล่ หมัดเดียวที่หนักพอจะพังกำแพง',anim:'lkm_str',col:'#e43b44',lv:.6}),
+  T('lkm_spd','เคียงจีแห่งความเร็ว',S=>lkHas('spd'),{pw:'lk_m_spd',chant:'เส้นสีฟ้าวาบผ่านอากาศ หมัดถึงตัวก่อนเสียงจะตามมา',anim:'lkm_spd',col:'#3b8ae4',lv:.55}),
+  T('lkm_end','เคียงจีแห่งความทนทาน',S=>lkHas('end'),{pw:'lk_m_end',chant:'ออร่าสีเขียวคลุมร่าง รับหมัดตรงๆ แล้วไม่ขยับแม้แต่นิ้วเดียว',anim:'lkm_end',col:'#3ec46b',lv:.5}),
+  T('lkm_tec','เคียงจีแห่งเทคนิค',S=>lkHas('tec'),{pw:'lk_m_tec',chant:'เส้นสีชมพูหกเส้น ทุกหมัดเข้าจุดที่ร่างกายของอีกฝ่ายรับไม่ได้',anim:'lkm_tec',col:'#f06bb0',lv:.58}),
+  T('lkm_ovc','เคียงจีแห่งการเอาชนะ',S=>lkHas('ovc'),{pw:'lk_m_ovc',chant:'ออร่าสีม่วงลุกท่วมตัว ร่างที่ควรล้มกลับยืนขึ้นแรงกว่าเดิม',anim:'lkm_ovc',col:'#9a5ae4',lv:.62}),
+  T('lkm_path','เส้นทางของตัวเอง',S=>hasP('lk_path'),{pw:'lk_path',chant:S=>`เคียงจีทุกสีรวมเป็นหนึ่ง "${S.flags.lkPath||'เส้นทางของฉัน'}"`,anim:'lkm_path',col:'#fee761',lv:.82}),
+  T('lk_ssireum','ซิรึมสายจินมูจิน',S=>hasP('lk_ssireum'),{pw:'lk_ssireum',chant:'คว้าเอวแล้วยกทั้งร่างขึ้นฟ้า ทุ่มลงพื้นแบบที่ตำนานรุ่น 0 เคยทำ',anim:'lk_gap',col:'#e8b796',lv:.45}),
+  T('lk_iron','หมัดเหล็ก',S=>hasP('lk_iron'),{pw:'lk_iron',chant:'กำปั้นที่ฝึกกับเสาเหล็กทุกเช้า ต่อยตรงไม่มีลีลา',anim:'lk_combo',col:'#8b9bb4',lv:.4}),
+  T('lk_magami','คาราเต้สายมากามิ',S=>hasP('lk_magami'),{pw:'lk_magami',chant:'ยืนรับหมัดด้วยท่าซันจิน แล้วสวนด้วยเซย์เคนสึกิของตระกูลมากามิ',anim:'lk_gap',col:'#f0ece0',lv:.5}));
+/* bloodlines and lineages */
+{const y=CLANS.lookism.find(c=>c.id==='yamazaki');if(y){y.n='ยามาซากิสายเลือดบริสุทธิ์';y.d='สายหลักของซินดิเคตยามาซากิที่ตำแหน่งหัวหน้าตระกูลส่งต่อกันมาครึ่งศตวรรษ เกิดมาพร้อมโครงกระดูกออบซิเดียน (흑골) กระดูกที่หนาแน่นจนมีดฟันไม่เข้า และกฎของตระกูลที่ไม่มีวันปล่อยใครไป';
+  const on0=y.on;y.on=function(S){on0.call(this,S);S.powers=S.powers||[];if(!S.powers.includes('lk_bone'))S.powers.push('lk_bone');};}}
+CLANS.lookism.push(
+  {id:'yamaaff',n:'ตระกูลสาขาของยามาซากิ',d:'ตระกูลในเครือ ทั้งทาเคชิ มาไซจิ วาตานาเบะ และฮังกุเระ อยู่ใต้ตระกูลผู้พิทักษ์ ได้อำนาจจากยามาซากิ และอาจถูกกวาดล้างเมื่อไรก็ได้',pl:'osaka',on(S){S.flags.yamaAff=pick(['ทาเคชิ','มาไซจิ','วาตานาเบะ','ฮังกุเระ']);S.st.fit=Math.min(100,S.st.fit+6);S.money=(S.money||0)+10;}},
+  {id:'magami',n:'ตระกูลมากามิ',d:'ผู้สืบทอดคาราเต้เคียวคุชินสายมากามิ ตระกูลในเครือยามาซากิที่เคยสอนวิชาให้พัค จงกอน และถูกเขากวาดล้างเกือบหมดตระกูล',pl:'osaka',on(S){S.powers=S.powers||[];if(!S.powers.includes('lk_magami'))S.powers.push('lk_magami');S.st.fit=Math.min(100,S.st.fit+8);}},
+  {id:'moojin',n:'สายเลือดจินมูจิน',d:'ลูกหลานของจินมูจิน ตำนานซิรึมแห่งรุ่น 0 ผู้พเนจรตลอดชีวิตโดยไม่สังกัดใคร และว่ากันว่าสู้กับคิม กัปรยองได้สูสี',hidden:1,p:.006,pl:'busan',on(S){S.powers=S.powers||[];if(!S.powers.includes('lk_ssireum'))S.powers.push('lk_ssireum');S.st.fit=Math.min(100,S.st.fit+14);}},
+  {id:'ironbox',n:'ศิษย์วัดหมัดเหล็ก',d:'เด็กกำพร้าที่โตในวัดของจีกงซอบ ราชาแห่งแทกู พระที่ฝึกลูกศิษย์ด้วยหมัดเหล็ก',pl:'daegu',on(S){S.st.fit=Math.min(100,S.st.fit+8);S.flags.ironTemple=1;}});
+/* era cities: new places for the kings' regions; descriptions change with the era */
+Object.assign(LK.places,{incheon:{n:'อินชอน',d:'เมืองท่าที่เคยมีราชาสองคนพร้อมกัน',money:30,v:'lkcity'},daegu:{n:'แทกู',d:'เมืองของวัดหมัดเหล็ก',money:25,v:'lkcity'}});
+for(const k of ['seoul','gangnam','ansan'])LK.places[k].v='lkcity';
+const LKPD={seoul:['โซลในเงาของยากูซ่า ซอยแคบ บ้านอิฐบนเนิน และร้านเหล้าที่ยามาซากิเก็บค่าคุ้มครอง','โซลยุคราชาแต่ละภูมิภาค อพาร์ตเมนต์ผุดขึ้นทุกปี','ย่านเก่าของโซล ที่ตั้งโรงเรียนมัธยมเจ และร้านสะดวกซื้อที่ไม่เคยปิด'],
+  gangnam:['ทุ่งนาฝั่งใต้แม่น้ำฮันที่กำลังถูกถมเป็นเมืองใหม่','ตึกสำนักงานใหม่ และเงินที่ไหลเข้าหลังวิกฤต','ตึกกระจกของบริษัทใหญ่ คลินิกศัลยกรรม และคนที่หน้าตาดีทุกคน'],
+  ansan:['เมืองโรงงานที่เพิ่งตั้ง','อาณาเขตของมา แทซู หมัดที่สุดยอด','เมืองโรงงานที่เคยมีราชาเป็นของตัวเอง'],
+  incheon:['ท่าเรือที่ยามาซากิขึ้นฝั่ง','อาณาเขตของนา แจกยอนกับซอน ยูแจ ราชาสองคนพร้อมกัน','เมืองท่าที่ราชารุ่น 1 ยังคุมอยู่'],
+  daegu:['เมืองแห่งวัดและตลาด','อาณาเขตของจีกงซอบ ราชาแห่งแทกู พระผู้ฝึกหมัดเหล็ก','เมืองที่ลูกศิษย์วัดหมัดเหล็กยังเดินถนน'],
+  busan:['ท่าเรือที่ยามาซากิใช้ส่งคน','อาณาเขตของจินรัง ราชาแห่งปูซาน','เมืองท่าริมทะเล นักสู้ที่นี่ไม่เคยยอมใคร']};
+for(const [k,ds] of Object.entries(LKPD))if(LK.places[k])Object.defineProperty(LK.places[k],'d',{configurable:true,get(){const y=(typeof S!=='undefined'&&S&&W?.id==='lookism')?S.year:(typeof cfg!=='undefined'?cfg.year:2015);return ds[lkEra(y||2015)];}});
+LK.modernNow=S=>!S||S.year>=1975;
+/* the city drawn per era: brick hillside houses and wires in Gen 0, apartment slabs and billboards in Gen 1, glass and neon in Gen 2 */
+VIEW.lkcity=function(c,w,h,r,y,fx,L){const base=h*.8,era=lkEra(y||2015);
+  if(era===0){hills(c,'#6a7a5a',h*.42,h*.06,80,w,h);for(let i=0;i<14;i++){const bw=w*(.06+r()*.04),bx=i*w*.072+r()*4,bh=h*(.08+r()*.07),yb=base-bh-h*.02-(i%4)*h*.03;rect(c,['#9a5a3a','#8a6a4a','#a07050'][i%3],bx,yb,bw,bh);poly(c,i%2?'#3a4a5a':'#5a3a2a',[bx-2,yb,bx+bw/2,yb-h*.03,bx+bw+2,yb]);if(r()<.5){rect(c,'#3a2a1a',bx+bw*.3,yb+bh*.3,bw*.3,bh*.3);L.push([bx+bw*.3,yb+bh*.3,bw*.3,bh*.3]);}}
+    c.strokeStyle='#2a2a30';c.lineWidth=1;for(let i=0;i<4;i++){const px0=w*(.12+i*.26);rect(c,'#4a3a2a',px0,base-h*.38,2,h*.38);c.beginPath();c.moveTo(px0,base-h*.36);c.quadraticCurveTo(px0+w*.13,base-h*.3,px0+w*.26,base-h*.36);c.stroke();}
+    rect(c,'#7a7060',0,base,w,h-base);rect(c,'#6a6050',0,base+h*.05,w,2);return;}
+  if(era===1){for(let i=0;i<7;i++){const bw=w*(.11+r()*.03),bx=i*w*.145+r()*6,bh=h*(.38+r()*.12);rect(c,i%2?'#c8c4b8':'#b8b4a8',bx,base-bh,bw,bh);rect(c,'#3a4a6a',bx+bw*.15,base-bh+4,bw*.7,h*.035);c.fillStyle='#2a2a30';c.font=`${Math.round(h*.03)}px sans-serif`;c.fillText(String(101+i),bx+bw*.3,base-bh+h*.03);
+      for(let wy=base-bh+h*.07;wy<base-h*.03;wy+=h*.045)for(let wx=bx+3;wx<bx+bw-5;wx+=bw*.2){rect(c,'#4a5a70',wx,wy,bw*.12,h*.022);if(r()<.35)L.push([wx,wy,bw*.12,h*.022]);}}
+    rect(c,'#d84a3a',w*.55,base-h*.62,w*.18,h*.07);rect(c,'#f0ece0',w*.565,base-h*.6,w*.15,h*.03);rect(c,'#5a5a60',0,base,w,h-base);for(let x=0;x<w;x+=w*.08)rect(c,'#e8e0a0',x,base+h*.08,w*.04,2);return;}
+  for(let i=0;i<8;i++){const bw=w*(.09+r()*.05),bx=i*w*.13+r()*6,bh=h*(.45+r()*.25),g=c.createLinearGradient(bx,base-bh,bx+bw,base);g.addColorStop(0,'#5a7a9a');g.addColorStop(1,'#2a3a5a');c.fillStyle=g;c.fillRect(bx,base-bh,bw,bh);
+    for(let wy=base-bh+4;wy<base-6;wy+=h*.03){rect(c,'rgba(180,220,255,.25)',bx+2,wy,bw-4,1);if(r()<.25)L.push([bx+3,wy-2,bw-6,2]);}}
+  const neon=['#ff4fa0','#4fe0ff','#fee761','#8a5aff'];for(let i=0;i<5;i++){const nx=w*(.05+i*.2)+r()*10,ny=base-h*(.18+r()*.2);rect(c,'#15131c',nx,ny,w*.07,h*.06);rect(c,neon[i%4],nx+2,ny+2,w*.07-4,h*.06-4);L.push([nx+2,ny+2,w*.07-4,h*.06-4]);}
+  rect(c,'#3a3e4a',0,base,w,h-base);for(let x=0;x<w;x+=w*.1)rect(c,'#f0ece0',x,base+h*.08,w*.05,2);};
+/* era flavour */
+{const nf=LK.newsFor;LK.newsFor=function(S){const e=lkEra(S.year);return e===0?['ตำรวจปิดข่าวเรื่องยากูซ่าในโซลอีกครั้ง','ร้านเหล้าย่านจงโนจ่ายค่าคุ้มครองเป็นเงินเยน','รถเมล์สายใหม่วิ่งข้ามแม่น้ำฮัน','โรงงานทอผ้ารับคนงานเพิ่มร้อยคน','วงการมวยใต้ดินพูดถึงชายชื่อคิม กัปรยอง']:
+  e===1?['ราชาแห่งอันซานต่อยหินแตกให้ลูกน้องดู','ว่ากันว่าอินชอนมีราชาสองคนพร้อมกัน','พีซีบังเปิดใหม่ทั่วประเทศ','บริษัทใหญ่ฟื้นจากวิกฤตไอเอ็มเอฟ','อพาร์ตเมนต์ใหม่ในกังนัมขายหมดในวันเดียว']:nf.call(this,S);};}
+const AMB0=AMB.lookism;Object.defineProperty(AMB,'lookism',{configurable:true,get(){const e=S&&W?.id==='lookism'?lkEra(S.year):2;return e===0?['รถเมล์เก่าพ่นควันดำ','แม่ค้าข้างถนนขายมันเผา','ชายในสูทดำเดินเก็บเงินตามร้าน','เสียงวิทยุทรานซิสเตอร์จากร้านตัดผม']:e===1?['ป้ายพีซีบังเรืองแสงทั้งซอย','โทรศัพท์ฝาพับดังพร้อมกันทั้งรถไฟ','เด็กมัธยมกลุ่มหนึ่งคุยถึงราชาของเมือง','ป้ายโฆษณาอพาร์ตเมนต์ใหม่']:AMB0;}});
+{LK.jobs.push({id:'factory',n:'คนงานโรงงาน',pay:5,sk:'craft',y0:1970,y1:2000},{id:'gangrun',n:'ลูกน้องแก๊งของราชาประจำเมือง',pay:10,sk:'fight',need:{fight:30},y:1996,y1:2014});
+  const iw=LK.isWhere;LK.isWhere=function(j,S){return iw.call(this,j,S)&&(!j.y0||S.year>=j.y0)&&(!j.y1||S.year<=j.y1)&&(j.id!=='crewm'||S.year>=2010);};}
+/* lore paths: the Fist Gang (Gen 0), a regional king (Gen 1), one of Charles Choi's Ten Geniuses, a crew boss (Gen 2), the Yamazaki heir */
+const lkFight=(title,E,win,lose)=>setTimeout(async()=>{if(busy)return;busy=true;try{const r=await battle(E,{lethal:true,title});if(r.r==='win'||r.r==='skip')win(r);else if(lose)lose(r);}finally{busy=false;save();render();}},350);
+const LKKING={seoul:'ราชาแห่งโซล',busan:'ราชาแห่งปูซาน',daegu:'ราชาแห่งแทกู',ansan:'ราชาแห่งอันซาน',incheon:'ราชาแห่งอินชอน',gangnam:'ราชาแห่งโซลใต้'};
+{const sp0=LK.special;LK.special=function(S){const o=sp0.call(this,S);const f=S.sk?.fight||0;
+  if(S.year>=1980&&S.year<=1992&&S.place==='seoul'&&f>=40&&!S.flags.fistGang)o.push({l:'เข้าร่วมแก๊งหมัดของคิม กัปรยอง',h:'ต่อต้านยากูซ่ายามาซากิ คนในแก๊งไม่ใช้อาวุธ ไม่ยุ่งกับยา',f(S){S.flags.fistGang=1;bond('gapryong',12);fm(6);say('คิม กัปรยองยื่นมือมา "พวกเราสู้ด้วยหมัด แค่นั้นพอ"','good');}});
+  if(lkEra(S.year)===1&&LKKING[S.place]&&f>=72&&!S.flags.lkKing)o.push({l:`ท้าชิงตำแหน่ง${LKKING[S.place]}`,h:'ล้มราชาประจำเมืองต่อหน้าทุกคน',f(S){const k=LKKING[S.place];lkFight(`ชิงตำแหน่ง${k}`,fE('ราชาประจำเมือง','b',R(84,90)),()=>{S.flags.lkKing=k;fm(25);setJob('gangrun');say(`ทั้งเมืองรู้แล้วว่าใครคือ${k}คนใหม่`,'good');remember(k,'ล้มราชาประจำเมือง','fight',3);},()=>say('คุณแพ้ ราชายังเป็นราชา','bad'));}});
+  if(S.year>=2005&&f>=82&&!S.flags.genius&&!S.flags.genNo)o.push({l:'รับคำเชิญของชาร์ลส์ ชเว',h:'เป็นหนึ่งในสิบอัจฉริยะ เงินไม่จำกัด แต่ต้องทำทุกอย่างที่ประธานสั่ง',f(S){S.flags.genius=1;dk(15);mon(40);fm(12);say('ชาร์ลส์ ชเว ยิ้มบางๆ "ยินดีต้อนรับสู่สิบอัจฉริยะ"','bad');}});
+  if(lkEra(S.year)===2&&f>=60&&S.job?.id==='crewm'&&!S.flags.ownCrew)o.push({l:'ตั้งแก๊งของตัวเอง',h:'มีพวกพ้องที่ยอมตายแทนกัน',f(S){S.flags.ownCrew=1;fm(8);say('คุณออกแบบโลโก้แก๊งบนผ้าเช็ดหน้าในร้านไก่ทอด','good');}});
+  if(hasB('yamazaki')&&S.job?.id==='yakuza'&&f>=75&&!S.flags.yamaHeir)o.push({l:'ชิงตำแหน่งทายาทยามาซากิ',h:'ฆ่าหรือถูกฆ่า ตามกฎของตระกูล',f(S){lkFight('ศึกทายาทยามาซากิ',fE('ทายาทยามาซากิอีกคน','b',R(86,92)),()=>{S.flags.yamaHeir=1;dk(20);fm(25);say('ชินเก็นวางดาบของตระกูลไว้ตรงหน้าคุณ','bad');},()=>{if(!live(.5,'แพ้ศึกทายาทและถูกประหารตามกฎตระกูลยามาซากิ'))return;say('คุณแพ้ และถูกไล่ออกจากโอซาก้า','bad');});}});
+  return o;};}
+/* era events, Pre-Generation to Second Generation */
+addCanon('lookism',[
+  {id:'lk_yamarule',y:1978,mo:2,t:'ยุคที่ยามาซากิครองเกาหลี',major:true,play(S){news(this.t,'ซินดิเคตยามาซากิจากญี่ปุ่นคุมโลกใต้ดินของเกาหลี เคนโซ ยามาซากิ ปกครองโซล ร้านค้าทุกร้านจ่ายค่าคุ้มครอง ใครขัดขืนหายไปในแม่น้ำฮัน');
+    if(S.age>=14)return{text:'ชายในสูทดำสองคนเดินเข้ามาในร้านของครอบครัวคุณ "ค่าคุ้มครองเดือนนี้ขึ้นเป็นสองเท่า"',choices:[{l:'สู้กับลูกน้องยามาซากิ',g:'brave',foe:['ลูกน้องซินดิเคตยามาซากิ',46],f(S){if(live(.7+fitb(250),'ถูกยากูซ่ายามาซากิโยนลงแม่น้ำฮัน')){fm(5);skill('fight',4);say('ข่าวว่ามีคนกล้าต่อยลูกน้องยามาซากิแพร่ไปทั่วซอย','good');}}},{l:'จ่ายเงิน',g:'safe',f(S){mon(-3);say('พ่อของคุณนับเงินด้วยมือที่สั่น','bad');}}]};}},
+  {id:'lk_fistgang',y:1982,mo:4,t:'แก๊งหมัดของคิม กัปรยอง',major:true,play(S){news(this.t,'คิม กัปรยอง ตั้งแก๊งหมัดกับเพื่อนผู้ก่อตั้ง ทั้งแบคโฮ พัค จินยอง อีอึนฮา และบักกู แล้วชวนทอม ลี กับชาร์ลส์ ชเว เข้ามา กัปรยองให้ชาร์ลส์เป็นรองหัวหน้า เพราะเขาเย็นชาและมองความจริงกว่าทุกคน');
+    if(S.age>=15&&S.place==='seoul')return{text:'ชายตัวไม่ใหญ่แต่ไหล่กว้างยืนขวางยากูซ่ายี่สิบคนที่กำลังรุมเด็กคนหนึ่ง เขาหันมามองคุณ "จะช่วยหรือจะดู?"',choices:[{l:'ร่วมสู้ข้างคิม กัปรยอง',g:'brave hero',foe:['ยากูซ่ายามาซากิ',48],f(S){if(live(.8+fitb(250),'ถูกยากูซ่ารุมในซอยโซล')){bond('gapryong',14);S.flags.fistGang=1;fm(8);skill('fight',5);say('เขาตบไหล่คุณครั้งเดียว "ใช้ได้" แล้วชวนเข้าแก๊ง','good');}}},{l:'ดูอยู่ห่างๆ',g:'safe',f(S){say('ยี่สิบคนล้มภายในสองนาที ไม่มีใครตาย ไม่มีใครลุกได้','plain');}}]};}},
+  {id:'lk_moojin',y:1984,mo:8,t:'ตำนานซิรึมพเนจร',play(S){news(this.t,'ชายชื่อจินมูจิน ตำนานซิรึมที่ไม่สังกัดใคร เดินทางไปทั่วประเทศ ทุ่มนักสู้ทุกเมืองที่ผ่าน คนในวงการบอกว่ามีแค่คิม กัปรยองที่สู้กับเขาได้สูสี');}},
+  {id:'lk_yamawar',y:1986,mo:6,t:'สงครามแก๊งหมัดกับยามาซากิ',major:true,play(S){news(this.t,'แก๊งหมัดโตเกินสามสิบคน เคนโซ ยามาซากิตายในการต่อสู้กับคิม กัปรยอง ชินเก็น ยามาซากิ บุกเข้ามาคนเดียวหลังมีคนในแก๊งบอกที่ตั้งฐาน แต่แพ้ แล้วอิทธิพลของยามาซากิในเกาหลีก็จบลง');
+    if(S.flags.fistGang&&S.age>=16)return{text:'คืนนั้นชินเก็น ยามาซากิเดินเข้าประตูฐานของแก๊งคนเดียว ทุกคนรู้ทันทีว่ามีคนทรยศบอกที่ตั้งฐาน',choices:[{l:'สู้กับชินเก็น ยามาซากิ',g:'brave hero',foe:['ชินเก็น ยามาซากิ',95,'b'],f(S){if(live(.25+fitb(500),'ถูกชินเก็น ยามาซากิฆ่าในคืนสงคราม')){fm(25);skill('fight',8);say('คุณถ่วงชินเก็นไว้จนกัปรยองมาถึง แล้วตำนานก็จบศึกด้วยหมัดเดียว','good');remember('คืนสงครามกับยามาซากิ','ยืนข้างกัปรยอง','fight',3);}}},
+      {l:'ตามหาคนทรยศ',g:'curious loyal',f(S){st('iq',2);fm(6);say('คุณไม่เจอตัวคนทรยศ แต่สังเกตว่าบางคนในแก๊งไม่เคยกลัวเลยแม้แต่น้อย','plain');}}]};}},
+  {id:'lk_disband',y:1990,mo:3,t:'แก๊งหมัดยุบ',major:true,play(S){news(this.t,'ชาร์ลส์ ชเว ทะเลาะกับพัค จินยองไม่หยุดจนเดินออกจากแก๊ง ไปเปิดตลาดอึนฮากับภรรยา คิม กัปรยองวางมือจากโลกใต้ดินแล้วหันไปเล่นการเมือง พัค จินยองเรียนเป็นเภสัชกร ทอม ลี ยังเป็นราชาขอทานเหมือนเดิม');if(S.flags.fistGang){S.flags.fistGang=0;say('แจ็กเก็ตของแก๊งถูกพับเก็บไว้ในตู้ คุณไม่เคยทิ้งมัน','plain');}}},
+  {id:'lk_kings',y:2004,mo:5,t:'ยุคราชาประจำภูมิภาค',major:true,play(S){news(this.t,'รุ่น 1 แบ่งเกาหลีเป็นอาณาเขตของราชา คว็อก จีชังเป็นราชาแห่งโซล จินรังราชาแห่งปูซาน จีกงซอบพระหมัดเหล็กราชาแห่งแทกู มา แทซูหมัดที่สุดยอดราชาแห่งอันซาน และอินชอนมีราชาสองคนคือนา แจกยอนกับซอน ยูแจ');}},
+  {id:'lk_tengen',y:2007,mo:9,t:'สิบอัจฉริยะของชาร์ลส์ ชเว',play(S){news(this.t,'ชาร์ลส์ ชเว ประธานเครือ HNH รวบรวมอัจฉริยะการต่อสู้สิบคน ทอม ลี อดีตสมาชิกแก๊งหมัดเข้าร่วมด้วย พัค จงกอนกับคิม กูอยู่ในรายชื่อ ไม่มีใครรู้ว่าประธานต้องการพวกเขาทำอะไร');}},
+  {id:'lk_magpurge',y:2009,mo:4,t:'การกวาดล้างตระกูลในเครือ',play(S){news(this.t,'ยามาซากิกวาดล้างตระกูลในเครือ พัค จงกอนฆ่าริวโจ มากามิ ครูที่สอนคาราเต้ให้เขา เคนตะ มากามิ ลูกชายรอดมาได้และสาบานว่าจะสร้างตระกูลขึ้นใหม่');
+    if(hasB('magami')||hasB('yamaaff'))return{text:'ชายชุดดำผมยาวเดินเข้าโดโจของตระกูลคุณ ไม่มีใครในห้องขยับได้ทัน',choices:[{l:'สู้กับพัค จงกอน',g:'brave',foe:['พัค จงกอน',97,'b'],f(S){if(live(.12+fitb(600),'ถูกพัค จงกอนฆ่าในการกวาดล้างตระกูล')){fm(20);skill('fight',8);trauma(20);say('เขาหยุดดาบตรงคอคุณ แล้วเดินจากไปโดยไม่พูดอะไร','plain');}}},{l:'หนีไปกับเคนตะ มากามิ',g:'safe loyal',f(S){if(live(.7,'ถูกตามล่าระหว่างหนีการกวาดล้าง')){trauma(25);S.flags.kentaFriend=1;say('คุณกับเคนตะซ่อนในเรือประมงสามวัน เขาสาบานว่าตระกูลจะกลับมา','bad');}}}]};}},
+  {id:'lk_kitae',y:2011,mo:7,t:'ราชาแห่งโซลคนใหม่',play(S){news(this.t,'คิม คีแท ลูกชายของคิม กัปรยองที่เคยอยู่เม็กซิโก กลับมาล้มคว็อก จีชังจนต้องย้ายไปเป็นราชาแห่งชุงชอง คีแทขึ้นเป็นราชาแห่งโซล');}},
+  {id:'lk_cheonliang',y:2020,mo:5,t:'ชอนรยาง',major:true,play(S){news(this.t,'ศึกที่ชอนรยางดึงทุกฝ่ายเข้ามา ประธานแห่งยามาซากิปรากฏตัวต่อหน้าคนเกาหลีเป็นครั้งแรก และจินมูจิน ตำนานซิรึมรุ่น 0 ก็โผล่มาหลังหายไปหลายสิบปี');}},
+]);
+Object.assign(CAST.lookism,{kitae:'คิม คีแท',jichang:'คว็อก จีชัง',jinrang:'จินรัง',gongseob:'จีกงซอบ',jaegyeon:'นา แจกยอน',tomlee:'ทอม ลี',moojin:'จินมูจิน',kenta:'เคนตะ มากามิ',kenzo:'เคนโซ ยามาซากิ'});
+Object.assign(CASTLOOK,{kitae:CL('m','#1c1a1f','short','#f0ece0',{coat:'#f0ece0'}),jichang:CL('m','#3e2731','short','#3a3a44'),jinrang:CL('m','#e8e8f0','long','#1c1a1f'),gongseob:CL('m','#e8b796','short','#b88a3a',{robe:'#b88a3a'}),
+  jaegyeon:CL('m','#e2c15a','short','#a22633',{md:'happy'}),tomlee:CL('m','#8a7a6a','long','#5a4a3a',{beard:1}),moojin:CL('m','#3e2731','short','#f0ece0',{beard:1}),kenta:CL('m','#1c1a1f','short','#f0ece0'),kenzo:CL('m','#1c1a1f','short','#1c1a1f',{coat:'#1c1a1f'})});
+Object.assign(CASTPOW,{kitae:94,jichang:86,jinrang:92,gongseob:88,jaegyeon:90,tomlee:92,moojin:96,kenta:80,kenzo:90});
+Object.assign(LK.castMeta,{kitae:{b:1988,at:S=>S.place==='seoul'&&S.year>=2011},jichang:{b:1982,at:S=>S.year<2011?S.place==='seoul':false},jinrang:{b:1984,at:S=>S.place==='busan'&&S.year>=2002},
+  gongseob:{b:1975,at:S=>S.place==='daegu'&&S.year>=2000},jaegyeon:{b:1986,at:S=>S.place==='incheon'&&S.year>=2003},tomlee:{b:1958,at:S=>S.place==='seoul'&&S.year>=1982},
+  moojin:{b:1950,at:S=>S.place==='busan'&&(S.year<=1990||S.year>=2020)},kenta:{b:1992,at:S=>S.place==='osaka'&&S.year>=2009},kenzo:{b:1940,d:1986,at:S=>S.place==='seoul'&&S.year<=1986}});
+Object.assign(CASTANIM,{kitae:'lkm_str',jichang:'lk_combo',jinrang:'lkm_spd',gongseob:'lk_combo',jaegyeon:'lkm_spd',tomlee:'lkm_tec',moojin:'lk_gap',kenta:'lk_gap',kenzo:'lk_gap',taesoo:'lkm_str',gun:'lkm_tec',goo:'slash'});
+
+/* ===================== LOOKISM fights are fists, feet and martial arts: attacks dash in and land as impacts (flash, shock lines,
+   Korean SFX), never beams. A few sword masters (Goo Kim, Lee Bangho, Musashi) are the exception. Also: heights from the lore for
+   every world, the Yamazaki unconscious state (Black Eyes) with control training, and the regional kings you can learn from or overthrow ===================== */
+const BTMELEE=()=>!!(W&&W.id==='lookism');
+const LKT={x:166,y:30};
+const lkHit=(px,x,y,r,col,a=1)=>{const n=10;for(let i=0;i<n;i++){const an=i/n*6.283,l=r*(.6+((i*7)%5)/8);for(let s=0;s<l;s+=1.5)px(x+Math.cos(an)*(r*.35+s),y+Math.sin(an)*(r*.35+s)*.8,1.5,1.5,col.replace('A',(a*(1-s/l)).toFixed(2)));}disc(px,x,y,Math.max(1,Math.round(r*.35)),`rgba(255,255,255,${(.9*a).toFixed(2)})`);};
+const lkFist=(px,x,y,skin)=>{px(x-3,y-2,6,5,skin||'#e8b796');px(x-3,y-2,6,1,'rgba(0,0,0,.35)');px(x+3,y-1,1,3,'rgba(0,0,0,.35)');};
+const lkSL=(px,LW,tt,col='rgba(255,255,255,.35)')=>{for(let i=0;i<10;i++)px(((tt*1.4+i*41)%LW),6+((i*17)%60),18,1,col);};
+Object.assign(ANIM,{
+  lk_combo(px,tt,hx,hy,col,LW,LH,gy){lkSL(px,LW,tt);const hits=[[0,-6],[6,4],[-4,10],[8,-10],[2,2]];hits.forEach(([dx,dy],i)=>{const t0=i*170,q=(tt-t0)/170;if(q<0)return;const a=Math.max(0,1-q*.8);if(q<1.4){lkFist(px,LKT.x+dx-6,LKT.y+dy,'#e8b796');lkHit(px,LKT.x+dx,LKT.y+dy,8+q*6,'rgba(255,255,255,A)',a);}});
+    if(tt>200)lkSfx(px,LKT.x-26,LKT.y-14,(tt/340|0)%2?'퍽!':'팍!','#ffffff',tt-200);},
+  lk_gap(px,tt,hx,hy,col,LW,LH,gy){if(tt<380){lkAura(px,hx,gy,'255,240,200',tt,8);return;}const q=(tt-380)/700;lkSL(px,LW,tt,'rgba(255,240,200,.45)');lkFist(px,LKT.x-8,LKT.y,'#e8b796');lkHit(px,LKT.x,LKT.y,12+q*26,'rgba(255,240,200,A)',Math.max(0,1-q));
+    for(let i=0;i<6;i++)px(LKT.x-20+i*8,gy-2,6+((i*3)%5),1,'rgba(40,30,30,.8)');if(q<.25)px(0,0,LW,LH,`rgba(255,255,255,${(.5-q*2).toFixed(2)})`);lkSfx(px,LKT.x-30,LKT.y-14,'쾅!','#fff0c8',tt-380);},
+  lk_copy(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<3;i++){const x=hx+30+i*30+((tt/6)%8);px(x,gy-30,7,24,`rgba(159,211,232,${(.45-i*.1).toFixed(2)})`);disc(px,x+3,gy-34,4,`rgba(159,211,232,${(.45-i*.1).toFixed(2)})`);}
+    if(tt>500){const q=(tt-500)/500;lkHit(px,LKT.x,LKT.y,10+q*14,'rgba(159,211,232,A)',Math.max(0,1-q));lkSfx(px,LKT.x-24,LKT.y-14,'똑같이!','#9fd3e8',tt-500);}},
+  lk_ui(px,tt,hx,hy,col,LW,LH,gy){px(0,0,LW,LH,'rgba(10,14,30,.3)');px(hx-14,gy-44,3,1,'#ffffff');px(hx-9,gy-44,3,1,'#ffffff');for(let i=0;i<8;i++){const q=(tt-i*110)/220;if(q<0||q>1.2)continue;lkHit(px,LKT.x+((i*9)%18)-9,LKT.y+((i*13)%22)-10,6+q*8,'rgba(232,244,255,A)',Math.max(0,1-q));}},
+  lk_unc(px,tt,hx,hy,col,LW,LH,gy){px(0,0,LW,LH,'rgba(0,0,0,.45)');px(hx-15,gy-44,3,2,'#000');px(hx-9,gy-44,3,2,'#000');for(let i=0;i<10;i++){const q=(tt-i*90)/200;if(q<0||q>1.2)continue;lkHit(px,LKT.x+((i*11)%20)-10,LKT.y+((i*7)%24)-12,6+q*10,'rgba(160,20,30,A)',Math.max(0,1-q));}if(tt>500)lkSfx(px,LKT.x-26,LKT.y-16,'...','#a0141e',tt-500);},
+  lkm_str(px,tt,hx,hy,col,LW,LH,gy){lkAura(px,hx,gy,LKM.str[3],tt);if(tt<450)return;const q=(tt-450)/700;lkFist(px,LKT.x-8,LKT.y,'#e8b796');lkHit(px,LKT.x,LKT.y,14+q*30,'rgba(255,70,70,A)',Math.max(0,1-q));if(q<.2)px(0,0,LW,LH,`rgba(255,80,80,${(.4-q*2).toFixed(2)})`);lkSfx(px,LKT.x-30,LKT.y-16,LKM.str[4],'#ff4646',tt-450);},
+  lkm_spd(px,tt,hx,hy,col,LW,LH,gy){lkSL(px,LW,tt*2,'rgba(160,200,255,.6)');for(let i=0;i<3;i++)px(hx+20+i*26,gy-34,7,26,`rgba(90,160,255,${(.45-i*.12).toFixed(2)})`);for(let i=0;i<6;i++){const q=(tt-300-i*90)/180;if(q<0||q>1.2)continue;lkHit(px,LKT.x+((i*7)%14)-7,LKT.y+((i*11)%20)-10,5+q*8,'rgba(90,160,255,A)',Math.max(0,1-q));}if(tt>300)lkSfx(px,LKT.x-26,LKT.y-14,LKM.spd[4],'#5aa0ff',tt-300);},
+  lkm_end(px,tt,hx,hy,col,LW,LH,gy){lkAura(px,hx,gy,LKM.end[3],tt,18);for(let i=0;i<4;i++){const q=((tt/400)+i/4)%1;px(hx+4+q*14,gy-30+i*5,2,1,'#ffffff');}if(tt>500){const q=(tt-500)/600;lkHit(px,LKT.x,LKT.y,10+q*20,'rgba(80,220,120,A)',Math.max(0,1-q));}if(tt>300)lkSfx(px,hx+8,hy-8,LKM.end[4],'#50dc78',tt-300);},
+  lkm_tec(px,tt,hx,hy,col,LW,LH,gy){const pts=[[0,-10],[3,6],[-2,22]];pts.forEach(([dx,dy],i)=>{const q=(tt-200-i*200)/300;if(q<0)return;const x=LKT.x+dx,y=LKT.y+dy,r=5+Math.min(1,q)*5;for(let a=0;a<12;a++)px(x+Math.cos(a/12*6.283)*r,y+Math.sin(a/12*6.283)*r,1,1,'rgba(255,120,190,.9)');px(x-6,y,12,1,'#ff78be');px(x,y-6,1,12,'#ff78be');if(q<1)lkHit(px,x,y,4+q*6,'rgba(255,120,190,A)',1-q);});if(tt>600)lkSfx(px,LKT.x-28,LKT.y-16,LKM.tec[4],'#ff78be',tt-600);},
+  lkm_ovc(px,tt,hx,hy,col,LW,LH,gy){px(0,0,LW,LH,'rgba(40,10,60,.3)');lkAura(px,hx,gy,LKM.ovc[3],tt,22);if(tt<500)return;const q=(tt-500)/700;lkFist(px,LKT.x-8,LKT.y,'#e8b796');lkHit(px,LKT.x,LKT.y,14+q*28,'rgba(176,112,255,A)',Math.max(0,1-q));lkSfx(px,LKT.x-30,LKT.y-16,LKM.ovc[4],'#b070ff',tt-500);},
+  lkm_path(px,tt,hx,hy,col,LW,LH,gy){const ks=Object.keys(LKM).filter(k=>S&&lkHas(k));(ks.length?ks:['str']).forEach((k,i)=>lkAura(px,hx-4+i*3,gy,LKM[k][3],tt+i*90,8));if(tt<600)return;const q=(tt-600)/800;lkFist(px,LKT.x-8,LKT.y,'#e8b796');lkHit(px,LKT.x,LKT.y,16+q*34,'rgba(254,231,97,A)',Math.max(0,1-q));if(q<.2)px(0,0,LW,LH,`rgba(255,255,255,${(.5-q*2).toFixed(2)})`);lkSfx(px,LKT.x-24,LKT.y-18,'길!','#fee761',tt-600);},
+});
+for(const k of ['lk_gap','lk_unc','lk_ui'])if(!CIUNDER.includes(k))CIUNDER.push(k);
+Object.assign(ENAN,{lk_combo:'หมัดเท้าต่อเนื่อง',lk_gap:'หมัดหนัก',lk_copy:'ท่าที่ก๊อปมา',lk_ui:'อัลตร้าอินสติงต์',lk_unc:'สภาวะไร้สติ',lkm_str:'เคียงจีแห่งพลัง',lkm_spd:'เคียงจีแห่งความเร็ว',lkm_end:'เคียงจีแห่งความทนทาน',lkm_tec:'เคียงจีแห่งเทคนิค',lkm_ovc:'เคียงจีแห่งการเอาชนะ'});
+/* nobody in this world throws energy: unnamed foes punch and kick, sword masters cut */
+{const ea=enAnim;enAnim=function(E){if(W?.id==='lookism'&&!(E.id&&CASTANIM[E.id]))return /ดาบ|นักดาบ|มูซาชิ|บังโฮ/.test(E.n||'')?'slash':(E.pow||0)>=70?'lk_gap':'lk_combo';return ea.apply(this,arguments);};}
+/* heights from the lore, every world: a scale on adult sprites, drawn from the feet up */
+const CASTHT={jotaro:1.18,josuke:1.08,koichi:.84,dio:1.12,polnareff:1.1,avdol:1.1,kakyoin:1.07,joseph:1.12,okuyasu:1.06,
+  levi:.86,reiner:1.1,bertholdt:1.2,erwin:1.1,mikasa:.98,annie:.9,armin:.95,hange:1.03,zeke:1.06,kenny:1.08,
+  gojo:1.16,todo:1.16,nanami:1.08,sukuna:1.08,yuta:1,megumi:1.02,itadori:1,maki:1,toji:1.1,choso:1.06,nobara:.92,
+  kenpachi:1.26,chad:1.2,byakuya:1.06,ichigo:1.03,hitsugaya:.8,rukia:.86,aizen:1.08,uryu:1.04,orihime:.95,
+  whitebeard:1.6,zoro:1.05,sanji:1.06,luffy:1,nami:.95,akainu:1.3,aokiji:1.3,kizaru:1.3,shanks:1.08,mihawk:1.08,ace:1.04,
+  jiraiya:1.12,kisame:1.16,naruto:1,sasuke:1,kakashi:1.06,gaara:.96,itachi:1.03,madara:1.08,pain:1.06,
+  goku:1,vegeta:.9,piccolo:1.22,krillin:.78,frieza:.8,cell:1.12,buu:1.05,beerus:.98,a18:.95,gohan:1.02,raditz:1.12,roshi:.82,satan:1.05,
+  hyungseok:1.12,vasco:1.2,jake:1.15,gun:1.13,goo:1.08,eli:1.1,johan:1.05,zack:1.05,jay:1.08,samuel:1.1,warren:1.12,vinjin:1.08,crystal:.95,mira:.97,
+  gapryong:1.1,shingen:1.15,james:1.05,taesoo:1.15,kitae:1.15,jinrang:1.1,gongseob:1.08,jaegyeon:1.05,tomlee:1.1,moojin:1.2,kenzo:1.1,charles:1.05,kenta:1.06};
+
+{const ch0=chibi;chibi=function(px,x,gy,o){const hs=o&&o.hs,c=px&&px.c;if(!hs||hs===1||!c||(o.age??20)<15||o.lie||o.sz==='baby')return ch0.apply(this,arguments);const k=px.k||1,sx=1+(hs-1)*.45;
+  c.save();c.translate(x*k,gy*k);c.scale(sx,hs);c.translate(-x*k,-gy*k);let r;try{r=ch0.call(this,px,x,gy,{...o,hs:undefined});}finally{c.restore();}if(r&&r.top!=null)r={...r,top:Math.round(gy-(gy-r.top)*hs),hy:Math.round(gy-(gy-r.hy)*hs),ey:Math.round(gy-(gy-r.ey)*hs)};return r;};}
+/* closer looks for the Lookism cast */
+Object.assign(CASTLOOK,{zack:CL('m','#5a3a2a','spiky','#262b44',{btn:1}),vasco:CL('m','#1c1a1f','short','#a22633',{md:'happy'}),gun:CL('m','#1c1a1f','short','#1c1a1f',{coat:'#1c1a1f'}),
+  goo:CL('m','#1c1a1f','bob','#262b44',{coat:'#262b44',md:'happy'}),johan:CL('m','#d8d8e0','short','#262b44',{eye:'#c0cbdc'}),kitae:CL('m','#1c1a1f','short','#f0ece0',{coat:'#f0ece0'})});
+for(const [id,h] of Object.entries(CASTHT))if(CASTLOOK[id])CASTLOOK[id].hs=h;
+/* the Yamazaki unconscious state (Black Eyes): the will to fight stays when the mind leaves. Uncontrolled it cannot tell friend
+   from foe; Shintaro held it from childhood, Gun keeps it running. Five steps of control training */
+Object.assign(POWERS,{lk_unc:{n:'สภาวะไร้สติ (ตาดำ)',cat:'สายเลือด',c:34,fame:10},lk_chop:{n:'สันมือของคว็อก จีชัง',cat:'ศิลปะการต่อสู้',c:18},lk_left:{n:'หมัดซ้ายทุบหินของมา แทซู',cat:'ศิลปะการต่อสู้',c:22,fame:4},
+  lk_sword2:{n:'ดาบสายอีบังโฮ',cat:'ศิลปะการต่อสู้',c:26,fame:6},lk_niten:{n:'ดาบสองมือสายมูซาชิ',cat:'ศิลปะการต่อสู้',c:26,fame:6}});
+Object.assign(AURA,{lk_unc:'#1c1a1f',lk_chop:'#f0ece0',lk_left:'#e43b44',lk_sword2:'#e8f4ff',lk_niten:'#e8f4ff'});
+const UNCLV=['ยังควบคุมไม่ได้ เมื่อหมดสติ ร่างกายจะทำร้ายทุกคนรอบตัว','รู้สึกตัวได้แวบหนึ่งก่อนสติจะหลุด','เริ่มแยกเพื่อนกับศัตรูได้ในสภาวะไร้สติ','เข้าออกสภาวะไร้สติได้เองครึ่งหนึ่ง','คุมแรงตัวเองได้แม้ในสภาวะไร้สติ','ควบคุมได้สมบูรณ์ แบบที่ชินทาโร่ทำได้ตั้งแต่เด็ก'];
+const uncLv=()=>Math.min(5,S?.flags?.uncCtl||0);
+{const y=CLANS.lookism.find(c=>c.id==='yamazaki');if(y){const on1=y.on;y.on=function(S){on1.call(this,S);if(!S.powers.includes('lk_unc'))S.powers.push('lk_unc');S.flags.uncCtl=0;};y.d+=' และสายเลือดนี้มีสภาวะไร้สติ (ตาดำ) ติดตัวมาแต่เกิด';}}
+{const a=CLANS.lookism.find(c=>c.id==='yamaaff');if(a){const on1=a.on;a.on=function(S){on1.call(this,S);if(S.flags.yamaAff==='ฮังกุเระ'&&chance(.3)){S.powers=S.powers||[];S.powers.push('lk_unc');S.flags.uncCtl=0;}};}}
+LEGS.lookism.push(LQ('lk_uncctl','ฝึกควบคุมสภาวะไร้สติ','ฝึกให้จิตที่หลุดไปยังรู้ว่าใครคือเพื่อน ใครคือศัตรู',{need:S=>hasP('lk_unc')&&uncLv()<5&&S.age>=10,steps:2,p:()=>.32+uncLv()*.06,
+  win(){S.flags.uncCtl=uncLv()+1;say(`การควบคุมสภาวะไร้สติ ขั้น ${S.flags.uncCtl}/5: ${UNCLV[S.flags.uncCtl]}`,'power');if(S.flags.uncCtl>=5)remember('ควบคุมสภาวะไร้สติ','ตาดำที่เชื่อฟังคุณ','power',3);}}));
+TECHDEF.lookism.push(T('lk_unc','เข้าสู่สภาวะไร้สติ',S=>hasP('lk_unc')&&uncLv()>=3,{pw:'lk_unc',chant:'ดวงตากลายเป็นสีดำสนิท สติหลุดไป แต่ร่างกายยังสู้ต่อด้วยสัญชาตญาณของตระกูล',anim:'lk_unc',col:'#1c1a1f',lv:.7}),
+  T('lk_chop','สันมือ',S=>hasP('lk_chop'),{pw:'lk_chop',chant:'สับสันมือลงไหปลาร้าเหมือนใบมีด',anim:'lk_gap',col:'#f0ece0',lv:.42}),
+  T('lk_left','หมัดซ้ายทุบหิน',S=>hasP('lk_left'),{pw:'lk_left',chant:'หมัดซ้ายที่ฝึกจนต่อยหินแตก ออกตรงๆ ไม่มีหลอก',anim:'lk_gap',col:'#e43b44',lv:.5}),
+  T('lk_sword2','ดาบสายอีบังโฮ',S=>hasP('lk_sword2'),{pw:'lk_sword2',chant:'ชักดาบออกจากฝักแล้วฟันในจังหวะเดียว',anim:'slash',col:'#e8f4ff',lv:.55}),
+  T('lk_niten','ดาบสองมือสายมูซาชิ',S=>hasP('lk_niten'),{pw:'lk_niten',chant:'ดาบยาวกับดาบสั้นในสองมือ ฟันสลับไม่ให้หายใจ',anim:'slash',col:'#e8f4ff',lv:.55}));
+{const b1=battle;battle=async function(E,o){const r=await b1.apply(this,arguments);try{if(S&&W?.id==='lookism'&&r&&hasP('lk_unc')){const lv=uncLv();
+  if(r.r==='lose'&&chance(.35+lv*.08)){r.r='win';if(lv<2){const known=pRefs().filter(x=>x.t!=='cast').map(x=>pOf(x)).filter(p=>p&&p.alive);dk(6);trauma(10);
+      say(`ดวงตาของคุณกลายเป็นสีดำ คุณตื่นมาเห็น${E?.n||'ศัตรู'}นอนอยู่บนพื้น${known.length?` และ${pick(known).short}ที่พยายามห้ามคุณก็บาดเจ็บด้วย`:' พร้อมกับคนที่ไม่เกี่ยวข้องอีกหลายคน'} คุณจำอะไรไม่ได้เลย`,'bad');}
+    else say(`ดวงตาของคุณกลายเป็นสีดำ แต่ครั้งนี้คุณยังรู้ว่าใครคือศัตรู สภาวะไร้สติจบ${E?.n||'ศัตรู'}โดยไม่แตะใครอื่น`,'power');}}}catch(e){}return r;};}
+/* regional kings: ask to be a disciple (pass a test fight to learn their skill) or overthrow them and rule the region yourself */
+const LKKINGS={seoul:[{id:'jichang',y0:2004,y1:2010,sk:'lk_chop'},{id:'kitae',y0:2011,y1:2040,sk:'lk_m_str'}],busan:[{id:'jinrang',y0:2002,y1:2040,sk:'lk_m_ovc'}],
+  daegu:[{id:'gongseob',y0:2000,y1:2040,sk:'lk_iron'}],ansan:[{id:'taesoo',y0:2004,y1:2040,sk:'lk_left'}],incheon:[{id:'jaegyeon',y0:2003,y1:2040,sk:'lk_m_spd'}]};
+const lkKingNow=S=>(LKKINGS[S.place]||[]).find(k=>S.year>=k.y0&&S.year<=k.y1&&!S.flags['kd_'+k.id]&&!killed(k.id));
+const lkLearn=sk=>{if(LKM[Object.keys(LKM).find(k=>LKM[k][0]===sk)||''])lkGain(Object.keys(LKM).find(k=>LKM[k][0]===sk),'ราชาสอนวิธีทะลุกำแพงให้คุณ');else if(!hasP(sk))gainPower(sk,`คุณได้${POWERS[sk]?.n||'ท่าใหม่'}จากอาจารย์`);};
+const lkKingFoe=k=>{const M=metaOf(k.id)||{b:S.year-30};return{n:CAST.lookism[k.id],id:k.id,pow:agePow(CASTPOW[k.id]||85,S.year-M.b),spec:castSpec(k.id),boss:1};};
+{const sp=LK.special;LK.special=function(S){const o=sp.call(this,S).filter(x=>!/^ท้าชิงตำแหน่ง/.test(x.l));const f=S.sk?.fight||0,k=lkKingNow(S),kn=k&&CAST.lookism[k.id];
+  if(k&&f>=30&&S.flags.lkMaster!==k.id&&S.age>=14)o.push({l:`ขอเป็นศิษย์ของ${kn}`,h:`ผ่านการทดสอบสี่ยกแล้วจะได้${POWERS[k.sk]?.n||'วิชาของราชา'}`,f(S){S.flags.lkTry=k.id;lkFight(`ทดสอบศิษย์ของ${kn}`,lkKingFoe(k),()=>{},()=>{});}});
+  if(k&&f>=70&&S.age>=16&&S.flags.lkKing!==S.place)o.push({l:`โค่น${kn}แล้วขึ้นเป็น${LKKING[S.place]||'ราชา'}`,h:'ล้มราชาประจำเมืองต่อหน้าทุกคน ถ้าแพ้อาจไม่รอด',f(S){lkFight(`ชิงบัลลังก์${LKKING[S.place]}`,lkKingFoe(k),()=>{S.flags['kd_'+k.id]=1;S.flags.lkKing=S.place;fm(28);if(S.job?.id!=='gangrun')setJob('gangrun');say(`${kn}ล้มลงกลางวงคนดู ตั้งแต่คืนนี้คุณคือ${LKKING[S.place]}`,'good');remember(LKKING[S.place],`โค่น${kn}`,'fight',3);},()=>{if(live(.75,`ถูก${kn}ล้มในศึกชิงบัลลังก์`))say(`${kn}มองคุณจากด้านบน "ยังเร็วไป"`,'bad');});}});
+  if(S.year>=2018&&S.place==='seoul'&&f>=50&&!hasP('lk_sword'))o.push({l:'ขอเป็นศิษย์คิม กู (จุนกู)',h:'ดาบจันทรา ใช้อะไรก็ได้เป็นดาบ',f(S){lkFight('ทดสอบกับคิม กู',lkKingFoe({id:'goo'}),()=>{gainPower('lk_sword','คิม กูหัวเราะ "ปากกาก็เป็นดาบได้นะ" แล้วสอนท่าแรกให้');bond('goo',10);},()=>say('คิม กูเก็บปากกาเข้ากระเป๋า "กลับไปฝึกมาใหม่"','plain'));}});
+  if(S.place==='seoul'&&f>=55&&!hasP('lk_sword2'))o.push({l:'ขอเรียนดาบกับปรมาจารย์อีบังโฮ',h:'ปรมาจารย์ดาบแห่งเกาหลี',f(S){lkFight('ทดสอบดาบกับอีบังโฮ',fE('ปรมาจารย์ดาบอีบังโฮ','b',R(84,90)),()=>gainPower('lk_sword2','อีบังโฮยอมรับคุณเป็นศิษย์ และส่งดาบเล่มแรกให้'),()=>say('ปลายดาบหยุดที่คอคุณ "ยังไม่พร้อม"','plain'));}});
+  if(S.place==='osaka'&&f>=55&&!hasP('lk_niten'))o.push({l:'ขอเรียนดาบกับมูซาชิ',h:'นักดาบสองมือแห่งญี่ปุ่น',f(S){lkFight('ทดสอบดาบกับมูซาชิ',fE('มูซาชิ นักดาบสองมือ','b',R(84,90)),()=>gainPower('lk_niten','มูซาชิยื่นดาบสั้นให้คุณถือมือซ้าย'),()=>say('มูซาชิเก็บดาบทั้งสองเล่ม "ฝึกอีกสิบปี"','plain'));}});
+  return o;};}
+/* the disciple test result: passing (win or lasting the rounds) teaches the skill */
+{const b2=battle;battle=async function(E,o){if(S&&S.flags.lkTry&&W?.id==='lookism'){o={...o,lethal:false,turns:4};}const r=await b2.call(this,E,o);try{if(S&&S.flags.lkTry){const k=Object.values(LKKINGS).flat().find(x=>x.id===S.flags.lkTry);S.flags.lkTry=0;
+  if(k&&(r.r==='win'||r.r==='time'||r.r==='skip')){S.flags.lkMaster=k.id;bond(k.id,12);skill('fight',4);say(`${CAST.lookism[k.id]}รับคุณเป็นศิษย์`,'good');lkLearn(k.sk);remember(`ศิษย์ของ${CAST.lookism[k.id]}`,'ราชาประจำเมือง','fight',2);}
+  else if(k)say(`${CAST.lookism[k.id]}ส่ายหัว "กลับไปฝึกมาก่อน"`,'plain');}}catch(e){}return r;};}
+{const sx=LK.statusX;LK.statusX=S=>sx(S)+(S.flags.lkKing?` · ${LKKING[S.flags.lkKing]||'ราชา'}`:'')+(hasP('lk_unc')?` · ตาดำ ${uncLv()}/5`:'')+(S.flags.lkMaster?` · ศิษย์ของ${CAST.lookism[S.flags.lkMaster]||''}`:'');}
+LK.pool.push({id:'lk_throne',w:4,when:S=>!!S.flags.lkKing&&S.place===S.flags.lkKing,play(S){return{text:pick(['เด็กหนุ่มจากเมืองข้างเคียงยืนรอหน้าบ้านคุณ "ข้ามาเอาบัลลังก์"','แก๊งจากต่างเมืองบุกเข้ามาในอาณาเขตของคุณ','ข่าวลือว่ามีคนกำลังรวบรวมคนมาโค่นคุณ']),choices:[
+  {l:'สู้ปกป้องบัลลังก์',g:'brave',foe:['ผู้ท้าชิงบัลลังก์',R(60,82)],f(S){if(live(.85+fitb(300),'แพ้ศึกปกป้องบัลลังก์')){fm(4);skill('fight',3);say('บัลลังก์ยังเป็นของคุณ','good');}else{}}},
+  {l:'ส่งลูกน้องไปจัดการ',g:'safe',f(S){if(chance(.6))say('ลูกน้องของคุณจัดการได้ แต่มีคนเริ่มพูดว่าราชาไม่ลงมือเอง','plain');else{S.flags.lkKing=0;fm(-10);say('ลูกน้องแพ้ ทั้งเมืองบอกว่าคุณไม่ใช่ราชาอีกแล้ว','bad');}}}]};}});
+
 /* ===== faces: every person card shows that person's chibi head, drawn live at their age right now, bobbing, blinking and doing a
    small gimmick of their world (chakra sparks, cursed wisps, ki, steam, reiatsu, the JoJo "ゴゴゴ", a sweat drop on the street).
    Opening a person shows a live full-body portrait. Looks are seeded exactly like the live view, so a face matches the sprite ===== */
@@ -10887,7 +11097,7 @@ function faceSpecOf(ref){try{const rr=s=>rng(hash(s)),pk=(r,a)=>a[Math.floor(r()
   if(ref.t==='kid'){const kd=S.kids[ref.i];if(!kd)return null;const r=rr(kd.n+kd.y);return faceGeneric('k',yr-kd.y,kd.sx,r()<.5?S.look.hair[1]:pk(r,HAIRS),r()<.5?S.look.skin:pk(r,LOOKS.skin),pk(r,OUTS));}
   if(ref.t==='par'){const p=S.fam[ref.r];if(!p)return null;const r=rr(p.n);return faceGeneric('p',S.age+p.off,ref.r==='mom'?'f':'m',pk(r,HAIRS),S.look.skin,pk(r,OUTS));}
   if(ref.t==='sib'){const s=S.sibs[ref.i];if(!s)return null;const r=rr(s.n);return faceGeneric('s',yr-s.by,s.sx,r()<.6?S.look.hair[1]:pk(r,HAIRS),S.look.skin,pk(r,OUTS));}
-  if(ref.t==='npc'){const o=S.npcs?.[ref.i];if(!o)return null;const r=rr(o.n+'npc');return faceGeneric('n',o.age||30,o.sx||'m',pk(r,HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}
+  if(ref.t==='npc'){const o=S.npcs?.[ref.i];if(!o)return null;const r=rr(o.n+'npc');return faceGeneric('n',typeof npcBirth==='function'?Math.max(0,yr-npcBirth(o)):30,o.sx||'m',pk(r,HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}
   if(ref.t==='folk'){const r=rr(ref.n+'folk');return faceGeneric('f',ref.age,ref.sx,pk(r,LOOKS[W.id]?.hair?.map(h=>h[1])||HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}
   if(ref.t==='peer'){const r=rr(ref.n+'peer');return faceGeneric('o',ref.age||20,ref.sx||'m',pk(r,HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}}catch(e){}return null;}
 /* draw one chibi on a scratch canvas, find its top row, and blit the head (or the whole body) scaled up */
@@ -10942,6 +11152,32 @@ canvas.facebig{float:left;margin:0 12px 6px 0;image-rendering:pixelated;border-r
 
 /* townsfolk jobs for worlds that had none, so Dragon Ball passers-by stop wearing Attack on Titan jobs */
 if(!TOWNJOB.db)TOWNJOB.db=['ช่างซ่อมแคปซูล','พ่อค้าไดโนเสาร์ย่าง','ตำรวจเวสต์ซิตี้','นักสู้ฝึกหัด','คนขับรถลอยฟ้า'];
+
+/* ===== fixes: (1) a fight choice now fights what its label names ("สู้กับไดโนเสาร์" is a dinosaur, not a generic human and not
+   whoever else the text mentions), so the death line matches the enemy; animals are drawn as beasts. (2) Neighbours have real ages
+   (a childhood rival grows up with you) and the dialog face shows the person you opened, not you ===== */
+let LASTLBL='';
+{const tg=techGate;techGate=function(c){LASTLBL=c&&c.l||'';try{return tg.apply(this,arguments);}finally{LASTLBL='';}};}
+const BEAST=/ไดโนเสาร์|หมีกริซลี่|หมี|หมาป่า|เสือ|งูยักษ์|ปลายักษ์|สัตว์ประหลาด|ลิงยักษ์|ราชาทะเล|หมูป่า|จระเข้|ฉลาม|นกยักษ์|แมงมุมยักษ์/;
+const lblTarget=l=>{const m=(l||'').match(/(?:ต่อสู้กับ|สู้กับ|ปราบ|ท้าสู้กับ|ท้าชิงกับ|จัดการ|ขวาง|โจมตี|ฟัน|ไล่ตี|ต่อยกับ)([^\s]{2,30})\s*$/);const t=m?m[1].replace(/^(?:ให้|เพื่อ)/,''):'';return /^(มัน|เขา|เธอ|พวกมัน|พวกเขา|ทุกคน|ศัตรู|คนนั้น|ตัวนั้น)$/.test(t)?'':t;};
+DESC.db.push([/สิ่งมีชีวิตสีเขียวมีปีก/,'cell']);
+{const be=btEnemy;btEnemy=function(s){const E=be.apply(this,arguments);try{if(typeof ARCFOE!=='undefined'&&ARCFOE)return E;const nm=lblTarget(LASTLBL),bm=(nm.match(BEAST)||(!nm&&String(s).match(BEAST))||[])[0];
+  if(bm&&!(E.id&&castsIn(nm).includes(E.id)))return{n:nm||bm,pow:Math.max(18,Math.min(80,E.id?myPow()*.85+R(0,20):E.pow)),beast:1,bcol:'#5a7a3a'};
+  if(nm&&!E.titan&&!E.curse){const ids=castsIn(nm);if(E.id&&!ids.includes(E.id)||!E.id)return ids.length?E:{n:nm,pow:E.id?Math.max(15,Math.min(92,myPow()*.85+R(0,22))):E.pow,spec:btSpecOf(null,/หญิง|สาว|แม่/.test(nm)?'f':'m',nm)};}}catch(e){}return E;};}
+{const ea=enAnim;enAnim=function(E){return E&&E.beast?(ANIM.lk_gap?'lk_gap':'punch'):ea.apply(this,arguments);};}
+/* neighbours age properly */
+const NPCAGE={rival:[0,0],kid:[2,5],gossip:[30,50],grump:[45,70],shop:[30,50],kind:[30,55],craft:[25,45]};
+function npcBirth(o){if(o.by==null){const a=NPCAGE[o.r]||[22,45];o.by=o.r==='rival'?S.birth+R(-1,1):o.r==='kid'?S.birth-R(a[0],a[1]):S.birth-R(a[0],a[1]);if(o.age0!=null)o.by=S.year-o.age0;}return o.by;}
+{const po=pOf;pOf=function(ref){const p=po.apply(this,arguments);try{if(p&&ref.t==='npc'&&p.o){p.age=Math.max(0,S.year-npcBirth(p.o));}}catch(e){}return p;};}
+/* the dialog's speech-box face shows the person being opened */
+{const ss=setSpeaker;setSpeaker=function(text,title){try{const cv0=$('#mFace');if(cv0){cv0.classList.remove('facei');FACEW.delete(cv0);}}catch(e){}ss.apply(this,arguments);try{if(!FACEREF||!S)return;const p=pOf(FACEREF),spec=faceSpecOf(FACEREF);if(!p||!spec)return;
+  $('#mWho').textContent=`${p.rel} · ${p.n}`;const cv=$('#mFace'),c=cv.getContext&&cv.getContext('2d');if(!c)return;const o={spec:{...spec,age:p.age},seed:0,g:faceGimmick(FACEREF),hov:false,dir:1};
+  cv.width=68;cv.height=68;FACEW.set(cv,o);cv.classList.add('facei');faceLoop();}catch(e){}};}
+/* the separate big portrait is no longer needed: the speech box carries the live face */
+{const a1=ask;ask=function(){const r=a1.apply(this,arguments);try{document.querySelectorAll('#modal canvas.facebig').forEach(c=>c.remove());}catch(e){}return r;};}
+/* a few events whose fight choice names no target: say who you actually fight */
+const addFoe=(w,id,lbl,foe)=>{for(const k of ['pool','canon','meets','mini','surprise','miles']){const ev=(WORLDS[w]?.[k]||[]).find(e=>e.id===id);if(!ev)continue;const p0=ev.play;ev.play=function(S){const r=p0.apply(this,arguments);if(r&&r.choices)for(const c of r.choices)if(c.l===lbl&&!c.foe)c.foe=foe;return r;};}};
+addFoe('jjk','jj_q','ร่วมโจมตี',['โกโจ ซาโตรุ (ม.ปลาย)',90,'b']);
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
