@@ -8911,15 +8911,30 @@ function btEnemy(s){s=s||'';const ids=castsIn(s).filter(id=>!castGone(id)&&id!==
   if(W.id==='bleach'&&/ฮอลโลว์|เมนอส|อารันคาร์/.test(s))return{n:/อารันคาร์/.test(s)?'อารันคาร์':'ฮอลโลว์',pow:p,curse:1,mask:1};
   const nm=W.id==='op'?(/ทหารเรือ/.test(s)?'ทหารเรือ':'โจรสลัด'):W.id==='naruto'?(/แยกตัว|ล้าหลัง/.test(s)?'นินจาแยกตัว':'นินจาศัตรู'):W.id==='aot'?(/สารวัตร/.test(s)?'สารวัตรทหาร':'ศัตรู'):W.id==='jojo'?'ผู้ใช้สแตนด์ศัตรู':W.id==='bleach'?'ศัตรู':'ศัตรู';
   return{n:nm,pow:p,spec:btSpecOf(null,'m',nm)};}
-const btBar=(el,v,m)=>{const p=Math.max(0,Math.min(100,v/m*100));el.style.width=p+'%';el.className=p<25?'cr':p<50?'lo':'';};
+const CASTANIM={naruto:'rasengan',sasuke:'chidori',kakashi:'chidori',itachi:'fire',gaara:'sand',neji:'palms',hinata:'palms',lee:'gates',guy:'gates',jiraiya:'rasengan',minato:'rasengan',pain:'repulse',nagato:'repulse',madara:'susanoo',obito:'kamui',kisame:'water',deidara:'clay',sasori:'puppetA',hidan:'curses',kakuzu:'wind',
+  gojo:'purple',sukuna:'slashes',megumi:'dogs',yuta:'rika',todo:'swapclap',nanami:'ratio',inumaki:'speech',nobara:'nails',choso:'bloodbeam',mahito:'curses',jogo:'fire',geto:'curses',kenjaku:'curses',toji:'staff',maki:'staff',
+  jotaro:'standrush',dio:'standrush',josuke:'standrush',kira:'clay',giorno:'standrush',polnareff:'slash',kakyoin:'standability',
+  luffy:'punch',zoro:'threeswords',sanji:'punch',ace:'fire',akainu:'fire',aokiji:'ice',kizaru:'bolt',whitebeard:'punch',mihawk:'slash',shanks:'slash',
+  ichigo:'whitebeam',rukia:'ice',byakuya:'bankai',kenpachi:'slash',aizen:'bankai',ulquiorra:'redball',grimmjow:'redball',uryu:'arrows',
+  eren:'titan',reiner:'titan',bertholdt:'titan',annie:'titan',zeke:'titan',levi:'odm',mikasa:'odm'};
+function enAnim(E){if(E.id&&CASTANIM[E.id]&&ANIM[CASTANIM[E.id]])return CASTANIM[E.id];if(E.titan)return'tstomp';if(E.mask)return'cero';if(E.curse)return'tendril';
+  const n=E.n||'';if(W.id==='jojo')return'standrush';if(W.id==='naruto')return /แยกตัว/.test(n)?'bolt':'fire';if(W.id==='op')return /ทหารเรือ/.test(n)?'gun':'slash';if(W.id==='aot')return'gun';if(W.id==='bleach')return'slash';if(['jjk','heian','jjedo'].includes(W.id))return'cursed';return'punch';}
+Object.assign(ANIM,{
+  tstomp(px,tt,hx,hy,col,LW,LH,gy){const p=Math.min(1,tt/600),x=hx+70,y=-30+p*(gy-14);px(x-14,y,30,22,'#c4875e');for(let i=0;i<4;i++)px(x-14+i*8,y+22,6,8,'#b27352');if(p>=1){for(let a=0;a<14;a++)px(x+Math.cos(a)*(tt-600)/10,gy-2-Math.abs(Math.sin(a))*(tt-600)/30,3,2,'#8a7a5a');}},
+  cero(px,tt,hx,hy,col,LW){const ch=Math.min(1,tt/500),r=2+ch*6;for(let a=0;a<16;a++)px(hx+6+Math.cos(a)*r,hy+Math.sin(a)*r,2,2,'#e43b44');if(tt>500){const w=Math.min(LW,(tt-500)/2);px(hx+6,hy-5,w,10,'rgba(228,59,68,.85)');px(hx+6,hy-2,w,4,'#feae34');}},
+  tendril(px,tt,hx,hy,col,LW,LH,gy){for(let j=0;j<4;j++){const len=Math.min(130,tt/6);for(let x=0;x<len;x+=2)px(hx+4+x,hy-6+j*5+Math.sin((x+tt/3)/8+j*2)*5,2,2,j%2?'#4a3a5a':'#68386c');}},
+});
+const btBar=(el,v,m)=>{if(!el)return;const p=Math.max(0,Math.min(100,v/m*100));el.style.width=p+'%';el.classList.toggle('cr',p<25);el.classList.toggle('lo',p>=25&&p<50);};
 function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='undefined'||!document.body||!S){done({r:'skip'});return;}
-  BT.on=true;const L=techList(S),mx=100,st0=S.st.hp;let me=Math.max(8,S.st.hp|0),en=100,trick=0,lastT=null,lock=false,flashE=0,flashM=0,turn=0;
+  BT.on=true;const L=techList(S),mx=100,st0=S.st.hp;let fx=null,dash=0;let me=Math.max(8,S.st.hp|0),en=100,trick=0,lastT=null,lock=false,flashE=0,flashM=0,turn=0;
   const d=document.createElement('div');d.id='btl';d.innerHTML='<div class="bx"><canvas width="240" height="120"></canvas><div class="bthud"><div><b class="nm"></b><small class="hpm"></small><div class="btbar"><i class="bm"></i></div></div><div style="text-align:right"><b class="ne"></b><small class="hpe"></small><div class="btbar"><i class="be"></i></div></div></div><p class="btlog" aria-live="polite"></p><div class="btacts"></div></div>';
-  document.body.append(d);const cv=d.querySelector('canvas'),c=cv.getContext('2d'),log=d.querySelector('.btlog'),acts=d.querySelector('.btacts');
+  document.body.append(d);const bm=d.querySelector('.bm'),be=d.querySelector('.be');const cv=d.querySelector('canvas'),c=cv.getContext('2d'),log=d.querySelector('.btlog'),acts=d.querySelector('.btacts');
   d.querySelector('.nm').textContent=S.name;d.querySelector('.ne').textContent=E.n;
-  const hud=()=>{btBar(d.querySelector('.bm'),me,mx);btBar(d.querySelector('.be'),en,100);d.querySelector('.hpm').textContent=`HP ${Math.max(0,me|0)}/${mx} · ฝีมือ ${Math.round(myPow())}`;d.querySelector('.hpe').textContent=`HP ${Math.max(0,en|0)}/100 · ฝีมือ ${Math.round(E.pow)}`;};
+  const hud=()=>{setTimeout(()=>{try{paint();}catch(e){}},0);btBar(bm,me,mx);btBar(be,en,100);d.querySelector('.hpm').textContent=`HP ${Math.max(0,me|0)}/${mx} · ฝีมือ ${Math.round(myPow())}`;d.querySelector('.hpe').textContent=`HP ${Math.max(0,en|0)}/100 · ฝีมือ ${Math.round(E.pow)}`;};
   const t0=performance.now();let raf;
-  const draw=now=>{if(!d.isConnected)return;const t=now-t0;c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=false;
+  const fxc=document.createElement('canvas');fxc.width=220;fxc.height=72;const fxx=fxc.getContext('2d');
+  const draw=()=>{if(!d.isConnected)return;raf=requestAnimationFrame(draw);paint();};
+  const paint=()=>{if(!d.isConnected)return;const now=performance.now();try{const t=now-t0;c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=false;
     const g=c.createLinearGradient(0,0,0,120);const sky=W.id==='jjk'||W.id==='bleach'?['#262b44','#5a4a6a']:W.id==='op'?['#5fcde4','#3a6aa8']:W.id==='naruto'?['#9fd3a0','#5a8a5a']:['#9fc0d4','#c8b88a'];g.addColorStop(0,sky[0]);g.addColorStop(1,sky[1]);c.fillStyle=g;c.fillRect(0,0,240,120);
     const px=(x,y,w,h,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};px.c=c;px.k=1;
     const p2=(x,y,w,h,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(Math.round(x)*2,Math.round(y)*2,w*2,h*2);};p2.c=c;p2.k=2;
@@ -8928,12 +8943,20 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
     if(!(now<flashE&&(now/80|0)%2)){if(E.titan)titanBody(px,178+shE,62,48,E.n==='ไททัน'?{}:TLOOK.attack);
       else if(E.curse)curseBlob(px,178+shE,62,30+bob,t,E.mask?'#e8e8e8':'#4a3a5a');
       else chibi(p2,Math.round((178+shE)/2),31,{...(E.spec||{}),dir:-1,pose:'arm',md:'angry'});}
-    if(!(now<flashM&&(now/80|0)%2))chibi(p2,Math.round((64+shM)/2),54+(bob>0?0:0),{...meSpec(),dir:1,pose:'arm',md:'angry'});
+    const dx=now<dash?Math.round(Math.sin((1-(dash-now)/450)*3.1416)*80):0;
+    if(!(now<flashM&&(now/80|0)%2))chibi(p2,Math.round((64+shM+dx)/2),54,{...meSpec(),dir:1,pose:'arm',md:'angry'});
+    if(dx>60)for(let a=0;a<8;a++)px(170+Math.cos(a)*10,44+Math.sin(a)*10,3,3,'#fee761');
+    if(fx&&now<fx.end&&now>=fx.t0){const A=ANIM[fx.anim]||ANIM.punch,tt=(now-fx.t0)*fx.k;fxx.setTransform(1,0,0,1,0,0);fxx.clearRect(0,0,220,72);fxx.imageSmoothingEnabled=false;
+      const q1=(x,y,w,h,col)=>{if(!col)return;fxx.fillStyle=col;fxx.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};q1.c=fxx;q1.k=1;const q2=(x,y,w,h,col)=>{if(!col)return;fxx.fillStyle=col;fxx.fillRect(Math.round(x)*2,Math.round(y)*2,w*2,h*2);};q2.c=fxx;q2.k=2;
+      try{fxx.save();A(q1,tt,62,38,fx.col||'#feae34',220,72,68,q2);fxx.restore();}catch(e){}
+      c.save();c.setTransform(1,0,0,1,0,0);if(fx.who==='me')c.drawImage(fxc,2,40);else{c.translate(240,0);c.scale(-1,1);c.drawImage(fxc,0,-6);}c.restore();}
     if(trick)px(4,4,60,9,'rgba(254,174,52,.85)'),c.fillStyle='#181425',c.font='8px sans-serif',c.fillText('ศัตรูตายใจ',8,11);
-    raf=requestAnimationFrame(draw);};raf=requestAnimationFrame(draw);
-  const say2=x=>{log.textContent=x;};
+    }catch(e){}};raf=requestAnimationFrame(draw);
+  let lastAct=performance.now();const say2=x=>{log.textContent=x;lastAct=performance.now();};
+  const wd=setInterval(()=>{if(!d.isConnected){clearInterval(wd);return;}if(!lock&&!acts.children.length&&performance.now()-lastAct>6000){if(en<=0)finish('win');else if(me<=0)finish('lose');else menu();}},1500);
   const finish=r=>{cancelAnimationFrame(raf);BT.on=false;setTimeout(()=>{d.remove();},r==='win'||r==='lose'?900:200);if(r!=='lose')S.st.hp=Math.max(1,Math.min(st0,Math.round(me)));lock=true;acts.innerHTML='';done({r,t:lastT,hp:me});};
-  const enemyTurn=(mul=1)=>{if(en<=0)return;let dmg=Math.round((6+E.pow*.24-myPow()*.08)*(.75+Math.random()*.5)*mul);dmg=Math.max(3,Math.min(42,dmg));const crit=chance(.1);if(crit)dmg=Math.round(dmg*1.6);
+  const enemyTurn=(mul=1)=>{if(en<=0)return;const an=enAnim(E);fx={who:'en',anim:an,col:E.titan?'#c4875e':E.curse?'#68386c':'#e43b44',t0:performance.now(),end:performance.now()+1100,k:1.6};say2(`${E.n} โจมตี!`);setTimeout(()=>enemyHit(mul),900);};
+  const enemyHit=(mul=1)=>{if(en<=0||!d.isConnected)return;let dmg=Math.round((6+E.pow*.24-myPow()*.08)*(.75+Math.random()*.5)*mul);dmg=Math.max(3,Math.min(42,dmg));const crit=chance(.1);if(crit)dmg=Math.round(dmg*1.6);
     me-=dmg;flashM=performance.now()+420;if(typeof sfx==='function')sfx('bad');say2(`${E.n} โจมตีกลับ${crit?' ถูกจุดสำคัญ!':''} คุณเสีย HP ${dmg}`);hud();
     if(me<=0){say2(`คุณล้มลง... ${E.n} ยืนอยู่เหนือร่างคุณ`);setTimeout(()=>finish('lose'),700);return;}setTimeout(menu,650);};
   const hit=(t)=>{lastT=t;turn++;S.tm=S.tm||{};S.tm[t.id]=(S.tm[t.id]||0)+1;let anim=tval(t.anim,S),mul=1;const ch=tval(t.chant,S);
@@ -8941,10 +8964,10 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
     if(t.jj&&chance(hasP('jj_flash')?.12:.05)){mul=2.5;anim='blackflash';if(!hasP('jj_flash'))gainPower('jj_flash','แบล็กแฟลชครั้งแรกเกิดกลางการต่อสู้');}
     if(trick){mul*=1.7;trick=0;}
     const free=t.isFull&&chance(.5);
-    if(t.id!=='basic')cutIn(t,ch,anim);
+    if(t.id!=='basic'){cutIn(t,ch,anim);fx={who:'me',anim,col:t.col,t0:performance.now()+900,end:performance.now()+2300,k:1.4};}else dash=performance.now()+450;
     let dmg=Math.round((10+(t.lv||0)*120+(myPow()-E.pow)*.3)*(.8+Math.random()*.4)*mul);dmg=Math.max(4,Math.min(95,dmg));
     setTimeout(()=>{en-=dmg;flashE=performance.now()+480;if(typeof sfx==='function')sfx('power');say2(`${t.id==='basic'?'คุณพุ่งเข้าใส่':t.n} · ${mul>=2.5?'แบล็กแฟลช! ':mul>1?'โจมตีตอนเผลอ! ':''}${E.n} เสีย HP ${dmg}`);hud();
-      if(en<=0){setTimeout(()=>{say2(`${E.n} ล้มลง คุณชนะ!`);finish('win');},600);return;}setTimeout(()=>enemyTurn(free?1.3:1),700);},t.id==='basic'?250:1400);};
+      if(en<=0){setTimeout(()=>{say2(`${E.n} ล้มลง คุณชนะ!`);finish('win');},600);return;}setTimeout(()=>enemyTurn(free?1.3:1),700);},t.id==='basic'?230:2000);};
   const alt=(k)=>{turn++;
     if(k==='talk'){const p=Math.min(.85,.12+(S.sk?.charm||0)/180+(E.id&&bd(E.id)>20?.3:0)+(o.lethal?0:.2)-(E.curse||E.titan?1:0));if(chance(p)){say2(`คุณพูดจนอีกฝ่ายลดอาวุธลง`);setTimeout(()=>finish('talk'),700);}else{say2(E.curse||E.titan?`${E.n} ไม่เข้าใจคำพูดของมนุษย์`:`${E.n} ไม่ฟังคุณเลย`);setTimeout(()=>enemyTurn(),600);}}
     if(k==='trick'){const p=Math.min(.85,.35+(S.sk?.charm||0)/250+(S.dark||0)/400);if(chance(p)){trick=1;say2(`คุณแกล้งทำเป็นเจ็บหนัก ${E.n} ลดการ์ดลง การโจมตีครั้งหน้าจะแรงขึ้นมาก`);setTimeout(menu,500);}else{say2(`${E.n} มองออกว่าคุณแกล้ง`);setTimeout(()=>enemyTurn(1.25),600);}}
@@ -8953,7 +8976,7 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
     for(const t of L.slice(0,7)){const b=document.createElement('button');b.type='button';b.style.setProperty?b.style.setProperty('--c',t.col||'#888'):0;const est=Math.round(10+(t.lv||0)*120+(myPow()-E.pow)*.3);
       b.innerHTML='<span></span><small></small>';b.firstChild.textContent=t.id==='basic'?'โจมตีด้วยตัวเอง':t.n;b.lastChild.textContent=`แรง ~${Math.max(4,est)}${t.hp?` · เสีย HP ${t.hp}`:''}${t.isFull?' · ร่ายนาน อาจโดนสวน':''}`;b.onclick=()=>{acts.innerHTML='';hit(t);};acts.append(b);}
     const pt=Math.round(Math.min(.85,.12+(S.sk?.charm||0)/180+(E.id&&bd(E.id)>20?.3:0)+(o.lethal?0:.2)-(E.curse||E.titan?1:0))*100),pf=Math.round(Math.max(.1,Math.min(.9,.4+(S.st.fit-E.pow)/200))*100);
-    for(const [k,n,h] of [['talk','พูดคุย / เจรจา',`โอกาส ${Math.max(0,pt)}%`],['trick','หลอกให้ตายใจ','ครั้งหน้าแรงขึ้น 1.7 เท่า'],['flee','หนี',`โอกาส ${pf}%`]]){const b=document.createElement('button');b.type='button';b.className='alt';b.innerHTML='<span></span><small></small>';b.firstChild.textContent=n;b.lastChild.textContent=h;b.onclick=()=>{acts.innerHTML='';alt(k);};acts.append(b);}
+    for(const [k,n,h] of [['talk','พูดคุย / เจรจา',`โอกาส ${Math.max(0,pt)}%`],['trick','หลอกให้ตายใจ','ครั้งหน้าแรงขึ้น 1.7 เท่า'],['flee','หนี',`โอกาส ${pf}%`]]){const b=document.createElement('button');b.type='button';b.className='alt';b.innerHTML='<span></span><small></small>';b.firstChild.textContent=n;b.lastChild.textContent=h;if(k==='trick'&&trick){b.disabled=true;b.lastChild.textContent='ศัตรูตายใจอยู่แล้ว โจมตีเลย';}b.onclick=()=>{acts.innerHTML='';alt(k);};acts.append(b);}
     acts.querySelector('button')?.focus();};
   hud();say2(o.title?`${o.title} · ${E.n} ขวางหน้าคุณ`:`${E.n} ตั้งท่าสู้`);menu();
 }catch(e){BT.on=false;done({r:'skip'});}});}
