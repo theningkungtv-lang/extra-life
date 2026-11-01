@@ -9135,7 +9135,7 @@ function townPanel(){if(!S||!S.alive)return;if(busy){toast('รอให้เ�
 /* ===== online, part two: a server list like a game lobby, a live window onto another player's life, actions with
    honest odds (spar, date, co-op quests, murder with self-defence), and cutscenes that put both of you in frame ===== */
 ON.tab='server';
-const svLabel=pr=>onTxt(pr.wt||pr.w,24)+(typeof SERVERS!=='undefined'&&pr.sv?' · '+(SERVERS.find(x=>x.id===pr.sv)?.n||''):'');
+const svLabel=pr=>onTxt(pr.wt||pr.w,24)+(typeof svOf==='function'&&pr.sv?' · '+(svOf(pr.sv)?.n||''):'');
 const oclamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const OWT={aot:'#8b7762',naruto:'#63c74d',jjk:'#8a5ac8',heian:'#c9a227',jjedo:'#b55088',op:'#5fcde4',bleach:'#262b44',jojo:'#feae34'};
 const myFit=()=>Math.round(S.st.fit+((S.sk?.fight||0)+(S.sk?.gear||0))*.25+powB());
@@ -9541,9 +9541,11 @@ const CAMACT=[[/กิน|ราเม็ง|ดังโงะ|อาหาร|
   const n=shortN(cm.id);c.font=`bold ${Math.max(9,Math.round(4.2*k))}px sans-serif`;const tw=c.measureText(n).width;const bx=x*k-tw/2,by=(gy-27)*k;
   c.fillStyle='rgba(24,20,37,.75)';c.fillRect(bx-3*k/2,by-11*k/3,tw+3*k,14*k/3+2);c.fillStyle='#fee761';c.fillText(n,bx,by);}catch(e){}};}
 
-/* ===== online servers: each one is a world at a fixed era with one clock for everybody. The server year comes from the
-   real clock (one game year every 24 seconds, the normal speed), new players are born into the server's current year,
-   and nobody can pause, speed up or skip; a player held up by an event catches up afterwards ===== */
+/* ===== online servers are hosted by players. SERVERS below are only the era templates a host picks from. Each live server is a record
+   {id,n,w,y,e,h,hn}: its clock is y + (now-e) in game months, so everyone inside shares one year. Every player inside carries the record
+   in presence, so the server lives on after the host leaves and disappears when the last player leaves. Only the host (who holds the
+   secret behind h) can delete it. One game year is 24 real seconds; new players are born into the server's current year,
+   nobody can pause, speed up or skip, and a player held up by an event catches up afterwards ===== */
 const SERVERS=[
   {id:'aot-1',w:'aot',n:'ปาราดีสก่อนกำแพงแตก',start:815,span:30},{id:'aot-2',w:'aot',n:'ยุคกำแพงแตกถึงสงครามปลดปล่อย',start:840,span:25},
   {id:'nar-1',w:'naruto',n:'ยุคสงครามนินจาครั้งที่ 3',start:20,span:30},{id:'nar-2',w:'naruto',n:'ยุคนารูโตะ',start:45,span:25},
@@ -9551,37 +9553,70 @@ const SERVERS=[
   {id:'op-1',w:'op',n:'ยุคราชาโจรสลัดโรเจอร์',start:1470,span:30},{id:'op-2',w:'op',n:'ยุคโจรสลัดผู้ยิ่งใหญ่',start:1495,span:35},
   {id:'bl-1',w:'bleach',n:'ยุคยมทูตแห่งคาราคุระ',start:1975,span:40},
   {id:'jo-1',w:'jojo',n:'ยุคสตาร์ดัสต์ครูเสดเดอร์ส',start:1960,span:32},{id:'jo-2',w:'jojo',n:'ยุคเพชรแท้ไม่มีวันแตก',start:1975,span:28}];
-const SVEPOCH=Date.UTC(2026,0,1),SVMS=()=>SPEEDS[1].m;
-const svMonths=sv=>Math.floor((Date.now()-SVEPOCH)/SVMS())%(sv.span*12);
-const svYear=sv=>sv.start+Math.floor(svMonths(sv)/12);
-const svOf=id=>SERVERS.find(s=>s.id===id);
-const svCount=id=>ON.peers.filter(p=>p.presence?.g==='el1'&&p.presence.on&&p.presence.sv===id).length;
+const SVMS=()=>SPEEDS[1].m;
+const svMonth=r=>r.y*12+Math.max(0,(Date.now()-r.e)/SVMS());
+const svYear=r=>Math.floor(svMonth(r)/12);
+const svHash=s=>{let a=2166136261,b=5381;for(const ch of String(s)){const c=ch.charCodeAt(0);a=Math.imul(a^c,16777619);b=Math.imul(b,33)^c;}return(a>>>0).toString(36)+(b>>>0).toString(36);};
+const svKeys=()=>{try{return JSON.parse(localStorage.getItem('el-hks')||'{}');}catch(e){return{};}};
+function svClean(r){if(!r||typeof r!=='object'||!WORLDS[r.w]||!Number.isFinite(+r.y)||!Number.isFinite(+r.e))return null;
+  return{id:String(r.id).slice(0,24),n:onTxt(String(r.n||''),40)||'เซิร์ฟเวอร์ไร้ชื่อ',w:r.w,y:Math.round(+r.y),e:Math.min(+r.e,Date.now()),h:String(r.h||'').slice(0,24),hn:onTxt(String(r.hn||''),30)};}
+ON.svMine=[];ON.svDead=(()=>{try{return JSON.parse(localStorage.getItem('el-svd')||'{}');}catch(e){return{};}})();
+/* every live server anyone in the lobby can see: the ones I host, the one I play in, and every record carried in someone's presence */
+function svLive(){const m=new Map(),add=r=>{r=svClean(r);if(r&&!ON.svDead[r.id]&&!m.has(r.id))m.set(r.id,r);};
+  for(const r of ON.svMine)add(r);if(S&&S.online&&ON.sv?.r)add(ON.sv.r);
+  for(const p of ON.peers||[]){const pr=p.presence;if(pr?.g==='el1')[].concat(pr.svr||[]).slice(0,4).forEach(add);}
+  return[...m.values()].sort((a,b)=>a.e-b.e);}
+const svOf=id=>svLive().find(s=>s.id===id);
+const svCount=id=>(ON.peers||[]).filter(p=>p.presence?.g==='el1'&&p.presence.on&&p.presence.sv===id).length;
+const svMineQ=r=>{const k=svKeys()[r.id];return!!k&&svHash(k)===r.h;};
 function svWorld(sv,y){const w=WORLDS[sv.w];const fw=typeof w.fam==='function'?w.fam(y):sv.w;return WORLDS[fw]?fw:sv.w;}
 function svSave(){try{localStorage.setItem('el-sv',JSON.stringify(ON.sv||null));}catch(e){}}
-try{ON.sv=JSON.parse(localStorage.getItem('el-sv')||'null');}catch(e){ON.sv=null;}
-{const mp1=myPresence;myPresence=function(){const p=mp1();if(S&&S.online&&ON.sv)p.sv=ON.sv.id;return p;};}
-/* picking a server on the setup screen */
+try{ON.sv=JSON.parse(localStorage.getItem('el-sv')||'null');if(ON.sv&&!svClean(ON.sv.r))ON.sv=null;}catch(e){ON.sv=null;}
+function svHost(name,tpl){const t=SERVERS.find(s=>s.id===tpl)||SERVERS[0],id='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),k=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  const ks=svKeys();ks[id]=k;try{localStorage.setItem('el-hks',JSON.stringify(ks));}catch(e){}
+  const r={id,n:onTxt(name,40)||t.n,w:t.w,y:t.start,e:Date.now(),h:svHash(k),hn:onTxt(cfg.name||'',30)};ON.svMine.unshift(r);ON.svMine=ON.svMine.slice(0,3);ON.svPick=id;pushPresence();return r;}
+function svDelete(r){const k=svKeys()[r.id];if(!k||svHash(k)!==r.h)return;ON.svX={id:r.id,k,t:Date.now()};ON.svDead[r.id]=Date.now();try{localStorage.setItem('el-svd',JSON.stringify(ON.svDead));}catch(e){}
+  ON.svMine=ON.svMine.filter(x=>x.id!==r.id);if(ON.svPick===r.id)ON.svPick=null;if(S&&S.online&&ON.sv?.id===r.id)svKick(r,'คุณปิดเซิร์ฟเวอร์ของตัวเองแล้ว');pushPresence();}
+function svKick(r,why){ON.sv=null;svSave();if(S){S.online=false;try{onNote(`${why} ชีวิตนี้เล่นต่อแบบคนเดียว`);say(`เซิร์ฟเวอร์ "${r.n}" ถูกปิด ${why}`,'plain');render();}catch(e){}}}
+/* presence carries the record of the server I'm in plus servers I host, and the host's delete notice for three minutes */
+{const mp1=myPresence;myPresence=function(){const p=mp1();const rs=[];if(S&&S.online&&ON.sv?.r){p.sv=ON.sv.id;rs.push(ON.sv.r);}for(const r of ON.svMine)if(!rs.some(x=>x.id===r.id))rs.push(r);
+  if(rs.length)p.svr=rs.slice(0,4);if(ON.svX&&Date.now()-ON.svX.t<180000)p.svx={id:ON.svX.id,k:ON.svX.k};return p;};}
+/* a delete notice counts only if its key hashes to the record's host tag */
+function svWatch(){const live=svLive();for(const p of ON.peers||[]){const x=p.presence?.svx;if(!x||ON.svDead[x.id])continue;const r=live.find(s=>s.id===x.id)||(ON.sv?.r?.id===x.id?ON.sv.r:null);
+    if(!r||svHash(x.k)!==r.h)continue;ON.svDead[r.id]=Date.now();try{localStorage.setItem('el-svd',JSON.stringify(ON.svDead));}catch(e){}if(S&&S.online&&ON.sv?.id===r.id)svKick(r,'โฮสต์ลบเซิร์ฟเวอร์นี้แล้ว');}
+  const old=Date.now()-864e5;for(const k in ON.svDead)if(ON.svDead[k]<old)delete ON.svDead[k];}
+setInterval(()=>{try{svWatch();const su=document.getElementById('setup');if(su&&!su.hidden&&cfg.online&&ON.room){pushPresence();const box=document.getElementById('svRow');if(!box||!box.contains(document.activeElement))onSetupUI();}}catch(e){}},2500);
+/* the setup screen: open servers everyone can see, and a form to host a new one */
 {const os0=onSetupUI;onSetupUI=function(){os0.apply(this,arguments);try{let box=document.getElementById('svRow');const row=document.getElementById('onRow');if(!row)return;
   if(!cfg.online||!ON.room){if(box)box.remove();return;}if(!box){box=document.createElement('div');box.id='svRow';box.className='svrow';row.after(box);}box.innerHTML='';
-  const h=document.createElement('b');h.textContent='เลือกเซิร์ฟเวอร์ (ทุกคนในเซิร์ฟเวอร์เดียวกันใช้เวลาเดียวกัน)';box.append(h);
-  if(!ON.svPick||!svOf(ON.svPick))ON.svPick=(SERVERS.find(s=>s.w===(WORLDS[cfg.world]?.famOf||cfg.world))||SERVERS[0]).id;
-  for(const sv of SERVERS){const b=document.createElement('button');b.type='button';b.className='svb';b.setAttribute('aria-pressed',ON.svPick===sv.id);const y=svYear(sv);
-    const t=document.createElement('span');t.textContent=sv.n;const sm=document.createElement('small');sm.textContent=`${WORLDS[sv.w].title} · ตอนนี้ปี ${y} · ผู้เล่น ${svCount(sv.id)} คน`;b.append(t,sm);
-    b.onclick=()=>{ON.svPick=sv.id;svApply();setupRender();};box.append(b);}
-  const nt=document.createElement('small');nt.style.opacity='.75';nt.textContent='คุณจะเกิดในปีปัจจุบันของเซิร์ฟเวอร์ เวลาเดินตลอด หยุด เร่ง หรือข้ามปีไม่ได้ ยังแก่และตายได้เหมือนเดิม';box.append(nt);}catch(e){}};}
-function svApply(){const sv=svOf(ON.svPick);if(!sv)return;const y=svYear(sv),fw=svWorld(sv,y);cfg.world=sv.w;cfg.year=y;if(!WORLDS[fw].places[cfg.place])cfg.place=Object.keys(WORLDS[fw].places)[0];}
-setInterval(()=>{try{const su=document.getElementById('setup');if(su&&!su.hidden&&cfg.online&&ON.room&&document.getElementById('svRow')){svApply();onSetupUI();}}catch(e){}},6000);
-(function(){try{const st=document.createElement('style');st.textContent=`.svrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin:6px 0 10px}.svrow>b,.svrow>small{grid-column:1/-1}
-.svb{text-align:left;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line,#444);background:transparent;color:inherit;cursor:pointer}.svb small{display:block;opacity:.7;font-size:12px}.svb[aria-pressed=true]{outline:2px solid #7ad0a0;background:rgba(122,208,160,.08)}`;document.head.append(st);}catch(e){}})();
-{const sg0=startGame;startGame=async function(c){if(c&&c.online&&ON.room){const sv=svOf(ON.svPick)||SERVERS.find(s=>s.w===c.world)||SERVERS[0];const y=svYear(sv);c.year=y;const fw=svWorld(sv,y);c.world=fw;if(!WORLDS[fw].places[c.place])c.place=Object.keys(WORLDS[fw].places)[0];ON.sv={id:sv.id,t0:Date.now(),m0:null};}
-  else if(c&&!c.online)ON.sv=null;const r=await sg0.apply(this,arguments);if(ON.sv&&S&&S.online){ON.sv.m0=S.year*12+(S.mo||0);svSave();}else svSave();return r;};}
+  const live=svLive();if(ON.svPick&&!live.some(s=>s.id===ON.svPick))ON.svPick=null;if(!ON.svPick&&live.length)ON.svPick=live[0].id;
+  const h=document.createElement('b');h.textContent=live.length?`เซิร์ฟเวอร์ที่เปิดอยู่ (${live.length}) · ทุกคนในเซิร์ฟเดียวกันใช้เวลาเดียวกัน`:'ยังไม่มีเซิร์ฟเวอร์ที่เปิดอยู่ เปิดเองได้เลย คุณจะเป็นโฮสต์';box.append(h);
+  for(const sv of live){const b=document.createElement('div');b.className='svb';b.tabIndex=0;b.setAttribute('role','button');b.setAttribute('aria-pressed',ON.svPick===sv.id);const y=svYear(sv),mine=svMineQ(sv),n=svCount(sv.id);
+    const t=document.createElement('span');t.textContent=sv.n;const sm=document.createElement('small');sm.textContent=`${WORLDS[sv.w].title} · ปี ${y} · ผู้เล่น ${n} คน · โฮสต์ ${mine?'คุณ':sv.hn||'ไม่ระบุชื่อ'}`;b.append(t,sm);
+    if(mine){const d=document.createElement('button');d.type='button';d.className='svdel';d.textContent='ลบเซิร์ฟ';d.onclick=e=>{e.stopPropagation();if(confirm(`ลบเซิร์ฟเวอร์ "${sv.n}"? ผู้เล่นที่อยู่ข้างในจะถูกย้ายไปเล่นคนเดียว`)){svDelete(sv);onSetupUI();}};b.append(d);}
+    const go=()=>{ON.svPick=sv.id;svApply();setupRender();};b.onclick=go;b.onkeydown=e=>{if(e.target===b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go();}};box.append(b);}
+  const f=document.createElement('form');f.className='svnew';const nm=document.createElement('input');nm.placeholder='ชื่อเซิร์ฟเวอร์ใหม่';nm.maxLength=40;nm.value=ON.svForm?.n||'';nm.oninput=()=>{ON.svForm={...ON.svForm,n:nm.value};};
+  const sel=document.createElement('select');const fam=WORLDS[cfg.world]?.famOf||cfg.world;for(const t of SERVERS){const o=document.createElement('option');o.value=t.id;o.textContent=`${WORLDS[t.w].title} · ${t.n} (เริ่มปี ${t.start})`;sel.append(o);}
+  sel.value=ON.svForm?.t||(SERVERS.find(s=>s.w===fam)||SERVERS[0]).id;sel.onchange=()=>{ON.svForm={...ON.svForm,t:sel.value};};
+  const bt=document.createElement('button');bt.type='submit';bt.textContent='เปิดเซิร์ฟเวอร์ (เป็นโฮสต์)';f.append(nm,sel,bt);f.onsubmit=e=>{e.preventDefault();svHost(nm.value.trim(),sel.value);ON.svForm=null;svApply();setupRender();};box.append(f);
+  const nt=document.createElement('small');nt.style.opacity='.75';nt.textContent='โฮสต์ลบเซิร์ฟของตัวเองได้ ถ้าโฮสต์ออก เซิร์ฟยังอยู่จนกว่าผู้เล่นคนสุดท้ายจะออก · เกิดในปีปัจจุบันของเซิร์ฟ หยุด เร่ง หรือข้ามปีไม่ได้';box.append(nt);}catch(e){}};}
+function svApply(){const sv=svOf(ON.svPick);if(!sv)return;const y=svYear(sv),fw=svWorld(sv,y);cfg.world=fw;cfg.year=y;if(!WORLDS[fw].places[cfg.place])cfg.place=Object.keys(WORLDS[fw].places)[0];}
+(function(){try{const st=document.createElement('style');st.textContent=`.svrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin:6px 0 10px}.svrow>b,.svrow>small,.svnew{grid-column:1/-1}
+.svb{position:relative;text-align:left;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line,#444);background:transparent;color:inherit;cursor:pointer}.svb small{display:block;opacity:.7;font-size:12px;padding-right:56px}.svb[aria-pressed=true]{outline:2px solid #7ad0a0;background:rgba(122,208,160,.08)}
+.svdel{position:absolute;top:6px;right:6px;font:inherit;font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid #c66;background:transparent;color:#e88;cursor:pointer}
+.svnew{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.svnew input,.svnew select{flex:1 1 160px;min-width:0;font:inherit;padding:6px 8px;border-radius:6px;border:1px solid var(--line,#444);background:transparent;color:inherit}.svnew select option{color:#000}
+.svnew button{font:inherit;padding:6px 12px;border-radius:6px;border:1px solid #7ad0a0;background:rgba(122,208,160,.12);color:inherit;cursor:pointer}`;document.head.append(st);}catch(e){}})();
+/* starting online: join the picked server, or host one for this world if none is picked */
+{const sg0=startGame;startGame=async function(c){if(c&&c.online&&ON.room){let sv=svOf(ON.svPick);if(!sv){const fam=WORLDS[c.world]?.famOf||c.world;sv=svHost(`เซิร์ฟของ${onTxt(c.name||'',20)||'ผู้เล่น'}`,(SERVERS.find(s=>s.w===fam)||SERVERS[0]).id);}
+    const y=svYear(sv);c.year=y;const fw=svWorld(sv,y);c.world=fw;if(!WORLDS[fw].places[c.place])c.place=Object.keys(WORLDS[fw].places)[0];ON.sv={id:sv.id,r:sv,t0:Date.now(),m0:null};}
+  else if(c&&!c.online)ON.sv=null;const r=await sg0.apply(this,arguments);if(ON.sv&&S&&S.online){ON.sv.t0=Date.now();ON.sv.m0=svMonth(ON.sv.r);svSave();}else svSave();return r;};}
 /* one clock: catch up when behind, wait when ahead, never stay paused */
 setInterval(()=>{try{if(!S||!S.online||!ON.sv||ON.sv.m0==null||!S.alive||$('#game').hidden)return;const tgt=ON.sv.m0+(Date.now()-ON.sv.t0)/SVMS(),cur=S.year*12+(S.mo||0)+(S.mt||0),diff=tgt-cur;
   if(diff>36){ON.sv.t0=Date.now();ON.sv.m0=Math.floor(cur);svSave();onNote('คุณหายไปนาน เวลาของคุณถูกตั้งใหม่ให้เดินพร้อมเซิร์ฟเวอร์');return;}
   if(diff<-.6){if(AUTO.on){ON.svHold=1;setAuto(false);}return;}
   if(!AUTO.on&&!busy&&$('#modal').hidden){ON.svHold=0;setAuto(true);}
   if(diff>1.2&&!busy&&$('#modal').hidden)S.mt=Math.min(.98,(S.mt||0)+Math.min(.45,diff*.06));}catch(e){}},300);
-{const ca1=continueAs;continueAs=function(k){const on=S?.online;const r=ca1.apply(this,arguments);try{if(on&&S){S.online=true;if(ON.sv){ON.sv.t0=Date.now();ON.sv.m0=S.year*12+(S.mo||0);svSave();}}}catch(e){}return r;};}
+{const ca1=continueAs;continueAs=function(k){const on=S?.online;const r=ca1.apply(this,arguments);try{if(on&&S&&ON.sv){S.online=true;ON.sv.t0=Date.now();ON.sv.m0=S.year*12+(S.mo||0);svSave();}}catch(e){}return r;};}
 
 /* ===================== DRAGON BALL: martial artists, Saiyans, seven balls and a dragon that grants a wish ===================== */
 const saiyan=S=>bloodOf(S).some(b=>b==='saiyan'||b==='halfsaiyan');
@@ -10053,6 +10088,860 @@ const GFX={p:[],k:'',w:0};
     else if(kind==='petal'){c.save();c.translate(p.x,p.y);c.rotate(t/600+p.ph);c.fillStyle='rgba(255,183,213,.9)';c.beginPath();c.ellipse(0,0,3*u*p.s,1.6*u*p.s,0,0,6.283);c.fill();c.restore();}
     else{c.fillStyle=`rgba(255,240,210,${.18+.18*Math.sin(t/800+p.ph)})`;c.beginPath();c.arc(p.x,p.y,1.2*u*p.s,0,6.283);c.fill();}}
   const vg=c.createRadialGradient(w/2,h*.55,Math.min(w,h)*.4,w/2,h*.55,Math.max(w,h)*.72);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.34)');c.fillStyle=vg;c.fillRect(0,0,w,h);c.restore();}catch(e){}};}
+
+/* ===== story arcs told chapter by chapter: a big arc is a run of canon events in the same or following months. Someone who belongs
+   in that fight gets the chapter's news, then a real choice (a fight choice opens the battle screen against the lore foe in `foe`);
+   everyone else gets the chapter as news, so no arc goes by in one line ===== */
+let ARCFOE=null;
+{const tg=techGate;techGate=function(c){ARCFOE=c&&c.foe||null;try{return tg.apply(this,arguments);}finally{ARCFOE=null;}};}
+{const be=btEnemy;btEnemy=function(s){if(!ARCFOE)return be.apply(this,arguments);const [n,pw,fl]=ARCFOE,E=fE(n,fl||'',Math.max(12,Math.min(99,pw)));
+  const id=castsIn(n)[0];if(id&&castSpec(id)){E.id=id;E.spec=castSpec(id);}if(pw>=80)E.boss=1;return E;};}
+/* a choice result: p = survival chance (plus fitness), then fame, fight skill, money, darkness, trauma, joy, bonds, flag, power, line */
+function arcDo(S,o){if(o.p!=null&&!live(Math.min(.97,o.p+fitb(o.fb||300)),o.d||'เสียชีวิตกลางศึก'))return;
+  if(o.fm)fm(o.fm);if(o.sk)skill('fight',o.sk);if(o.mn)mon(o.mn);if(o.dk)dk(o.dk);if(o.tr)trauma(o.tr);if(o.j)st('joy',o.j);
+  if(o.b)for(const [id,v] of Object.entries(o.b))bond(id,v);if(o.fl)S.flags[o.fl]=1;if(o.pw&&!hasP(o.pw))gainPower(o.pw,o.pwx||'');
+  if(o.s)say(o.s,o.k||'good');if(o.m)remember(o.m,o.s||'',o.k==='bad'?'grief':'fight',3);if(o.f)o.f(S);}
+const ARCWHO={};
+function ARC(w,y,list){if(!WORLDS[w])return;addCanon(w,list.map(c=>({id:c.id,y:c.y??y,mo:c.mo,t:c.t,major:!!c.major,arc:1,
+  play(S){if(c.when&&!c.when(S))return;if(c.mood)scene(c.mood,[],c.cap||c.t);const who=c.who||ARCWHO[w]||(()=>true);
+    if(!c.x||S.age<(c.age??12)||!who(S)){news(c.t,c.n);return;}news(c.t,c.n);
+    return{text:c.x,choices:c.c.map(o=>({l:o.l,g:o.g,foe:o.foe,f(S){arcDo(S,o);}}))};}})));}
+const K=(l,g,o={})=>({l,g,...o});
+
+/* ---------------- Jujutsu Kaisen: Shibuya, the Culling Game, Shinjuku ---------------- */
+ARCWHO.jjk=S=>jjS(S)||seesCurse(S);
+ARC('jjk',2018,[
+  {id:'sh_jogo',mo:9,t:'ชิบุยะ: ไฟของโจโกะ',mood:'fire',cap:'ชานชาลาใต้ดินชิบุยะ',
+   n:'หลังโกโจถูกผนึก คำสาปภูเขาไฟโจโกะเผาเซนอิน นาโอบิโตะ มากิ และนานามิจนสาหัสในพริบตาเดียว แล้วมันยัดนิ้วสุคุนะสิบนิ้วเข้าปากอิตาโดริที่หมดสติ',
+   x:'กลิ่นเนื้อไหม้ลอยขึ้นมาจากบันได คุณได้ยินเสียงโจโกะหัวเราะอยู่ชั้นล่าง มากิยังส่งเสียงครางอยู่ในกองไฟ',
+   c:[K('ลงไปสู้กับโจโกะ','brave hero',{foe:['โจโกะ',86,'cb'],p:.35,d:'ถูกโจโกะเผาเหลือแต่เถ้า',fm:14,sk:6,s:'คุณถ่วงโจโกะได้หลายวินาที พอให้ลากมากิออกมาจากกองไฟ',m:'สู้กับโจโกะ'}),
+      K('ลากมากิกับนานามิออกมา','kind brave',{p:.6,d:'ถูกเปลวไฟของโจโกะไล่ทัน',fm:8,b:{maki:10,nanami:8},s:'คุณลากทั้งสองคนขึ้นบันไดไปหาทีมแพทย์ทัน'}),
+      K('ถอยขึ้นไปบนพื้นดิน','safe',{tr:10,s:'คุณได้ยินเสียงระเบิดจากใต้ดินตามหลังมาตลอดทาง','k':'plain'})]},
+  {id:'sh_sukuna',mo:9,t:'ชิบุยะ: ราชาคำสาปตื่น',mood:'red',cap:'สี่แยกชิบุยะที่ถูกตัดเป็นชิ้น',
+   n:'สุคุนะในร่างอิตาโดริฆ่าโจโกะ เมงุมิเรียกมาโฮรากะเพื่อหยุดมัน สุคุนะจึงกางอาณาเขตวิหารมารร้าย ทุกอย่างในรัศมีสองร้อยเมตรถูกหั่นจนเป็นผุยผง',
+   x:'เสียงคนกรีดร้องหยุดลงพร้อมกัน ทุกอย่างรอบตัวคุณถูกตัดเป็นเส้นบางๆ เหมือนกระดาษในเครื่องย่อย คุณยังอยู่ขอบรัศมี',
+   c:[K('วิ่งออกนอกรัศมีอาณาเขต','safe',{p:.55,d:'ถูกคมของวิหารมารร้ายหั่นเป็นชิ้น',tr:20,s:'คุณออกมาได้ทันก่อนเส้นตัดจะถึงตัว หันกลับไปก็ไม่เหลือตึกสักหลัง','k':'plain'}),
+      K('ใช้พลังคำสาปกางม่านป้องกันพลเรือน','hero kind',{p:.4,d:'ม่านของคุณแตกต่อหน้าคมของสุคุนะ',fm:16,j:4,s:'ม่านของคุณแตกในสามวินาที แต่สามวินาทีนั้นพาเด็กสิบคนออกมาได้',m:'กันคมของสุคุนะ'})]},
+  {id:'sh_mahito',mo:9,t:'ชิบุยะ: แสงดำของอิตาโดริ',mood:'grief',cap:'ซากอาคารชิบุยะ',
+   n:'นานามิตายด้วยมือมาฮิโตะต่อหน้าอิตาโดริ คุงิซากิถูกแตะหน้า แล้วโทโดเข้ามาช่วย อิตาโดริปล่อยแสงดำติดกันจนมาฮิโตะหนี เคนจาคุในร่างเกะโทดูดมาฮิโตะเข้าไป และประกาศแผนการต่อหน้าทุกคน',
+   x:'มาฮิโตะหลายสิบร่างถูกปล่อยออกมาจากตัวมัน โทโดตะโกนเรียกคุณ "อย่ายืนเฉย!"',
+   c:[K('ร่วมสู้กับมาฮิโตะข้างโทโด','brave hero',{foe:['มาฮิโตะ',84,'c'],p:.4,d:'ถูกมาฮิโตะแตะวิญญาณจนร่างบิดเบี้ยว',fm:14,sk:7,b:{todo:10,itadori:8},s:'แสงดำของอิตาโดริจบศึกนี้ คุณเห็นมันกับตา',m:'สู้กับมาฮิโตะ'}),
+      K('พาคุงิซากิไปหานิตตะ','kind',{p:.7,d:'ร่างกลายพันธุ์ของมาฮิโตะไล่ทัน',b:{nobara:10},fm:6,s:'นิตตะ อาราตะ หยุดอาการของเธอไว้ได้ คุณไม่รู้ว่าเธอจะตื่นอีกไหม'})]},
+  {id:'cg_rules',mo:10,t:'กฎแปดข้อของเกมคัดสรร',mood:'night',cap:'ภูติโคกาเนะลอยอยู่ข้างหู',
+   n:'กฎข้อแรก: ผู้เล่นต้องเข้าโคโลนีภายในสิบเก้าวัน ฆ่าผู้เล่นได้แต้ม ผู้ใช้คุณไสย 5 แต้ม คนธรรมดา 1 แต้ม ครบร้อยแต้มเพิ่มกฎได้หนึ่งข้อ ใครแต้มไม่ขยับสิบเก้าวันถูกลบวิชา หน่วยงานไสยศาสตร์สั่งประหารอิตาโดริ ยูตะรับคำสั่งนั้น',
+   x:'โคกาเนะสีทองลอยมาข้างหูคุณ "ผู้เล่นใหม่! ยืนยันการเข้าร่วมไหม? แต้มของคุณตอนนี้คือศูนย์"',
+   who:S=>ARCWHO.jjk(S)||S.flags.culling,
+   c:[K('ร่วมทีมอิตาโดริกับเมงุมิ ไปช่วยสึมิกิ','brave kind',{fl:'cgTeam',b:{itadori:8,megumi:10},fm:6,s:'แผนของเมงุมิคือหาแต้มให้ครบร้อยแล้วเพิ่มกฎให้ออกจากเกมได้'}),
+      K('ล่าแต้มเพื่อตัวเอง','dark brave',{foe:['ผู้เล่นจากยุคเฮอัน',62],p:.55,d:'ถูกผู้เล่นที่ฟื้นจากพันปีก่อนฆ่าเอาแต้ม',dk:14,sk:6,fl:'cgHunt',s:'แต้มของคุณขึ้นเป็นห้า โคกาเนะประกาศชื่อคุณให้ทุกคนได้ยิน'}),
+      K('ซ่อนตัวและนับวัน','safe',{tr:14,s:'เวลาสิบเก้าวันเดินช้าเหมือนสิบเก้าปี','k':'plain'})]},
+  {id:'cg_higuruma',mo:10,t:'โคโลนีโตเกียวที่ 1: ศาลของฮิงุรุมะ',mood:'night',cap:'ห้องพิจารณาคดีในอาณาเขต',
+   n:'ทนายความฮิงุรุมะ ฮิโรมิ กางอาณาเขตการตัดสินประหาร อิตาโดริถูกตั้งข้อหาฆาตกรรมที่ชิบุยะ ยอมรับผิดทุกข้อ แต่ยังชนะด้วยหมัด สุดท้ายฮิงุรุมะใช้แต้มร้อยแต้มเพิ่มกฎ: โอนแต้มให้กันได้',
+   x:'ประตูไม้โผล่ขึ้นกลางถนน คุณถูกดูดเข้าไปยืนบนแท่นจำเลย ชิกิงามิรูปตาชั่งเปิดปากอ่านข้อหา',
+   c:[K('สู้คดีด้วยเหตุผล','curious',{p:.6,fb:600,f(S){st('iq',3);},s:'คุณโต้แย้งจนชิกิงามิตัดสินว่าหลักฐานไม่พอ ฮิงุรุมะยิ้มเป็นครั้งแรกในรอบหลายปี'}),
+      K('สู้กับฮิงุรุมะด้วยกำลัง','brave',{foe:['ฮิงุรุมะ ฮิโรมิ',80],p:.45,d:'ถูกดาบประหารของฮิงุรุมะ',fm:12,sk:6,s:'ค้อนของเขาหยุดห่างหน้าคุณแค่นิ้วเดียว'})]},
+  {id:'cg_hakari',mo:10,t:'โคโลนีโตเกียวที่ 2: ฮาคาริกับคาชิโมะ',mood:'night',cap:'สนามมวยใต้ดิน',
+   n:'ฮาคาริ คินจิ ออกแจ็กพอตจากอาณาเขตการพนันมรณะ ได้ร่างกายอมตะสี่นาทีสิบเอ็ดวินาที สู้กับคาชิโมะ ฮาจิเมะ เทพสายฟ้าจากสมัยเอโดะที่ฟื้นในร่างใหม่ จนคาชิโมะยอมรับและร่วมฝ่าย',
+   x:'สายฟ้าสีฟ้าผ่าลงหลังคา ชายผมขาวยืนบนนั้น "เจ้าแข็งแรงพอจะทำให้ข้าสนุกไหม?"',
+   c:[K('ท้าคาชิโมะ','brave',{foe:['คาชิโมะ ฮาจิเมะ',87],p:.3,d:'ถูกสายฟ้าของคาชิโมะผ่าจนไหม้ทั้งร่าง',fm:18,sk:8,s:'คาชิโมะหัวเราะเสียงดัง "ไว้ค่อยมาเจอกันใหม่ตอนเจ้าแกร่งกว่านี้"',m:'รอดจากคาชิโมะ'}),
+      K('ดูฮาคาริเล่นพนัน','curious safe',{j:4,s:'เพลงเปิดของอาณาเขตดังทั่วโคโลนี ฮาคาริเต้นไปสู้ไปเหมือนไม่มีทางตาย','k':'plain'})]},
+  {id:'cg_sendai',mo:10,t:'โคโลนีเซนได: สี่ขั้วอำนาจ',mood:'night',cap:'ซากเมืองเซนได',
+   n:'โคโลนีเซนไดถูกแบ่งเป็นสี่ขั้ว อิชิโกริ ริว ปืนใหญ่พลังคำสาปจากยุคเอโดะ อุโระ ทาคาโกะ นักฆ่าจากเฮอัน คุโรอุรุชิ คำสาปแมลงสาบ และโอโตะสุ ยูตะเข้ามาคนเดียวแล้วจบทั้งหมด',
+   x:'ลำแสงขนาดตึกพุ่งผ่านหัวคุณไป ชายร่างยักษ์บนหลังคาตะโกน "ข้าหิว! หิวคนที่สู้ได้!"',
+   c:[K('สู้กับอิชิโกริ','brave',{foe:['อิชิโกริ ริว',85],p:.32,d:'ถูกปืนใหญ่พลังคำสาปของอิชิโกริ',fm:16,sk:8,s:'ยูตะมาถึงตอนคุณหมดแรง และจบศึกด้วยการคัดลอกวิชา'}),
+      K('ช่วยพลเรือนในโคโลนีหาที่ซ่อน','kind',{p:.65,d:'ถูกคุโรอุรุชิรุมกัด',fm:8,j:4,s:'คุณพาคนเจ็ดคนไปซ่อนในโรงพยาบาลร้าง ทุกคนรอดถึงเช้า'})]},
+  {id:'cg_maki',mo:11,t:'โคโลนีซากุระจิมะ: มากิ',mood:'red',cap:'ชายหาดซากุระจิมะ',
+   n:'มากิที่ฆ่าตระกูลเซนอินทั้งตระกูลในคืนเดียว เดินเข้าโคโลนีซากุระจิมะ ผู้ไม่มีพลังคำสาปแม้แต่นิดเดียวกลายเป็นนักสู้แบบเดียวกับโทจิ เธอล้มนาโอยะที่กลายเป็นคำสาปได้ด้วยมือเปล่า',
+   x:'นาโอยะในร่างคำสาปพุ่งมาด้วยความเร็ววิชาฉายภาพ เขาไม่ได้มองคุณด้วยซ้ำ เขามองหามากิ',
+   c:[K('ขวางนาโอยะไว้ให้มากิ','brave hero',{foe:['เซนอิน นาโอยะ (คำสาป)',84,'c'],p:.35,d:'ถูกนาโอยะกระแทกด้วยความเร็วเสียง',fm:14,sk:7,b:{maki:10},s:'มากิเหยียบผ่านศพนาโอยะแล้วพยักหน้าให้คุณครั้งเดียว'}),
+      K('ช่วยคุณย่าของมิวะ ทหารที่บาดเจ็บ','kind',{p:.7,s:'บนเกาะมีคนต้องการความช่วยเหลือมากกว่าคนที่อยากสู้','k':'plain',fm:4})]},
+  {id:'cg_megumi',mo:11,t:'สุคุนะยึดร่างเมงุมิ',mood:'grief',cap:'สนามโรงเรียนกลางม่าน',
+   n:'สึมิกิพี่สาวของเมงุมิคือภาชนะของโยโรซุ สุคุนะใช้คำมั่นสัญญาที่ทำกับอิตาโดริ ย้ายตัวเองเข้าร่างเมงุมิ แล้วใช้มือของเมงุมิฆ่าพี่สาวเขาเอง วิญญาณของเมงุมิจมลงในความสิ้นหวัง',
+   x:'คุณเห็นเมงุมิยืนอยู่ แต่รอยสักบนหน้าไม่ใช่ของเขา เขายิ้มแบบที่เมงุมิไม่เคยยิ้ม',
+   c:[K('ตะโกนเรียกชื่อเมงุมิ','kind brave',{p:.5,d:'สุคุนะในร่างเมงุมิตัดคุณขาดครึ่ง',tr:18,b:{megumi:8},s:'ดวงตานั้นกะพริบเหมือนมีอะไรต่อสู้อยู่ข้างใน แล้วสุคุนะก็บินจากไป','k':'plain'}),
+      K('หนีไปแจ้งทีมโรงเรียน','safe',{tr:10,fm:4,s:'ทุกคนเงียบเมื่อได้ยินข่าว แผนปลดผนึกโกโจถูกเร่งให้เร็วขึ้น','k':'plain'})]},
+  {id:'sj_gojo',mo:11,t:'ชินจูกุ: ผู้แข็งแกร่งที่สุด ปะทะ ราชาคำสาป',mood:'red',cap:'ชินจูกุที่ไม่มีคนเหลือ',
+   n:'วันที่ 24 ธันวาคม โกโจที่ปลดผนึกแล้วชนอาณาเขตกับสุคุนะห้าครั้ง ใช้สีม่วงสองร้อยเปอร์เซ็นต์จนตึกทั้งย่านหายไป แต่มาโฮรากะปรับตัวให้สุคุนะเห็นวิธีตัดพื้นที่ทั้งหมด โกโจถูกฟันขาดครึ่งด้วยคมตัดโลก',
+   x:'คุณอยู่ในทีมสำรองที่รอบนดาดฟ้าห่างไปสองกิโล ทุกครั้งที่อาณาเขตชนกัน หน้าต่างทั้งเมืองสั่น ทีมแพทย์รอคำสั่ง',
+   c:[K('เตรียมเข้าแทนเป็นคนต่อไป','brave hero',{fm:10,j:-4,fl:'sjRelay',s:'ชื่อของคุณถูกเขียนต่อจากคาชิโมะในรายชื่อผลัด','k':'plain'}),
+      K('ดูอยู่หน้าจอในฐาน','safe',{tr:16,s:'จออับเป็นสีเทาตอนที่โกโจล้มลง ไม่มีใครในห้องพูดอะไรเลย','k':'bad'})]},
+  {id:'sj_end',mo:11,t:'ชินจูกุ: วิญญาณที่ไม่ยอมแพ้',mood:'red',cap:'ใจกลางชินจูกุ',
+   n:'คาชิโมะใช้ร่างมิติเดียวแล้วตาย ฮิงุรุมะตาย ยูตะเข้าร่างโกโจด้วยวิชาของเคนจาคุ คุงิซากิกลับมาพร้อมค้อนเสียงสะท้อน อิตาโดริกางอาณาเขตของตัวเองแล้วต่อยวิญญาณสุคุนะออกจากร่างเมงุมิ ราชาคำสาปจบลงในวันที่ 25',
+   x:'ถึงคิวของคุณ สุคุนะในสภาพครึ่งร่างยังยืนอยู่กลางซากเมือง ไฟสีดำลุกบนมือมัน',
+   who:S=>(ARCWHO.jjk(S)&&S.flags.sjRelay),
+   c:[K('สู้กับสุคุนะหนึ่งยก','brave hero',{foe:['เรียวเมน สุคุนะ',97,'cb'],p:.2,d:'ถูกสุคุนะตัดขาดในการผลัดที่ชินจูกุ',fm:30,sk:10,s:'คุณซื้อเวลาได้สิบเจ็ดวินาที อิตาโดริใช้มันจนครบทุกวินาที',m:'ผลัดที่ชินจูกุ'}),
+      K('ส่งพลังรักษาให้อิตาโดริแทน','kind',{p:.6,fm:12,b:{itadori:12},s:'มือของอิตาโดริอุ่นขึ้นตอนเขาเดินกลับไปหาสุคุนะเป็นครั้งสุดท้าย'})]},
+]);
+
+/* ---------------- Dragon Ball: every saga in steps ---------------- */
+ARCWHO.db=S=>dbF(S)||S.flags.dbHunt;
+ARC('db',750,[
+  {id:'db_tao',mo:5,t:'นักฆ่าเถาไป๋ไป๋',major:1,mood:'red',cap:'ทุ่งหน้าหอคอยคาริน',
+   n:'กองทัพริบบอนแดงจ้างนักฆ่าที่ดังที่สุดในโลก เถาไป๋ไป๋ฆ่าโบระต่อหน้าลูกชายด้วยนิ้วเดียว แล้วใช้หมัดเดียวเอาชนะโกคู เด็กมีหางต้องปีนหอคอยคารินเพื่อดื่มน้ำศักดิ์สิทธิ์',
+   x:'ชายเปียยาวในชุดจีนยืนบนเสาที่เขาขว้างแล้วลอยตามไป "เป้าหมายของข้าไม่ใช่เจ้า แต่ถ้าเจ้าขวางก็ไม่มีปัญหา"',
+   c:[K('สู้กับเถาไป๋ไป๋','brave hero',{foe:['เถาไป๋ไป๋',55],p:.45,d:'ถูกนิ้วของเถาไป๋ไป๋แทงทะลุ',fm:10,sk:6,s:'คุณถ่วงเวลาได้จนโกคูลงมาจากหอคอย แล้วเถาไป๋ไป๋ก็โดนระเบิดของตัวเอง'}),
+      K('ปีนหอคอยคารินตามโกคู','brave curious',{p:.85,d:'ตกลงมาจากหอคอยคาริน',sk:5,f(S){st('fit',4);},b:{goku:6},s:'คุณปีนถึงยอดในสามวัน แมวขาวชื่อคารินโยนถั่วเซียนให้คุณหนึ่งเม็ด'})]},
+  {id:'db_baba',mo:9,t:'ยายพยากรณ์กับนักสู้ห้าคน',mood:'night',cap:'วังของยายพยากรณ์',
+   n:'โกคูต้องชนะนักสู้ห้าคนของยายพยากรณ์ เพื่อให้หาลูกบอลดาวที่สี่ ผู้สู้คนสุดท้ายใส่หน้ากากคือคุณปู่โกฮังที่ตายไปแล้ว ได้กลับมาเยี่ยมหลานหนึ่งวัน',
+   x:'ยายแม่มดบนลูกแก้วชี้มาที่คุณ "อยากรู้อนาคตไหม? ต้องชนะลูกน้องข้าก่อนนะ"',
+   c:[K('ลงสนามสู้กับมนุษย์ล่องหน','brave',{foe:['มนุษย์ล่องหนซูเกะ',35],p:.85,sk:4,mn:4,f(S){const ev=W.canon.find(e=>e.major&&evYear(e)>S.year);if(ev)say(`ยายพยากรณ์บอกคุณว่า "ปี ${evYear(ev)} ระวัง${ev.t}"`,'plain');},s:'ยายพยากรณ์ยอมเปิดลูกแก้วให้คุณดูอนาคตหนึ่งครั้ง'}),
+      K('ดูอยู่ข้างเวที','safe',{j:3,s:'ตอนชายสวมหน้ากากถอดหน้ากาก โกคูกอดเขาร้องไห้ คนดูเงียบกันหมด','k':'plain'})]},
+  {id:'db_b22',y:753,mo:2,t:'ศึกชิงเจ้ายุทธภพครั้งที่ 22',major:1,mood:'day',cap:'เวทีเทนคาอิจิ',
+   n:'เทนชินฮังศิษย์สำนักกระเรียนเปลี่ยนใจกลางสนาม แล้วชนะโกคูในรอบชิงเพราะโกคูโดนรถบรรทุกชนออกนอกเวที เถาไป๋ไป๋กลับมาในร่างไซบอร์ก',
+   x:'ชื่อของคุณถูกเรียกในรอบแรก คู่ต่อสู้คือเด็กตัวซีดที่ลอยได้และอ่านใจได้',
+   c:[K('สู้กับเจาซึ','brave',{foe:['เจาซึ',38],p:.95,fm:6,sk:4,s:'คุณบังคับตัวเองไม่คิดเลข เจาซึอ่านใจคุณไม่ออก'}),
+      K('สละสิทธิ์','safe',{s:'คุณนั่งดูโกคูกับเทนชินฮังสู้กันจนเวทีพัง','k':'plain'})]},
+  {id:'db_tambourine',y:753,mo:5,t:'ทัมบูรีนล่านักสู้',mood:'grief',cap:'ห้องพักนักสู้',
+   n:'คุริรินถูกปีศาจทัมบูรีนฆ่าตายในคืนหลังการแข่ง ลูกน้องจอมมารพิคโกโร่ไล่ฆ่านักสู้ทุกคนที่มีชื่ออยู่ในรายชื่อการแข่ง ผู้เฒ่าเต่าตายด้วยมาฟูบะ',
+   x:'ปีศาจมีปีกกระแทกหน้าต่างเข้ามา มันถือรายชื่อนักสู้และชื่อคุณถูกวงไว้ด้วยสีแดง',
+   c:[K('สู้กับทัมบูรีน','brave hero',{foe:['ทัมบูรีน',52],p:.45,d:'ถูกปีศาจทัมบูรีนฆ่าเหมือนนักสู้คนอื่นในรายชื่อ',fm:12,sk:6,s:'ทัมบูรีนหนีไปพร้อมรอยหมัดบนหน้า'}),
+      K('ทำลายรายชื่อแล้วซ่อนตัว','safe',{p:.75,d:'ปีศาจของจอมมารพบที่ซ่อน',tr:12,s:'คุณซ่อนในถ้ำสามเดือน จนข่าวมาว่าโกคูต่อยทะลุอกจอมมาร'})]},
+  {id:'db_kami',y:753,mo:8,t:'วังพระเจ้า',mood:'day',cap:'วังพระเจ้าเหนือเมฆ',
+   n:'โกคูเดินทางขึ้นไปหาพระเจ้าบนวังเหนือเมฆ ฝึกกับมิสเตอร์โปโป้สามปี ส่วนลูกของจอมมารชื่อพิคโกโร่จูเนียร์เติบโตขึ้นอย่างเงียบๆ เพื่อแก้แค้น',
+   x:'ระหว่างปีนหอคอยคาริน คุณเห็นเด็กหนุ่มคนหนึ่งลอยต่อขึ้นไปบนเมฆ',
+   c:[K('ขอฝึกกับมิสเตอร์โปโป้','brave curious',{p:.95,sk:7,f(S){st('fit',4);},b:{goku:6},s:'โปโป้ให้คุณกวาดพื้นวังสามเดือนก่อนให้เริ่มฝึกจริง'}),
+      K('กลับบ้าน','safe',{s:'คุณมองเมฆจากข้างล่าง','k':'plain'})]},
+]);
+ARC('db',761,[
+  {id:'db_raditz2',mo:3,t:'โกคูตายครั้งแรก',mood:'grief',cap:'ทุ่งหญ้าที่ยานราดิซตก',
+   n:'โกคูจับราดิซไว้ให้พิคโกโร่ยิงมาคังโคซัปโปทะลุทั้งคู่ ราดิซบอกก่อนตายว่าอีกหนึ่งปี ชาวไซย่าที่แข็งแกร่งกว่าเขาจะมา พิคโกโร่พาโกฮังไปฝึกในทะเลทราย โกคูวิ่งบนเส้นทางงูไปหาท่านไคโอ',
+   x:'คุณยืนห่างไปร้อยเมตรตอนลำแสงเกลียวพุ่งออกจากนิ้วของพิคโกโร่',
+   c:[K('ขอฝึกกับพิคโกโร่ด้วย','brave',{p:.85,d:'ถูกพิคโกโร่ทิ้งไว้กับไดโนเสาร์',sk:7,b:{piccolo:6},s:'พิคโกโร่ไม่พูดอะไร แต่ก็ไม่ไล่คุณกลับ'}),
+      K('ไปหาดราก้อนบอลเพื่อชุบโกคู','kind curious',{mn:-2,b:{bulma:6},s:'บุลมาบอกว่าต้องรอหนึ่งปี เพราะลูกบอลกลายเป็นหิน','k':'plain'})]},
+]);
+ARC('db',762,[
+  {id:'db_nappa',mo:0,t:'นัปปะ',mood:'fire',cap:'ทุ่งหินที่สนามรบ',
+   n:'นัปปะฆ่าเทนชินฮังและเจาซึ พิคโกโร่ตายเพื่อบังโกฮัง พระเจ้าที่เป็นร่างเดียวกันจึงตาย ดราก้อนบอลหายไปจากโลก โกคูมาถึงพร้อมไคโอเคน และหักหลังนัปปะในครั้งเดียว',
+   x:'ชายหัวโล้นตัวใหญ่ชี้นิ้วขึ้นฟ้า เมืองทั้งเมืองข้างหลังคุณระเบิดเป็นดอกเห็ด "ต่อไปคือพวกแกนะ"',
+   c:[K('สู้กับนัปปะ','brave hero',{foe:['นัปปะ',70],p:.3,d:'ถูกนัปปะเหยียบจนกระดูกหัก',fm:16,sk:8,s:'คุณถ่วงนัปปะไว้สองนาที โกคูลงจากเมฆสีทองพอดี',m:'สู้กับนัปปะ'}),
+      K('พาโกฮังหนี','kind',{p:.6,b:{gohan:10},s:'โกฮังร้องไห้ตลอดทางเพราะครูพิคโกโร่ตายต่อหน้า'})]},
+  {id:'db_vegeta1',mo:0,t:'เบจิต้าแปลงร่างลิงยักษ์',mood:'red',cap:'ใต้ดวงจันทร์ปลอม',
+   n:'เบจิต้าสร้างดวงจันทร์ปลอมด้วยลูกพลัง แปลงร่างเป็นลิงยักษ์แล้วบีบโกคูจนกระดูกแตก ยาจิโรเบตัดหางมัน โกฮังกลายเป็นลิงยักษ์ทับเบจิต้า คุริรินปาลูกบอลพลังที่โกคูรวบรวมไว้ เบจิต้าคลานกลับยาน',
+   x:'ลิงยักษ์ตาแดงยืนเต็มฟ้า คุริรินถือลูกพลังสีฟ้าตะโกน "ใครก็ได้ดึงความสนใจมันที!"',
+   c:[K('ดึงความสนใจลิงยักษ์','brave hero',{foe:['เบจิต้า (ลิงยักษ์)',86,'b'],p:.3,d:'ถูกลิงยักษ์เบจิต้าเหยียบ',fm:20,sk:8,b:{krillin:10},s:'วินาทีที่มันหันมาหาคุณ ลูกพลังของคุริรินกระแทกหลังมันพอดี',m:'สู้กับลิงยักษ์'}),
+      K('ส่งพลังให้ลูกบอลพลังของโกคู','kind',{fm:6,pw:'db_genki',pwx:'คุณยกมือขึ้นส่งพลังให้ลูกบอลสีฟ้า แล้วจำความรู้สึกนั้นได้',s:'ลูกบอลพลังใหญ่ขึ้นอีกนิดเพราะคุณ'})]},
+  {id:'db_namekgo',mo:3,t:'ยานสู่ดาวนาเม็ก',mood:'day',cap:'ฐานปล่อยยานของแคปซูลคอร์ป',
+   n:'บุลมา คุริริน และโกฮัง ขึ้นยานเก่าของพระเจ้าไปดาวนาเม็ก เพื่อหาดราก้อนบอลชุบชีวิตทุกคน ส่วนโกคูฝึกในยานแรงโน้มถ่วงร้อยเท่าระหว่างตามไป',
+   x:'มีที่ว่างในยานอีกหนึ่งที่',
+   c:[K('ขึ้นยานไปนาเม็กด้วย','brave curious',{fl:'namekGo',b:{gohan:6,krillin:6,bulma:6},s:'โลกหายไปทางหน้าต่าง อีกสามสิบสี่วันคุณจะถึงดาวที่ท้องฟ้าเป็นสีเขียว'}),
+      K('อยู่เฝ้าโลก','safe',{s:'คุณดูยานกลายเป็นจุดเล็กๆ บนฟ้า','k':'plain'})]},
+  {id:'db_frieza1',mo:5,t:'ฟรีเซอร์บุกหมู่บ้านนาเม็ก',mood:'fire',cap:'หมู่บ้านบนเนินสีเขียว',
+   n:'ฟรีเซอร์สั่งโดโดเรียกับซาร์บอนฆ่าชาวนาเม็กทั้งหมู่บ้านเพื่อเอาดราก้อนบอล เบจิต้าที่หายดีแล้วมาถึง ฆ่าคิวอี ฆ่าโดโดเรีย แล้วขโมยลูกบอลไปซ่อน',
+   x:'เด็กนาเม็กตัวเล็กชื่อเดนเด้วิ่งหนีโดโดเรีย มันยกมือเล็งหลังเด็ก',
+   who:S=>ARCWHO.db(S)&&S.flags.namekGo,
+   c:[K('สู้กับโดโดเรีย','brave hero',{foe:['โดโดเรีย',64],p:.5,d:'ถูกโดโดเรียยิงด้วยลำแสงจากปาก',fm:14,sk:6,b:{dende:12},s:'เดนเด้รอด เขาจะจำหน้าคุณไปตลอดชีวิต'}),
+      K('อุ้มเดนเด้หนี','kind',{p:.7,b:{dende:10,gohan:4},s:'คุณกับโกฮังหลบหลังโขดหินจนพลังของโดโดเรียผ่านไป'})]},
+  {id:'db_ginyu',mo:6,t:'หน่วยรบพิเศษกินิว',mood:'red',cap:'ทุ่งหญ้าสีฟ้าของนาเม็ก',
+   n:'หน่วยรบพิเศษกินิวห้าคนลงจากยานพร้อมท่าโพสต์ โกคูมาถึง ล้มรีคูมด้วยเข่าเดียว กินิวสลับร่างกับโกคู แต่สลับผิดไปเป็นกบเพราะโกคูโยนกบเข้าใส่',
+   x:'ชายผมแดงตัวใหญ่ชื่อรีคูมโพสต์ท่าเสร็จ แล้วพุ่งมาที่คุณก่อนเพราะคุณยืนใกล้สุด',
+   who:S=>ARCWHO.db(S)&&S.flags.namekGo,
+   c:[K('สู้กับรีคูม','brave',{foe:['รีคูม',72],p:.4,d:'ถูกรีคูมยิงลำแสงรีคูมสุดยอด',fm:14,sk:7,s:'คุณประคองตัวไว้จนโกคูลงจอด'}),
+      K('ช่วยคุริรินแย่งลูกบอล','curious brave',{p:.65,fm:8,b:{krillin:8},s:'คุณกับคุริรินหิ้วลูกบอลดาวหกบินต่ำเหนือน้ำจนพ้นสายตา'})]},
+  {id:'db_frieza2',mo:7,t:'ร่างที่หนึ่งถึงสามของฟรีเซอร์',mood:'red',cap:'ใต้ต้นไม้ยักษ์ของผู้เฒ่า',
+   n:'พิคโกโร่ฟื้นด้วยดราก้อนบอล รวมร่างกับเนลแล้วบินมาสู้ฟรีเซอร์ ฟรีเซอร์แปลงร่างทีละขั้น เบจิต้าขอให้คุริรินทำร้ายเขาจนเกือบตายเพื่อพลังไซย่า แต่ฟรีเซอร์ร่างสุดท้ายยิงทะลุอกเบจิต้า',
+   x:'ฟรีเซอร์ร่างที่สามหัวยาวเหมือนเปลือกหอย หันมามองคุณด้วยรอยยิ้มบาง "แมลงตัวนี้มาจากไหนอีก?"',
+   who:S=>ARCWHO.db(S)&&S.flags.namekGo,
+   c:[K('สู้กับฟรีเซอร์','brave hero',{foe:['ฟรีเซอร์',92,'b'],p:.15,d:'ถูกฟรีเซอร์ยิงลำแสงจากปลายนิ้วทะลุหน้าอก',fm:28,sk:9,s:'ฟรีเซอร์ปัดคุณทิ้งเหมือนฝุ่น แต่มันใช้เวลาพอให้เดนเด้รักษาพิคโกโร่',m:'สู้กับฟรีเซอร์'}),
+      K('พาเดนเด้ไปรักษาคนเจ็บ','kind',{p:.55,d:'ถูกฟรีเซอร์ยิงตามหลัง',b:{dende:8,gohan:6},fm:8,s:'เดนเด้รักษาโกฮังทันก่อนลำแสงจะมาถึง'})]},
+  {id:'db_namekend',mo:9,t:'ดาวนาเม็กระเบิด',mood:'fire',cap:'ทะเลลาวาของนาเม็ก',
+   n:'โกคูซูเปอร์ไซย่าสู้กับฟรีเซอร์บนดาวที่กำลังจะระเบิดในห้านาที ชาวนาเม็กขอพรกับโพรุงกาให้ทุกคนที่ตายเพราะฟรีเซอร์ฟื้น แล้วย้ายทุกคนมาโลก ยกเว้นโกคูกับฟรีเซอร์ โกคูหนีด้วยยานของกินิว',
+   x:'พื้นแตกเป็นทางลาวา เสียงโพรุงกาก้องฟ้า "บอกพรข้อสุดท้ายมา"',
+   who:S=>ARCWHO.db(S)&&S.flags.namekGo,
+   c:[K('ขอให้ย้ายทุกคนไปโลก','kind',{fm:10,s:'แสงสีขาวห่อตัวคุณ แล้วคุณก็ยืนอยู่ในสวนของแคปซูลคอร์ปพร้อมชาวนาเม็กร้อยคน'}),
+      K('อยู่ช่วยโกคูจนวินาทีสุดท้าย','brave hero',{p:.35,d:'ตายพร้อมดาวนาเม็ก',fm:20,sk:6,s:'คุณถูกแสงของพรดึงไปที่โลกตอนที่ดาวนาเม็กกำลังแตก'})]},
+]);
+ARC('db',767,[
+  {id:'db_gero',mo:4,t:'ห้องทดลองของดร.เกโร่',mood:'night',cap:'ห้องทดลองในภูเขาทางเหนือ',
+   n:'โกคูล้มลงด้วยโรคหัวใจตามคำเตือนของทรังคซ์ เบจิต้าในร่างซูเปอร์ไซย่าล้มหมายเลข 19 ดร.เกโร่หนีไปปลุกหมายเลข 17 และ 18 แล้วถูก 17 ฆ่าทิ้ง หมายเลข 18 หักแขนเบจิต้าด้วยเตะเดียว',
+   x:'ประตูห้องทดลองระเบิด เด็กหนุ่มผมดำกับเด็กสาวผมทองเดินออกมาด้วยท่าทางเบื่อหน่าย',
+   c:[K('สู้กับหมายเลข 18','brave',{foe:['มนุษย์ดัดแปลงหมายเลข 18',80],p:.35,d:'ถูกหมายเลข 18 เตะคอหัก',fm:16,sk:7,s:'18 เลิกสู้กับคุณกลางคัน "น่าเบื่อ" แล้วเดินไปกับ 17'}),
+      K('พาโกคูที่ป่วยไปบ้าน','kind',{p:.8,b:{goku:8},s:'คุณป้อนยาจากอนาคตให้โกคูทันเวลา'})]},
+  {id:'db_cell2',mo:6,t:'เซลสมบูรณ์แบบ',mood:'red',cap:'เกาะกลางทะเล',
+   n:'เซลดูดหมายเลข 17 แล้วไล่ล่า 18 หมายเลข 16 ปกป้องเธอ เบจิต้าที่ออกจากห้องแห่งจิตและเวลาปล่อยให้เซลดูด 18 เพราะอยากสู้กับร่างสมบูรณ์ แล้วแพ้ คุริรินมีรีโมตปิด 18 อยู่ในมือแต่ไม่กดมัน',
+   x:'เซลร่างที่สองบินผ่านหัวคุณไปหาเด็กสาวผมทอง คุริรินยืนนิ่งกับรีโมตในมือ',
+   c:[K('สู้กับเซลร่างสอง','brave hero',{foe:['เซล',85,'b'],p:.25,d:'ถูกเซลดูดร่างด้วยหาง',fm:20,sk:8,s:'เซลเหวี่ยงคุณทิ้งแล้วไปต่อ แต่คุณได้เห็นพลังร่างนั้นกับตา'}),
+      K('ขอให้คุริรินกดรีโมต','curious',{b:{krillin:4},s:'คุริรินบีบรีโมตจนแตกในมือ "ผมทำไม่ได้"','k':'plain'})]},
+  {id:'db_htc',mo:7,t:'ห้องแห่งจิตและเวลา',mood:'day',cap:'ห้องสีขาวไม่มีที่สิ้นสุด',
+   n:'โกคูกับโกฮังเข้าห้องแห่งจิตและเวลา หนึ่งวันข้างนอกเท่ากับหนึ่งปีข้างใน ทั้งคู่ออกมาในร่างซูเปอร์ไซย่าที่ผ่อนคลายตลอดเวลา เซลประกาศเซลเกมส์อีกสิบวัน',
+   x:'มิสเตอร์โปโป้ยืนข้างประตู "ห้องว่างหนึ่งวัน ใช้ได้ครั้งเดียวในชีวิต"',
+   c:[K('เข้าห้องแห่งจิตและเวลา','brave',{p:.9,d:'ขาดใจในอากาศเบาบางของห้อง',sk:12,f(S){st('fit',6);},s:'คุณออกมาโตขึ้นหนึ่งปี และแข็งแกร่งกว่าเดิมทั้งตัว'}),
+      K('ยกเวลาให้คนอื่น','kind',{fm:4,s:'คุณยกวันของคุณให้ทรังคซ์ เขาโค้งให้คุณลึกๆ','k':'plain'})]},
+]);
+ARC('db',774,[
+  {id:'db_b25',mo:3,t:'ศึกชิงเจ้ายุทธภพครั้งที่ 25',major:1,mood:'day',cap:'สนามแข่งที่คนแน่น',
+   n:'โกคูกลับจากโลกหลังความตายหนึ่งวันเพื่อลงแข่ง ไคโอชินปรากฏตัวในสนาม สปอปอวิชลูกน้องบาบิดี้ดูดพลังของโกฮัง เพื่อปลุกจอมมารบูที่ถูกผนึกมาห้าล้านปี',
+   x:'ในรอบเยาวชน คุณได้คู่กับเด็กผมตั้งที่มีพลังผิดปกติ ส่วนในรอบผู้ใหญ่ ชายตัวใหญ่ตาว่างเปล่าบีบคอวีเดลอยู่กลางเวที',
+   c:[K('ขึ้นเวทีหยุดสปอปอวิช','brave hero',{foe:['สปอปอวิช',58],p:.6,d:'ถูกสปอปอวิชบีบหัวแตก',fm:12,sk:6,b:{videl:8},s:'กรรมการหยุดการแข่งเพราะคุณ แต่ผู้ชมโห่เพราะไม่รู้ว่าวีเดลเกือบตาย'}),
+      K('ลงแข่งรอบเยาวชนกับเด็กผมตั้ง','brave',{foe:['ทรังคซ์ (เด็ก)',62],p:.95,sk:5,fm:6,s:'เขาเตะคุณออกนอกเวทีแล้วยิ้มเหมือนเบจิต้า'})]},
+  {id:'db_majin',mo:3,t:'มาจินเบจิต้า',mood:'fire',cap:'อัฒจันทร์สนามแข่ง',
+   n:'บาบิดี้ควบคุมใจเบจิต้าที่ยอมให้เพราะอยากสู้กับโกคูจริงๆ เบจิต้ายิงใส่อัฒจันทร์ฆ่าคนดูหลายร้อย แล้วระเบิดตัวเองเพื่อหยุดบู ก่อนตาย เขากอดลูกชาย',
+   x:'ลำแสงสีทองพุ่งลงอัฒจันทร์ที่คุณนั่ง คนข้างๆ หายไปพร้อมเก้าอี้',
+   c:[K('กันลำแสงให้คนดู','hero brave',{p:.4,d:'ถูกลำแสงของมาจินเบจิต้า',fm:18,j:4,s:'แขนคุณไหม้ แต่แถวข้างหลังรอดทั้งแถว'}),
+      K('วิ่งออกจากสนาม','safe',{p:.75,d:'ถูกแรงระเบิดในอัฒจันทร์',tr:16,s:'คุณได้ยินเสียงระเบิดลูกสุดท้ายจากหุบเขา แล้วทุกอย่างก็เงียบ','k':'plain'})]},
+  {id:'db_gotenks',mo:3,t:'บูร่างชั่วกับโกเทนคซ์',mood:'red',cap:'วังพระเจ้า',
+   n:'บูแยกตัวเป็นร่างชั่ว ฆ่าทุกคนในเมืองด้วยลำแสงเดียว แล้วบินไปหานักรบที่วังพระเจ้า โกเทนคซ์ซูเปอร์ไซย่า 3 เกือบชนะ แต่บูดูดเขาเข้าไป เบจิโต้จากต่างหูโพทาร่าเกือบจบทุกอย่าง แล้วยอมให้ถูกดูดเพื่อเข้าไปช่วยทุกคน',
+   x:'บูสีชมพูตัวสูงยิ้มบนวังพระเจ้า มันมองนักรบที่เหลือทีละคน คุณเป็นคนที่สาม',
+   c:[K('สู้กับบูร่างชั่ว','brave hero',{foe:['จอมมารบู',94,'b'],p:.15,d:'ถูกจอมมารบูเปลี่ยนเป็นช็อกโกแลตแล้วกิน',fm:24,sk:8,s:'คุณซื้อเวลาให้โกเทนคซ์แปลงร่างทันพอดี',m:'สู้กับจอมมารบู'}),
+      K('ซ่อนเด็กสองคนในห้องแห่งจิตและเวลา','kind',{p:.6,b:{goten:8,trunks:8},s:'บูตะโกนจนมิติแตก แต่คุณกันประตูไว้ได้นานพอ'})]},
+  {id:'db_kidbuu',mo:5,t:'บอมบ์พลังของทั้งโลก',mood:'day',cap:'ดาวไคโอชินที่เป็นทุ่งเปล่า',
+   n:'โลกฟื้นด้วยดราก้อนบอลนาเม็ก โกคูซูเปอร์ไซย่า 3 สู้กับบูร่างจิ๋ว เบจิต้าขอให้มนุษย์ทุกคนยกมือ ไม่มีใครยกจนมิสเตอร์ซาตานตะโกนผ่านโทรจิต ทั้งโลกยกมือพร้อมกัน บูร่างจิ๋วหายไปในบอลพลัง',
+   x:'เสียงในหัวคุณเป็นเสียงมิสเตอร์ซาตาน "ทุกคน ยกมือขึ้น! เพื่อฉัน!"',
+   c:[K('ยกมือส่งพลัง','kind hero',{fm:4,j:6,pw:'db_genki',pwx:'คุณส่งพลังทั้งหมดขึ้นฟ้า แล้วเข้าใจวิธีรวบรวมพลังของคนอื่น',s:'บอลพลังลูกนั้นมีส่วนของคุณอยู่ด้วย'}),
+      K('ไม่ยกเพราะไม่เชื่อ','curious',{dk:4,s:'คุณยกมือช้ากว่าทุกคนในเมือง แต่ก็ยกจนได้','k':'plain'})]},
+]);
+ARC('db',778,[
+  {id:'db_god',mo:2,t:'ซูเปอร์ไซย่าก็อด',mood:'day',cap:'ลานหลังบ้านบุลมา',
+   n:'ชาวไซย่าใจบริสุทธิ์หกคนจับมือกันในพิธีที่มังกรเทพบอก ทั้งโกคู เบจิต้า โกฮัง โกเท็น ทรังคซ์ และลูกในท้องของวีเดล ผมของโกคูกลายเป็นสีแดง แล้วสู้กับบีรุสจนท้องฟ้าแตก',
+   x:'โกคูหันมาหาคุณ "ขาดอีกหนึ่งคน คุณมีเลือดไซย่าใช่ไหม?"',
+   who:S=>saiyan(S),
+   c:[K('จับมือร่วมพิธี','kind brave',{fm:14,pw:'db_ssg',pwx:'พลังของคุณไหลเข้าไปในพิธี แล้วทิ้งร่องรอยของพลังเทพไว้ในตัวคุณ',s:'แสงสีแดงห่อทั้งหกคน บีรุสพยักหน้าว่าการต่อสู้ครั้งนี้สนุก'}),
+      K('ปฏิเสธ','safe',{s:'คุณยืนดูพลังของเทพจากขอบสนาม','k':'plain'})]},
+]);
+ARC('db',779,[
+  {id:'db_u6',mo:7,t:'ศึกจักรวาลที่ 6 กับ 7',major:1,mood:'day',cap:'สนามบนดาวร้าง',
+   n:'เทพทำลายล้างชัมปาท้าบีรุสเดิมพันซูเปอร์ดราก้อนบอล แต่ละฝ่ายส่งนักรบห้าคน ฮิตนักฆ่าที่หยุดเวลาได้ คาเบะซูเปอร์ไซย่าจากจักรวาล 6 และฟรอสต์ ฝ่ายโลกชนะแบบหวุดหวิด',
+   x:'ทีมของเบจิต้ายังขาดตัวสำรอง เขามองคุณจากหัวจรดเท้า "แกพอใช้ได้"',
+   c:[K('ลงสนามสู้กับฟรอสต์','brave',{foe:['ฟรอสต์',78],p:.5,d:'ถูกเข็มพิษของฟรอสต์',fm:18,sk:7,s:'คุณจับได้ว่าฟรอสต์ซ่อนเข็มพิษในแขน กรรมการตัดสิทธิ์มัน'}),
+      K('นั่งเชียร์','safe',{j:4,s:'มอนะก้ากลายเป็นตำนานโดยที่ไม่ได้ขยับเลย','k':'plain'})]},
+  {id:'db_black',mo:10,t:'โกคูแบล็ก',major:1,mood:'red',cap:'อนาคตที่มนุษย์เหลือหยิบมือ',
+   n:'ทรังคซ์กลับมาจากอนาคตอีกครั้ง คนหน้าเหมือนโกคูในชุดดำกวาดล้างมนุษย์ เขาคือซามัสไคที่ขโมยร่างโกคู รวมร่างกับซามัสอีกคนเป็นอมตะ สุดท้ายท่านเซนโอะลบอนาคตทั้งจักรวาลทิ้ง',
+   x:'คุณข้ามเวลาไปพร้อมเครื่องย้อนเวลาของบุลมา คนในชุดดำยิ้มด้วยหน้าของโกคู "มนุษย์... ช่างน่าขยะแขยง"',
+   c:[K('สู้กับโกคูแบล็ก','brave hero',{foe:['โกคูแบล็ก',93,'b'],p:.2,d:'ถูกเคียวแห่งสายลมของโกคูแบล็กฟัน',fm:24,sk:8,s:'คุณได้ยินเสียงซามัสพูดถึงความยุติธรรมของเทพ ขณะที่มือมันฟันคนตาย',m:'สู้กับโกคูแบล็ก'}),
+      K('อพยพผู้รอดชีวิตในอนาคต','kind',{p:.65,b:{trunks:10},fm:8,s:'มายลูกสาวของคุณป้าในอนาคตจับมือคุณแน่นตลอดทาง'})]},
+]);
+ARC('db',780,[
+  {id:'db_top0',mo:2,t:'คัดตัวนักรบสิบคน',major:1,mood:'day',cap:'วังพระเจ้า',
+   n:'ท่านเซนโอะประกาศศึกแห่งพลัง จักรวาลที่แพ้จะถูกลบทิ้ง โกคูเลือกทีมสิบคน โกฮัง พิคโกโร่ คุริริน เทนชินฮัง ผู้เฒ่าเต่า หมายเลข 17 และ 18 เบจิต้า และฟรีเซอร์ที่ถูกปลุกจากนรกยี่สิบสี่ชั่วโมง',
+   x:'โกฮังจัดการทดสอบด้วยการสู้ร่วมกัน คุณเป็นหนึ่งในคนที่ถูกเรียกมาลอง',
+   c:[K('ประลองกับโกฮัง','brave',{foe:['ซน โกฮัง',84],p:.92,fm:10,sk:8,b:{gohan:8},s:'คุณไม่ได้ติดทีม แต่โกฮังบอกให้คุณเฝ้าโลกระหว่างที่ทุกคนไป'}),
+      K('สละที่ให้หมายเลข 17','kind',{fm:4,s:'หมายเลข 17 พยักหน้าเงียบๆ เขาเป็นคนชนะศึกนั้นในท้ายที่สุด','k':'plain'})]},
+]);
+ARC('db',781,[
+  {id:'db_broly',mo:1,t:'โบรลี่',major:1,mood:'red',cap:'ขั้วโลกเหนือ',
+   n:'ฟรีเซอร์พาซาไยย่าที่ถูกเนรเทศตั้งแต่ทารกกลับมา โบรลี่ทุบโกคูกับเบจิต้าจนน้ำแข็งขั้วโลกแตก ฟรีเซอร์ยิงพาราไกส์พ่อของเขาเพื่อจุดความโกรธ โกคูกับเบจิต้าฟิวชั่นเป็นโกจิต้า เพื่อนต่างดาวของโบรลี่ขอพรให้ส่งเขากลับไปดาวร้าง',
+   x:'ชายร่างยักษ์ผมเขียวคำรามจนลมพัดกลับ เขาไม่ได้อยากสู้ เขาแค่หยุดไม่ได้',
+   c:[K('สู้กับโบรลี่','brave',{foe:['โบรลี่',95,'b'],p:.15,d:'ถูกโบรลี่ทุบจนจมน้ำแข็ง',fm:26,sk:9,s:'หมัดของเขาหยุดก่อนถึงหน้าคุณ เขามองคุณเหมือนจำใครบางคนได้',m:'เจอโบรลี่'}),
+      K('ช่วยเชโรขอพรส่งโบรลี่กลับ','kind',{fm:8,b:{goku:6},s:'แสงพรห่อโบรลี่หายไปทันก่อนโกจิต้าจะยิงลูกสุดท้าย'})]},
+]);
+ARC('db',782,[
+  {id:'db_moro',mo:4,t:'โมโร่ผู้กินดาว',major:1,mood:'night',cap:'คุกของหน่วยลาดตระเวนจักรวาล',
+   n:'จอมเวทแก่ชื่อโมโร่หนีจากคุกของหน่วยลาดตระเวนจักรวาล ดูดพลังชีวิตของดาวทั้งดวงจนแห้งตาย เขาดูดพลังของโกคูไปด้วย โกคูต้องค้นหาความเงียบในใจจนตัวเองเข้าใกล้อัลตร้าอินสติงต์ด้วยตัวเอง',
+   x:'เมอร์ลัส เจ้าหน้าที่หนุ่มของหน่วยลาดตระเวน ยื่นบัตรประจำตัวให้คุณ "ตอนนี้คุณคือเจ้าหน้าที่ฝึกหัด"',
+   c:[K('บุกจับนักโทษแหกคุก','brave hero',{foe:['นักโทษกาแล็กซี่',72],p:.55,d:'ถูกนักโทษของโมโร่ฆ่ากลางดาวร้าง',fm:16,sk:7,mn:4,s:'คุณจับนักโทษได้สองคน หน่วยลาดตระเวนจ่ายค่าหัวเป็นเหรียญจักรวาล'}),
+      K('อยู่ช่วยชาวโลกที่ถูกดูดพลัง','kind',{fm:6,j:4,s:'พลังชีวิตที่ถูกดูดไปกลับมาเมื่อโมโร่ถูกจบลง ต้นไม้ทั้งเมืองออกดอกในคืนเดียว'})]},
+]);
+ARC('db',784,[
+  {id:'db_hero',mo:1,t:'กองทัพริบบอนแดงฟื้น',major:1,mood:'red',cap:'ฐานลับของมาเจนต้า',
+   n:'มาเจนต้าลูกชายผู้นำกองทัพริบบอนแดงจ้างดร.เฮโดะหลานดร.เกโร่ สร้างแกมม่าหนึ่งและสอง หลอกว่าพวกบุลมาเป็นเอเลี่ยน แล้วปลุกเซลแม็กซ์ พิคโกโร่ลักพาตัวแพนเพื่อกระตุ้นโกฮัง โกฮังตื่นเป็นร่างบีสต์',
+   x:'แกมม่าหมายเลขสองโพสต์ท่าเหมือนซูเปอร์ฮีโร่ "เราคือผู้พิทักษ์ความยุติธรรม!" เขาเชื่อแบบนั้นจริงๆ',
+   c:[K('สู้กับแกมม่า 2','brave',{foe:['แกมม่าหมายเลข 2',80],p:.45,d:'ถูกปืนแกมม่าของแกมม่า 2',fm:16,sk:7,s:'คุณบอกความจริงเรื่องมาเจนต้าระหว่างสู้ แกมม่า 2 หยุดยิง'}),
+      K('ช่วยหาแพนที่ถูกลักพาตัว','kind',{p:.8,b:{gohan:8,piccolo:6},s:'คุณพาแพนกลับมาก่อนเซลแม็กซ์จะตื่น'})]},
+]);
+
+/* ---------------- JoJo: Phantom Blood, Battle Tendency, Stardust Crusaders, Diamond is Unbreakable, Golden Wind, Stone Ocean ---------------- */
+ARCWHO.jojo=S=>standU(S)||hasP('jo_hamon')||['passione','capo'].includes(S.job?.id);
+ARC('jojo',1888,[
+  {id:'jo_mask',mo:10,t:'หน้ากากหิน',major:1,mood:'night',cap:'คฤหาสน์โจสตาร์',
+   n:'ดิโอ แบรนโด้ใส่หน้ากากหินแอซเท็กที่เปื้อนเลือดแล้วกลายเป็นแวมไพร์ คฤหาสน์โจสตาร์ไหม้ทั้งหลัง โจนาธานไปเรียนวิชาฮามอนกับวิลล์ เอ. เซปเปลี',
+   x:'ชายในหมวกทรงสูงมีหนวดหยิกหยุดหน้าคุณ "ฮามอน วิชาลมปราณที่ส่งพลังเหมือนแสงแดด สนใจไหม?"',
+   who:S=>S.age>=12,
+   c:[K('เรียนฮามอนกับเซปเปลี','brave curious',{p:.95,pw:'jo_hamon',pwx:'ลมหายใจของคุณเริ่มมีเสียงเหมือนระฆัง',sk:5,b:{},s:'นิ้วของเซปเปลีกดท้องคุณ แล้วลมหายใจก็เปลี่ยนไปตลอดกาล'}),
+      K('ไม่ยุ่งเรื่องนี้','safe',{s:'คืนนั้นคุณได้ยินเสียงม้าวิ่งไปทางวินด์ไนท์ล็อต','k':'plain'})]},
+  {id:'jo_windknight',y:1889,mo:1,t:'วินด์ไนท์ล็อต',mood:'night',cap:'หมู่บ้านกลางหมอก',
+   n:'ดิโอยึดหมู่บ้านวินด์ไนท์ล็อตทั้งหมู่บ้านเป็นซอมบี้ เซปเปลีตายหลังส่งพลังสุดท้ายให้โจนาธาน โจนาธานต่อยฮามอนแสงแดดใส่ดิโอจนร่างแตกเหลือแค่หัว',
+   x:'ซอมบี้ทั้งหมู่บ้านคลานออกจากหลุมศพ แสงอาทิตย์ยังอีกสามชั่วโมง',
+   c:[K('สู้กับซอมบี้ของดิโอ','brave hero',{foe:['อัศวินซอมบี้',58],p:.5,d:'ถูกซอมบี้ของดิโอดูดเลือดจนตาย',fm:12,sk:6,s:'คุณถือคบเพลิงจนรุ่งเช้า แสงแดดทำที่เหลือ'}),
+      K('พาเด็กในหมู่บ้านออกไป','kind',{p:.7,d:'ถูกซอมบี้ในหมอกลากไป',j:4,fm:6,s:'เด็กชายชื่อโพโคถือมือคุณไว้ตลอดทาง'})]},
+  {id:'jo_pillar',y:1939,mo:2,t:'มนุษย์เสาหิน',major:1,mood:'red',cap:'ใต้ดินกรุงโรม',
+   n:'ทหารนาซีขุดพบมนุษย์เสาหินสามตน วามุอุ เอซิดิซี และคาร์ส สิ่งมีชีวิตที่สร้างหน้ากากหินและกินแวมไพร์เป็นอาหาร โจเซฟ โจสตาร์มีเวลาสามสิบสามวันก่อนแหวนพิษในร่างจะแตก',
+   x:'ลมพัดจากใต้ดินแรงจนคบไฟดับ ชายร่างยักษ์มีเขาค่อยๆ ลืมตา "เด็กน้อยคนนี้หายใจแปลกดี"',
+   c:[K('ใช้ฮามอนสู้กับวามุอุ','brave',{foe:['วามุอุ',82,'b'],p:.3,d:'ถูกลมใบมีดของวามุอุฉีกร่าง',fm:16,sk:8,s:'วามุอุยิ้มอย่างนับถือ "นักรบสมควรได้ตายด้วยมือนักรบ" แล้วปล่อยคุณไป'}),
+      K('หนีไปเตือนโจเซฟ','safe',{p:.75,b:{},s:'โจเซฟหัวเราะแล้วบอกว่า "คำพูดต่อไปของนายคือ \'นายเชื่อฉันเถอะ\'"'})]},
+]);
+ARC('jojo',1988,[
+  {id:'jo_c1',mo:11,t:'ครูเสดเดอร์ส: เส้นทางห้าสิบวัน',mood:'day',cap:'ท่าเรือฮ่องกง',
+   n:'โฮลลี่แม่ของโจทาโร่ป่วยเพราะสแตนด์ที่เธอควบคุมไม่ได้ เธอมีเวลาห้าสิบวัน โจเซฟ อับดุล คาเคียวอิน และโปลนาเรฟที่ล้มเพราะซิลเวอร์แชริออต ออกเดินทางจากฮ่องกงไปไคโร',
+   x:'ร้านอาหารจีนในฮ่องกง ชายผมตั้งฝรั่งเศสวางเหรียญบนโต๊ะคุณ "ใครที่นี่มีสแตนด์?"',
+   c:[K('ร่วมเดินทางไปไคโร','brave',{fl:'crusader',b:{jotaro:6},fm:6,s:'โจเซฟยื่นตั๋วเครื่องบินให้คุณ เครื่องลำนั้นตกกลางทะเลเพราะสแตนด์ศัตรู แต่ทุกคนรอด'}),
+      K('ไม่ไป','safe',{s:'คุณได้ยินข่าวเรือดำน้ำและรถไฟของพวกเขาพังตลอดทางในหนังสือพิมพ์','k':'plain'})]},
+  {id:'jo_c2',mo:11,t:'ครูเสดเดอร์ส: ทะเลทราย',mood:'day',cap:'ทะเลทรายอียิปต์',
+   n:'ฮอลฮอร์สยิงปืนสแตนด์จากข้างหลังเจ้านายคนใหม่ทุกคน อับดุลเกือบตาย เอ็นดูลชายตาบอดฟังเสียงเท้าบนทราย ส่งสแตนด์น้ำมาตัดคอ อิกกี้หมาบอสตันเทอเรียร์เข้าร่วมทีม',
+   x:'ทรายตรงหน้าเปียกเป็นวง แล้วทุกอย่างก็เงียบ คุณได้ยินเสียงไม้เท้าเคาะพื้นที่ไกลออกไป',
+   who:S=>ARCWHO.jojo(S)&&S.flags.crusader,
+   c:[K('สู้กับเอ็นดูล','brave',{foe:['เอ็นดูล',70],p:.45,d:'ถูกสแตนด์ปีศาจน้ำตัดคอในทะเลทราย',fm:14,sk:7,s:'คุณโยนกระติกน้ำล่อเสียง แล้วสแตนด์ของคุณปิดระยะได้ก่อน'}),
+      K('นอนนิ่งบนทราย','safe curious',{p:.85,s:'น้ำวนผ่านคุณไป มันหาเสียงหัวใจที่เต้นเร็วกว่า','k':'plain'})]},
+  {id:'jo_c3',mo:11,t:'ครูเสดเดอร์ส: คฤหาสน์ของดิโอ',mood:'night',cap:'คฤหาสน์ในไคโร',
+   n:'วานิลลาไอซ์ผู้ภักดีที่สุดของดิโอฆ่าอับดุลและอิกกี้ในคฤหาสน์ คาเคียวอินจับความลับของเดอะเวิลด์ได้ด้วยชีวิต เวลาหยุดได้ห้าวินาที แล้วโจทาโร่ก็หยุดเวลาได้เหมือนกัน',
+   x:'ประตูห้องหายไปเป็นรูกลมเหมือนถูกกลืน ช่องว่างนั้นค่อยๆ เคลื่อนมาหาคุณ',
+   who:S=>ARCWHO.jojo(S)&&S.flags.crusader,
+   c:[K('สู้กับวานิลลาไอซ์','brave hero',{foe:['วานิลลาไอซ์',86,'b'],p:.25,d:'ถูกครีมของวานิลลาไอซ์กลืนหายไปทั้งตัว',fm:20,sk:8,s:'คุณได้ยินเสียงหัวเราะของดิโอจากชั้นบน "สนุกดีนี่ ซาโว่ย"',m:'คฤหาสน์ของดิโอ'}),
+      K('อยู่ข้างคาเคียวอินบนหลังคา','kind',{p:.5,d:'ถูกเดอะเวิลด์ต่อยตอนเวลาหยุด',b:{},fm:12,s:'คุณเห็นนาฬิกาบนหอสูงเดินถอยหลังหนึ่งวินาที แล้วคาเคียวอินก็ยิ้ม'})]},
+]);
+ARC('jojo',1999,[
+  {id:'jo_shigechi',mo:5,t:'ชิเงจิหายตัว',mood:'night',cap:'โรงเรียนมัธยมบุโดกาโอกะ',
+   n:'ชิเงจิเด็กอ้วนที่มีสแตนด์ฮาร์เวสต์เจอถุงกระดาษที่มีมือคนอยู่ข้างใน เขาถูกฆ่าในห้องน้ำโรงเรียน ก่อนตายเขาส่งกระดุมเสื้อของฆาตกรไปให้โจสุเกะ',
+   x:'ฮาร์เวสต์ตัวเล็กร้อยตัววิ่งผ่านเท้าคุณ มันถือกระดุมที่ยังมีด้ายติดอยู่',
+   c:[K('ตามกระดุมไปร้านตัดเสื้อ','curious brave',{p:.8,b:{josuke:8,koichi:6},fm:6,s:'ช่างตัดเสื้อจำได้ว่ากระดุมนี้มาจากสูทราคาแพงที่ชายคนหนึ่งสั่งทุกปี'}),
+      K('ไม่ยุ่ง','safe',{tr:8,s:'แมวทุกตัวในเมืองหายไปอีกหนึ่งสัปดาห์','k':'plain'})]},
+  {id:'jo_echoes',mo:6,t:'แอคโค่ แอคท์ 3 กับคิลเลอร์ควีน',mood:'red',cap:'ถนนในโมริโอ',
+   n:'คิระ โยชิคาเงะ เปลี่ยนหน้าเป็นคนอื่น โคอิจิใช้แอคโค่แอคท์ 3 ทำให้คิลเลอร์ควีนหนักจนจมดิน โจทาโร่ต่อยคิระจนเกือบตาย แต่ลมพัดจากหลังให้เขาหนีได้ทุกครั้ง',
+   x:'รถถังจิ๋วรูปหัวกะโหลกกลิ้งมาตามถนน ส่งเสียง "มองนี่!" มันกำลังไล่ความร้อนของตัวคุณ',
+   c:[K('สู้กับชีเออร์ฮาร์ทแอทแทค','brave',{foe:['ชีเออร์ฮาร์ทแอทแทค',74],p:.45,d:'ถูกระเบิดของชีเออร์ฮาร์ทแอทแทค',fm:14,sk:7,b:{koichi:8},s:'โคอิจิทำให้มันหนักจนกลิ้งต่อไม่ได้ ทั้งเมืองเงียบไปชั่วขณะ'}),
+      K('วิ่งเข้าห้องเย็น','curious safe',{p:.8,s:'ระเบิดไล่ความร้อนแต่ห้องเย็นไม่มีความร้อนให้ไล่','k':'plain'})]},
+  {id:'jo_btd2',mo:7,t:'ไบท์สเดอะดัสต์: เช้าวันเดิม',mood:'night',cap:'ทางเดินเช้าวันอังคาร',
+   n:'คิระสวมสแตนด์ระเบิดไว้ในตัวฮายาโตะเด็กชายที่จับได้ว่าเขาเป็นใคร ใครก็ตามที่ฮายาโตะบอกความลับจะระเบิดแล้วเวลาย้อนกลับเช้าเดิม ฮายาโตะจำได้ทุกรอบ',
+   x:'เด็กชายคนหนึ่งจับแขนเสื้อคุณ ตาแดงก่ำ "อย่าถามฉันว่าใครเป็นฆาตกร ถ้าฉันบอกคุณ คุณจะระเบิด"',
+   c:[K('อย่าถาม ช่วยเขาคิดแผน','curious kind',{f(S){st('iq',3);},b:{},fm:10,s:'ฮายาโตะใช้รอบสุดท้ายหลอกให้คิระพูดชื่อตัวเองต่อหน้าโรฮัง'}),
+      K('ถามชื่อฆาตกร','brave',{p:.25,d:'ระเบิดเพราะไบท์สเดอะดัสต์',s:'เวลาย้อนกลับเช้าเดิม คุณจำอะไรไม่ได้ แต่ฮายาโตะจำได้','k':'plain'})]},
+  {id:'jo_kiraend',mo:7,t:'ศึกสุดท้ายในโมริโอ',mood:'red',cap:'ถนนหน้าบ้านคิระ',
+   n:'โจสุเกะสู้คิระกลางถนนตอนเช้า โอคุยาสุเกือบตายจากระเบิดอากาศ คิระใช้ระเบิดลูกที่สามเป็นครั้งสุดท้าย แล้วถูกรถพยาบาลที่ถอยหลังทับตาย วิญญาณของเรมิพาเขาไปยังซอยที่ไม่มีทางกลับ',
+   x:'ฟองอากาศใสลอยเต็มถนน คิระยืนบนหลังคารถ "ข้าแค่อยากใช้ชีวิตอย่างสงบ"',
+   c:[K('สู้กับคิระ โยชิคาเงะ','brave hero',{foe:['คิระ โยชิคาเงะ',88,'b'],p:.3,d:'ถูกคิลเลอร์ควีนเปลี่ยนเป็นระเบิด',fm:24,sk:8,b:{josuke:10},s:'โจสุเกะซ่อมรอยแผลของคุณด้วยเครซี่ไดมอนด์ "ยังไหวไหม?"',m:'สู้กับคิระ'}),
+      K('พาชาวบ้านออกจากถนน','kind',{p:.75,fm:8,j:4,s:'ไม่มีชาวบ้านคนไหนรู้ว่าเมืองรอดจากอะไรมา'})]},
+]);
+ARC('jojo',2001,[
+  {id:'jo_trish',mo:1,t:'ปกป้องลูกสาวของบอส',mood:'day',cap:'เรือกลางทะเลเนเปิลส์',
+   n:'ทีมของบูจาราตีได้รับคำสั่งให้คุ้มครองทริช ลูกสาวของบอสพาสซิโอเน่ ทีมลาสต์ของริซอตโต้ไล่ล่าเธอเพื่อหาตัวตนบอส ทั้งรถไฟ ทั้งเรือ ทั้งเครื่องบิน กลายเป็นสนามรบ',
+   x:'รถไฟไปฟลอเรนซ์ทุกคนในขบวนแก่ลงเร็วผิดปกติ ชายผมเปียสีเทาสูบบุหรี่อยู่ท้ายขบวน',
+   c:[K('สู้กับพรอสชูโต้','brave',{foe:['พรอสชูโต้',76],p:.45,d:'แก่ตายในรถไฟเพราะเดอะเกรทฟูลเดด',fm:14,sk:7,b:{bucciarati:8},s:'คุณกอดน้ำแข็งไว้ให้ตัวเย็น พลังของมันจับคุณไม่ได้'}),
+      K('ซ่อนทริชในตู้เต่า','kind',{p:.75,b:{},fm:8,s:'เต่าโคโค่โจมีห้องทั้งห้องอยู่ในกระดอง'})]},
+  {id:'jo_venezia',mo:2,t:'เวนิส: ทีมแยกทาง',mood:'grief',cap:'โบสถ์ซานจอร์โจ',
+   n:'บูจาราตีพาทริชไปส่งบอส แล้วรู้ว่าบอสต้องการฆ่าลูกตัวเอง เขาหักหลังองค์กร บอสพุ่งเอาหมัดทะลุท้องบูจาราตี ทีมทุกคนต้องเลือกบนท่าเรือว่าจะลงเรือตามเขาไปไหม',
+   x:'เรือลำเล็กออกจากท่าแล้ว บูจาราตียืนที่หัวเรือ "ข้าไม่สั่ง ใครจะมาให้มาเพราะตัวเอง"',
+   c:[K('ลงเรือไปกับบูจาราตี','brave loyal',{fl:'traitor',dk:-4,b:{bucciarati:12,giorno:8},fm:10,s:'นาร์รันชาร้องไห้แล้วกระโดดตามมาเป็นคนสุดท้าย'}),
+      K('อยู่กับองค์กร','safe',{dk:6,s:'คุณดูเรือหายไปในคลอง แล้วกลับไปรายงานบอส','k':'plain'})]},
+  {id:'jo_rome',mo:3,t:'โรม: เรเควียม',mood:'red',cap:'โคลอสเซียม',
+   n:'อับบัคคิโอตายที่ซาร์ดิเนียหลังเปิดเผยหน้าบอส ในโรมโปลนาเรฟชี้ทางลูกธนูให้ ซิลเวอร์แชริออตเรเควียมสลับวิญญาณคนทั้งเมือง นาร์รันชาและบูจาราตีตาย จอร์โน่แทงตัวเองด้วยลูกธนู โกลด์เอ็กซ์พีเรียนซ์เรเควียมส่งดิอาโวโล่เข้าสู่ความตายไม่รู้จบ',
+   x:'ทุกคนในจัตุรัสหลับลงพร้อมกัน เงาสีดำของสแตนด์ที่ไม่มีใครควบคุมเดินช้าๆ ไปที่โคลอสเซียม คุณตื่นอยู่ในร่างคนอื่น',
+   who:S=>ARCWHO.jojo(S),
+   c:[K('สู้กับดิอาโวโล่','brave hero',{foe:['ดิอาโวโล่',92,'b'],p:.2,d:'ถูกคิงคริมสันลบเวลาแล้วต่อยทะลุหลัง',fm:26,sk:9,s:'คุณเห็นเวลาหายไปสามวินาที แต่จอร์โน่ได้ลูกธนูก่อน',m:'คืนที่โรม'}),
+      K('แย่งลูกธนูให้จอร์โน่','brave loyal',{p:.5,d:'ถูกลมที่ไม่มีอยู่จริงพัดตกสะพาน',b:{giorno:12},fm:16,s:'ลูกธนูลอยไปหาจอร์โน่ ราวกับเลือกเขาเอง'})]},
+]);
+ARC('jojo',2011,[
+  {id:'jo_whitesnake',mo:8,t:'ไวท์สเนก',mood:'night',cap:'เรือนจำกรีนดอลฟินสตรีท',
+   n:'บาทหลวงปุชชี่ดึงแผ่นวิญญาณและแผ่นสแตนด์ของโจทาโร่ออกจากร่าง โจลีนต้องเอาแผ่นทั้งสองคืนก่อนพ่อของเธอตาย เธอปลดสแตนด์สโตนฟรีเป็นเส้นด้ายแล้วต่อยไปข้างหน้า',
+   x:'หมอกหนาลอยเต็มทางเดินเรือนจำ ทุกคนที่เดินในหมอกละลายเป็นเมือก แผ่นซีดีสีเงินหล่นจากหน้าผากใครบางคน',
+   c:[K('สู้กับไวท์สเนก','brave',{foe:['เอนริโก้ ปุชชี่',86,'b'],p:.3,d:'ถูกไวท์สเนกดึงแผ่นวิญญาณออกไป',fm:20,sk:8,s:'คุณคว้าแผ่นแผ่นหนึ่งไว้ได้ มันคือความทรงจำของโจทาโร่'}),
+      K('ช่วยโจลีนหนีหมอก','kind',{p:.65,fm:10,s:'เส้นด้ายสโตนฟรีลากคุณสองคนขึ้นหลังคาก่อนตัวละลาย'})]},
+]);
+
+/* ---------------- Naruto: Pain and the Fourth War in steps ---------------- */
+ARCWHO.naruto=S=>isNinja(S);
+ARC('naruto',66,[
+  {id:'pa_1',mo:3,t:'เทพทั้งหกบุกโคโนฮะ',mood:'fire',cap:'โคโนฮะใต้ฝน',
+   n:'ร่างทั้งหกของเพนแยกย้ายไปทั่วหมู่บ้านเพื่อหาจิ้งจอกเก้าหาง คาคาชิสู้กับร่างเทพจนจักระหมดและตาย ซึนาเดะส่งจักระผ่านทากผ่านหมู่บ้าน',
+   x:'ตะขาบยักษ์โผล่จากพื้นกลางตลาด ร่างที่มีตารินเนะกันแหวนมองคุณด้วยหน้านิ่ง "ความเจ็บปวดจะทำให้เจ้าเข้าใจ"',
+   who:S=>isNinja(S)&&vilOf(S)==='konoha',
+   c:[K('สู้กับร่างสัตวเดรัจฉาน','brave hero',{foe:['เพน ร่างสัตวเดรัจฉาน',78,'b'],p:.35,d:'ถูกสัตว์อัญเชิญของเพนกลืน',fm:16,sk:7,s:'คุณฟันหัวสุนัขสามหัวได้หนึ่งหัว มันแยกเป็นสองตัว แต่ทีมอินุซึกะมาถึงพอดี'}),
+      K('อพยพพลเรือนเข้าหลุมหลบภัย','kind',{p:.7,fm:8,j:4,s:'ทุกคนที่คุณพาลงหลุมหลบภัยรอดจากชินระเทนเซย์'})]},
+  {id:'pa_2',mo:3,t:'ชินระเทนเซย์',mood:'quake',cap:'หลุมยักษ์ที่เคยเป็นหมู่บ้าน',
+   n:'เพนลอยขึ้นเหนือหมู่บ้านแล้วผลักทุกอย่างออกในครั้งเดียว โคโนฮะกลายเป็นหลุมยักษ์ นารูโตะกลับมาพร้อมเซนจุตสึ ฮินาตะสารภาพรักแล้วถูกแทง นารูโตะปล่อยหางที่แปด มินาโตะโผล่มาจากผนึกเพื่อปิดมัน นารูโตะเดินไปคุยกับนางาโตะ และนางาโตะใช้ชีวิตชุบทุกคนกลับมา',
+   x:'คุณลืมตาอยู่ใต้ซากบ้าน ได้ยินเสียงคนทั้งหมู่บ้านตะโกนชื่อเด็กผมทองคนหนึ่ง',
+   who:S=>isNinja(S)&&vilOf(S)==='konoha',
+   c:[K('ขุดหาคนรอด','kind',{p:.9,fm:10,j:6,s:'คนที่ตายในวันนั้นลืมตาขึ้นพร้อมกัน รวมทั้งคาคาชิ'}),
+      K('วิ่งไปช่วยนารูโตะ','brave hero',{foe:['เพน ร่างเทพ',88,'b'],p:.3,d:'ถูกแรงดึงดูดของร่างเทพบดขยี้',fm:20,sk:8,b:{naruto:10},s:'นารูโตะตะโกนให้คุณถอย แล้วกระโดดใส่เพนด้วยรัศมีโอดามะ'})]},
+]);
+ARC('naruto',67,[
+  {id:'w4_1',mo:3,t:'กองทัพพันธมิตรนินจา',mood:'day',cap:'แนวหน้าของกองพลที่สี่',
+   n:'ห้าหมู่บ้านรวมเป็นกองทัพแปดหมื่นคนเป็นครั้งแรก กาอาระนำกองพลที่สี่ คาบูโตะใช้เอโดะเทนเซย์ปลุกคาเงะและนินจาในตำนานที่ตายไปแล้วทั้งหมดกลับมารบ',
+   x:'นินจาที่ตายไปหลายปีเดินข้ามทุ่งเข้ามา ผิวแตกเหมือนดินเผา คุณจำหน้าคนหนึ่งได้ เขาคือคนที่สอนคุณตอนเด็ก',
+   c:[K('สู้กับนินจาฟื้นคืนชีพ','brave',{foe:['นินจาเอโดะเทนเซย์',68],p:.5,d:'ถูกนินจาที่ตายไปแล้วฆ่า',fm:12,sk:7,s:'คุณใช้คาถาผนึกปิดร่างนั้น ก่อนผนึกเขาพูดว่า "เก่งขึ้นเยอะนะ"'}),
+      K('อยู่หน่วยแพทย์','kind',{p:.85,f(S){skill('medic',4);},fm:6,s:'คุณเย็บแผลจนนิ้วชา ในเต็นท์ไม่มีใครถามว่าคนเจ็บมาจากหมู่บ้านไหน'})]},
+  {id:'w4_2',mo:4,t:'มาดาระคืนชีพ',mood:'red',cap:'ทุ่งที่อุกกาบาตสองลูกตก',
+   n:'คาบูโตะปลุกอุจิวะ มาดาระ เขาสู้กับกองพลห้าคาเงะคนเดียว เรียกอุกกาบาตสองลูกถล่มทุ่ง แล้วฟื้นด้วยรินเนะเทนเซย์ของโอบิโตะ ถอดเก้าหางทั้งหมดใส่ร่างตัวเอง',
+   x:'ก้อนหินขนาดภูเขาลอยอยู่บนฟ้า ชายผมยาวยืนบนนั้นพูดเรียบๆ "หนีไปก็ไม่มีประโยชน์ มีลูกที่สองอยู่ข้างหลัง"',
+   c:[K('สู้กับมาดาระ','brave hero',{foe:['อุจิวะ มาดาระ',98,'b'],p:.1,d:'ถูกอุจิวะ มาดาระฆ่าในสงครามนินจาครั้งที่สี่',fm:30,sk:10,s:'มาดาระมองคุณครั้งเดียว "อย่างน้อยเจ้าก็ไม่หนี"',m:'ยืนต่อหน้ามาดาระ'}),
+      K('หนีจากแนวอุกกาบาต','safe',{p:.6,d:'ถูกอุกกาบาตลูกที่สองทับ',tr:20,s:'คุณเห็นโอโนกิยกอุกกาบาตด้วยมือที่สั่น','k':'plain'})]},
+  {id:'w4_3',mo:5,t:'สึคุโยมิอนันต์',mood:'night',cap:'ใต้แสงจันทร์สีแดง',
+   n:'มาดาระส่องสึคุโยมิอนันต์ผ่านดวงจันทร์ ทุกคนในโลกถูกพันในต้นไม้ศักดิ์สิทธิ์และฝันดีตลอดกาล ยกเว้นนารูโตะ ซาสึเกะ คาคาชิ และซากุระ คางูยะ โอซึซึกิ ตื่นจากร่างมาดาระ เด็กสองคนผนึกเธอด้วยมือที่จับกัน',
+   x:'แสงสีแดงจากดวงจันทร์ส่องตาคุณ ในหัวคุณเห็นภาพชีวิตที่คุณอยากมีมาตลอด มันอบอุ่นจนไม่อยากตื่น',
+   c:[K('ฝืนตัวเองไม่ให้หลับ','brave',{p:.9,f(S){st('iq',2);},fm:6,j:-4,s:'คุณหลับไปอยู่ดี แต่จำความฝันได้ทุกอย่างเมื่อตื่น'}),
+      K('ปล่อยให้ฝัน','safe',{j:6,s:'ในฝันนั้นทุกคนที่ตายไปยังอยู่ครบ คุณร้องไห้ตอนตื่น','k':'plain'})]},
+]);
+
+/* ---------------- Attack on Titan: Trost and the Return to Shiganshina in steps ---------------- */
+ARCWHO.aot=S=>isMil(S);
+ARC('aot',850,[
+  {id:'tr_2',mo:1,t:'ทรอสต์: แก๊สหมด',mood:'fire',cap:'หลังคาเมืองทรอสต์',
+   n:'ไททันมหึมาเตะประตูทรอสต์พังอีกครั้ง หน่วยฝึกที่ 104 ต้องเข้าแนวรบ เอเรนถูกกลืนกินต่อหน้าอาร์มิน ทหารที่เหลือติดอยู่บนหลังคาเพราะแก๊สในถังหมด และกองเสบียงถูกไททันเจ็ดตัวล้อม',
+   x:'แก๊สของคุณเหลือแค่ครึ่งถัง มิคาสะตะโกนจากหลังคาข้างหน้า "ถ้าไม่สู้ก็ตาย!"',
+   c:[K('บุกกองเสบียงที่ไททันล้อม','brave',{foe:['ไททัน 7 เมตร',55,'t'],p:.5,d:'ถูกไททันกินในกองเสบียง',fm:10,sk:7,b:{mikasa:6,jean:6},s:'ทุกคนเติมแก๊สได้ ฌองตะโกนสั่งการเหมือนเคยทำมาทั้งชีวิต'}),
+      K('รอบนหลังคา','safe',{p:.55,d:'ไททันปีนขึ้นหลังคาได้',tr:14,s:'ไททันตัวหนึ่งมองคุณจากถนนข้างล่างทั้งบ่าย','k':'plain'})]},
+  {id:'tr_3',mo:1,t:'ทรอสต์: หินอุดประตู',mood:'red',cap:'ประตูทรอสต์',
+   n:'เอเรนออกมาจากท้ายทอยไททันที่ต่อยไททันตัวอื่น ทหารรักษาการณ์จ่อปืนใหญ่ใส่เขา พิกซิสสั่งให้ไททันเอเรนแบกหินยักษ์ไปอุดประตู ทหารหน่วยคุ้มกันตายไปครึ่งหน่วยเพื่อพาเขาไปถึง',
+   x:'ไททันตัวสูงสิบห้าเมตรแบกหินเดินช้าๆ ไปที่ประตู ไททันตัวอื่นวิ่งเข้ามาจากทุกซอย คุณอยู่ในหน่วยล่อ',
+   c:[K('สู้ล่อไททันออกจากเอเรน','brave hero',{foe:['ไททันผิดปกติ',60,'t'],p:.4,d:'ถูกไททันกินระหว่างล่อให้เอเรนแบกหิน',fm:16,sk:7,s:'เสียงหินกระแทกประตูดังทั่วเมือง มนุษย์ชนะไททันเป็นครั้งแรก',m:'วันอุดประตูทรอสต์'}),
+      K('ยิงพลุบอกทาง','kind',{p:.75,fm:6,s:'พลุสีแดงของคุณบอกทางให้หน่วยถัดไปได้ทัน'})]},
+  {id:'sg_2',mo:10,t:'ชิงกันชินะ: บุกฆ่าตัวตาย',mood:'grief',cap:'ทุ่งหลังกำแพงชิงกันชินะ',
+   n:'ไททันวานรขว้างหินบดทหารทั้งหน่วย เออร์วินนำทหารใหม่ทุกคนบุกตรงไปข้างหน้าเพื่อล่อหิน ให้ลีไวล์อ้อมไปฟันวานร ทหารเกือบทั้งหมดตายพร้อมเออร์วิน อาร์มินถูกไททันมหึมาเผาจนไหม้เพื่อให้เอเรนได้จังหวะ',
+   x:'เออร์วินชักดาบขึ้นฟ้า "ทหาร! โกรธไว้! ตะโกนไว้! สู้ไว้!" หินก้อนแรกกำลังลอยมา',
+   c:[K('บุกตามเออร์วิน','brave hero',{p:.12,d:'ถูกหินของไททันวานรบดในการบุกฆ่าตัวตาย',fm:30,j:-6,s:'คุณเป็นหนึ่งในไม่กี่คนที่ยังลุกขึ้นได้หลังหินผ่านไป',m:'บุกตามเออร์วิน'}),
+      K('อยู่ปกป้องม้าของทุกคน','kind',{p:.6,d:'ไททันเกราะไล่ทันคอกม้า',tr:20,fm:6,s:'ม้าที่รอดพาทหารที่เหลือเก้าคนกลับบ้าน','k':'plain'})]},
+]);
+ARC('aot',854,[
+  {id:'rb_2',mo:8,t:'พันธมิตรที่ไม่น่าเป็นไปได้',mood:'night',cap:'กองไฟกลางป่า',
+   n:'ฮันจิ ลีไวล์ มิคาสะ อาร์มิน ฌอง คอนนี่ จับมือกับไรเนอร์ แอนนี่ พีค และกาบี้ อดีตศัตรูที่ฆ่าเพื่อนพวกเขา เพื่อหยุดเอเรน ทั้งหมดนั่งรอบกองไฟเดียวกันในคืนนั้น',
+   x:'ไรเนอร์มองเปลวไฟ "ข้าฆ่าพ่อแม่ของพวกเจ้า ข้าไม่ขอให้อภัย" ทุกคนเงียบ แล้วมองคุณ',
+   c:[K('นั่งลงข้างไรเนอร์','kind',{b:{reiner:8},j:2,s:'คืนนั้นไม่มีใครฆ่าใคร นั่นคือจุดเริ่มต้น'}),
+      K('ต่อยไรเนอร์หนึ่งหมัด','brave',{dk:3,b:{jean:4},s:'ไรเนอร์ไม่หลบ ฌองต่อยตามคุณอีกหมัด แล้วทุกคนก็นั่งลง','k':'plain'})]},
+  {id:'rb_3',mo:9,t:'ฟ้าดินส่องสว่าง: บนหลังไททัน',mood:'red',cap:'กระดูกสันหลังของไททันยักษ์',
+   n:'ไททันกำแพงล้านตัวเหยียบโลกครึ่งใบ พันธมิตรขึ้นเรือบินไปลงบนหลังไททันมูลฐาน ไททันบริสุทธิ์ทั้งหมดที่ซีคกับเอเรนเรียกออกมาเคยเป็นทหารที่ตายไป ทั้งเบอร์โทลท์ พอร์โค และมาร์เซล ฮันจิตายบนท่าเรือเพื่อซื้อเวลาให้เรือบินออก',
+   x:'ร่างของไททันเกราะ ไททันจักร และไททันขากรรไกร ที่ถูกสร้างจากความทรงจำ วิ่งเข้ามาจากทุกทิศบนหลังกระดูก',
+   c:[K('สู้กับไททันจากความทรงจำ','brave hero',{foe:['ไททันแห่งอดีต',80,'t'],p:.3,d:'ถูกไททันจากความทรงจำบดบนหลังไททันมูลฐาน',fm:24,sk:8,s:'มิคาสะบินผ่านคุณไปหาเอเรน คุณกันทางให้เธอได้สองวินาที',m:'บนหลังไททันมูลฐาน'}),
+      K('คุ้มกันเรือบินของอาร์มิน','kind',{p:.55,fm:12,b:{armin:10},s:'อาร์มินตะโกนชื่อคุณจากเรือบิน แล้วระเบิดไททันมหึมาลงบนพื้น'})]},
+]);
+
+/* ---------------- One Piece: Marineford and Wano in steps ---------------- */
+ARCWHO.op=S=>pirate(S)||marine(S);
+ARC('op',1522,[
+  {id:'mf_2',mo:11,t:'มารีนฟอร์ด: ความตายของเอส',mood:'fire',cap:'ลานประหารมารีนฟอร์ด',
+   n:'ลูฟี่ฝ่าแนวทหารเรือสามพลเรือเอกไปถึงลานประหารจนปลดโซ่เอสได้ อาคาอินุพูดดูถูกหนวดขาว เอสหยุดวิ่งกลับมาสู้ แล้วรับหมัดแมกม่าแทนลูฟี่ เอสตายในอ้อมแขนของน้องชาย',
+   x:'หมัดแมกม่าพุ่งมาทางเด็กหมวกฟาง คุณอยู่ห่างแค่สามก้าว',
+   c:[K('ขวางอาคาอินุ','brave hero',{foe:['อาคาอินุ',92,'b'],p:.12,d:'ถูกหมัดแมกม่าของอาคาอินุ',fm:30,sk:8,s:'หมัดแมกม่าเฉียดคุณไป มันยังไปถึงเอสอยู่ดี แต่ลูฟี่เห็นว่าคุณพยายาม',m:'ขวางอาคาอินุ'}),
+      K('ลากลูฟี่ที่ช็อกหนี','kind',{p:.5,d:'ถูกลาวาจากแนวทหารเรือ',b:{luffy:10},fm:14,s:'จิมเบผู้มีแผลไหม้ทั้งหลังรับลูฟี่ต่อจากคุณ'})]},
+  {id:'mf_3',mo:11,t:'มารีนฟอร์ด: หนวดขาวยืนตาย',mood:'red',cap:'ลานที่แตกเป็นสองซีก',
+   n:'หนวดขาวต่อยหน้าอาคาอินุจนเกาะแตกครึ่ง แล้วถูกกลุ่มหนวดดำแทงและยิงหลายร้อยนัด เขาประกาศว่าวันพันปีจะมาถึง และตายทั้งยืนโดยไม่มีแผลที่หลัง แชงคส์มาถึงหยุดสงคราม',
+   x:'แชงคส์ผมแดงยืนกลางสนามรบ "สงครามจบแล้ว ใครอยากสู้ต่อ มาสู้กับกลุ่มผมแดง"',
+   c:[K('วางอาวุธ','safe kind',{j:4,fm:4,s:'คุณช่วยแบกศพของหนวดขาวกับเอสขึ้นเรือของแชงคส์'}),
+      K('ไล่ตามไปสู้กับหนวดดำ','brave',{foe:['มาร์แชล ดี. ทีช',86,'b'],p:.3,d:'ถูกพลังความมืดของหนวดดำดึงเข้าไป',fm:18,sk:7,s:'หนวดดำหัวเราะแล้วหายไปในความมืดของตัวเอง'})]},
+]);
+ARC('op',1524,[
+  {id:'wa_2',mo:11,t:'บุกโอนิงาชิมะ',mood:'fire',cap:'เกาะผีกลางเทศกาลไฟ',
+   n:'คืนเทศกาลไฟ กลุ่มอาคาซายะเก้านายที่เหลือกับพันธมิตรนินจาโจรสลัดมิงค์ซามูไรบุกโอนิงาชิมะ ห้าแม่ทัพรุ่นใหม่หักหลังไคโดบนหลังคา โซโลฟันคิงด้วยฮาคิราชา ซันจิตื่นพลังเจอร์มา',
+   x:'กองทัพกิฟเตอร์ร้อยคนวิ่งลงบันไดหัวกะโหลก ข้างหลังมีชายในชุดปีกเพลิง',
+   c:[K('สู้กับกองทัพกิฟเตอร์','brave',{foe:['กิฟเตอร์',62],p:.55,d:'ถูกกองทัพกิฟเตอร์รุมในโอนิงาชิมะ',fm:14,sk:7,s:'ซามูไรสามคนกระโดดมายืนหลังคุณ "ไปต่อ! เพื่อวาโนะ!"'}),
+      K('ช่วยชาวบ้านจากไฟ','kind',{p:.75,fm:8,j:4,s:'โมโมโนะสุเกะในร่างมังกรพาเกาะลอยออกจากเมืองหลวงดอกไม้ได้ทัน'})]},
+  {id:'wa_3',mo:11,t:'นิกะ',mood:'day',cap:'ท้องฟ้าเหนือวาโนะ',
+   n:'ลูฟี่ที่หัวใจหยุดเต้นได้ยินเสียงกลองแห่งการปลดปล่อย ผลกุมกุมคือผลมนุษย์ร่างนิกะ เทพสุริยะที่ทำให้ทุกคนยิ้ม ลูฟี่ร่างห้าเป่าไคโดลงลาวาใต้โอนิงาชิมะ วาโนะเปิดประเทศ',
+   x:'เสียงกลองดังจากทุกที่และไม่มีที่ไหนเลย คุณรู้สึกอยากหัวเราะโดยไม่มีเหตุผล',
+   c:[K('ตะโกนเชียร์ลูฟี่','kind brave',{j:8,fm:6,b:{luffy:6},s:'ไคโดตกลงไปในลาวา ทั้งวาโนะได้เห็นท้องฟ้าโดยไม่มีควันเป็นครั้งแรกในยี่สิบปี'}),
+      K('ไปร่วมรบกับลอว์และคิด','brave',{foe:['บิ๊กมัม',90,'b'],p:.2,d:'ถูกบิ๊กมัมตบตกหน้าผา',fm:20,sk:8,s:'คิดยิงสายฟ้าดาบแม่เหล็กผ่านหัวคุณ บิ๊กมัมตกลงไปพร้อมระเบิด'})]},
+]);
+
+/* ---------------- Bleach: the rescue of Rukia, Karakura and the Thousand-Year Blood War ---------------- */
+ARCWHO.bleach=S=>reaper(S)||seesSpirit(S);
+ARC('bleach',2001,[
+  {id:'ss_1',mo:6,t:'บุกเซเรเทย์',mood:'day',cap:'ประตูเซเรเทย์ทางทิศตะวันตก',
+   n:'อิจิโกะ อุริว ชาด โอริฮิเมะ บุกเซเรเทย์ด้วยลูกกระสุนพลังวิญญาณของคูไคคุ อิจิโกะสู้กับเร็นจิ แล้วชนะเคนปาจิ ซาราคิ ที่ไม่ใช้ชื่อดาบ',
+   x:'คนผมทรงประหลาดหน้ายิ้มหัวเราะบนหลังคา ชายร่างยักษ์มีกระดิ่งที่ผมกำลังไล่ฟันทุกคนที่มีพลังวิญญาณ',
+   c:[K('สู้กับเคนปาจิ','brave',{foe:['ซาราคิ เคนปาจิ',90,'b'],p:.2,d:'ถูกเคนปาจิฟันในเซเรเทย์',fm:24,sk:9,s:'เคนปาจิหัวเราะเสียงดัง "นายทำให้ข้าสนุกได้สามวินาที"',m:'สู้กับเคนปาจิ'}),
+      K('ช่วยฮานาทาโร่พาคนเจ็บ','kind',{p:.8,f(S){skill('medic',4);},fm:6,s:'ฮานาทาโร่จากหน่วยสี่พาคุณเดินในท่อระบายน้ำใต้เซเรเทย์'})]},
+]);
+ARC('bleach',2002,[
+  {id:'fk_2',mo:3,t:'ไอเซ็นกับฮงเงียคุ',mood:'red',cap:'คาราคุระจำลอง',
+   n:'ไอเซ็นรวมร่างกับฮงเงียคุ ฆ่าหัวหน้าหน่วยหลายคนในคาราคุระจำลอง อิจิโกะฝึกในเซ็งไกมอนสามเดือน แล้วออกมาด้วยร่างมุเก็ตสึ ไอเซ็นแพ้ และถูกจองจำสองหมื่นปี',
+   x:'ฮงเงียคุสีม่วงเต้นอยู่ในอกของไอเซ็น เขามองคุณเหมือนมองแมลง "ยังมีคนลุกขึ้นได้อีกหรือ"',
+   c:[K('ลุกขึ้นสู้ไอเซ็น','brave hero',{foe:['ไอเซ็น โซสุเกะ',96,'b'],p:.12,d:'ถูกไอเซ็นฟันด้วยคุโรฮิตสึกิ',fm:30,sk:9,s:'คุณไม่ได้แตะไอเซ็นเลย แต่ซื้อเวลาได้จนอุราฮาระมาถึงพร้อมคิโด',m:'ลุกขึ้นต่อหน้าไอเซ็น'}),
+      K('พาฮินาโมริที่ถูกแทงหนี','kind',{p:.6,fm:10,s:'อุโนฮานะรับเธอต่อจากคุณ บาดแผลถูกปิดภายในสองนาที'})]},
+]);
+ARC('bleach',2004,[
+  {id:'tw_2',mo:7,t:'ยามาโมโตะตาย',mood:'fire',cap:'หน่วยที่หนึ่งที่ไหม้ทั้งตึก',
+   n:'ยฮาบัคบุกเซเรเทย์ ยามาโมโตะปล่อยบังไคซันกะโนะทาจิ เปลวไฟที่ร้อนกว่าดวงอาทิตย์ แต่คนที่เขาสู้เป็นตัวปลอม ยฮาบัคตัวจริงขโมยบังไคแล้วตัดยามาโมโตะเป็นสองท่อน',
+   x:'ซันซ์ตาร์ริตเตอร์ในชุดขาวยื่นเหรียญดำมาที่คุณ "บังไคของแกเป็นของพวกเราแล้ว"',
+   c:[K('สู้กับซันซ์ตาร์ริตเตอร์','brave',{foe:['ซันซ์ตาร์ริตเตอร์',78],p:.4,d:'ถูกควินซีของวานเดนไรค์ยิงทะลุ',fm:16,sk:8,s:'คุณสู้ด้วยชิไคเพราะบังไคใช้ไม่ได้ และยังรอด'}),
+      K('ดับไฟที่หน่วยหนึ่ง','kind',{p:.7,fm:8,s:'หน่วยเก็บกู้ของคุณดึงคนออกจากไฟได้สิบเอ็ดคน'})]},
+  {id:'tw_3',mo:10,t:'ยฮาบัคยึดราชาวิญญาณ',mood:'night',cap:'วังราชาวิญญาณ',
+   n:'ยฮาบัคดูดราชาวิญญาณ สามโลกเริ่มรวมเป็นหนึ่ง โลกแห่งความตายกับโลกมนุษย์จะไม่แยกจากกันอีก อิจิโกะใช้ดาบที่หักกับลูกศรของอุริว และพลังของไอเซ็นที่ถูกปล่อยชั่วคราว จบความสามารถเดอะออลไมตี้ของยฮาบัค',
+   x:'ท้องฟ้าเหนือคาราคุระมีปราสาทลอยกลับหัวอยู่ ใครที่มองนานเกินไปจะเริ่มลืมว่าตัวเองตายไปแล้วหรือยัง',
+   c:[K('บุกเป็นด่านหน้าให้อิจิโกะ','brave hero',{foe:['ยฮาบัค',98,'b'],p:.1,d:'ถูกเดอะออลไมตี้เห็นอนาคตแล้วฆ่าก่อนจะขยับ',fm:30,sk:10,s:'ยฮาบัคเห็นคุณในอนาคตแล้วไม่สนใจ นั่นทำให้อุริวยิงลูกศรได้',m:'ศึกที่วังราชาวิญญาณ'}),
+      K('ปกป้องคนในคาราคุระ','kind',{p:.65,fm:12,j:4,s:'เด็กในเมืองยังเห็นท้องฟ้าธรรมดาเพราะคนแบบคุณ'})]},
+]);
+
+/* ===== JoJo stands drawn after their lore designs. STANDLOOK holds each canon stand's colours and head shape; a player's own
+   stand gets a stable look hashed from its name. Each canon stand user rushes with their own stand, and the Part 3, 5 and 6
+   cast who were missing (Dio, the Crusaders, Diavolo, Jolyne) join the world ===== */
+const STANDLOOK={
+  star:{n:'สตาร์แพลทินัม',b:'#7a5ca8',t:'#e8c050',a:'#c83a3a',hd:'hair',hc:'#1c1a1f',cry:'โอร่า โอร่า โอร่า!'},
+  world:{n:'เดอะเวิลด์',b:'#e8c050',t:'#2a7a4a',a:'#1c1a1f',hd:'pipe',cry:'มุดะ มุดะ มุดะ!'},
+  crazy:{n:'เครซี่ไดมอนด์',b:'#e48cc0',t:'#a8bce0',a:'#e04a7a',hd:'pipe',cry:'โดรา โดรา โดรา!'},
+  kq:{n:'คิลเลอร์ควีน',b:'#e8a4c4',t:'#6a3a7a',a:'#f0ece0',hd:'cat',cry:'คิลเลอร์ควีน แตะแล้ว'},
+  gold:{n:'โกลด์เอ็กซ์พีเรียนซ์',b:'#e8c050',t:'#3a9a5a',a:'#c83030',hd:'curl',cry:'มุดะ มุดะ มุดะ!'},
+  hiero:{n:'ไฮโรแฟนท์กรีน',b:'#3aa860',t:'#c8f0a0',a:'#1e5a3a',hd:'mask',cry:'เอมเมอรัลด์สแปลช!'},
+  chariot:{n:'ซิลเวอร์แชริออต',b:'#c8ccd6',t:'#4a5a8a',a:'#f0f4ff',hd:'knight',sword:1,cry:'ฮอร่า ฮอร่า ฮอร่า!'},
+  magician:{n:'เมจิเชียนเรด',b:'#c8502a',t:'#f0b040',a:'#ff8a3a',hd:'bird',fire:1,cry:'ครอสไฟร์เฮอริเคน!'},
+  sticky:{n:'สติกกี้ฟิงเกอร์ส',b:'#eceef6',t:'#3a5ab8',a:'#e8c050',hd:'pipe',zip:1,cry:'อาริ อาริ อาริ!'},
+  stone:{n:'สโตนฟรี',b:'#5a8ad8',t:'#2a2a5a',a:'#a8d0ff',hd:'hair',hc:'#2a2a5a',string:1,cry:'โอร่า โอร่า!'},
+  whitesnake:{n:'ไวท์สเนก',b:'#e6e2d8',t:'#1c1a1f',a:'#8a5a3a',hd:'mask',cry:'แผ่นของเจ้า... ข้าเอาไปแล้ว'},
+  kc:{n:'คิงคริมสัน',b:'#c03040',t:'#f0ece0',a:'#1c1a1f',hd:'twoface',cry:'เวลาถูกลบไปแล้ว'},
+  hand:{n:'เดอะแฮนด์',b:'#3a6ad8',t:'#f0ece0',a:'#e8c050',hd:'pipe',cry:'ข้าจะลบมันทิ้ง!'},
+  echoes:{n:'แอคโค่ แอคท์ 3',b:'#3aa860',t:'#e8c050',a:'#1c1a1f',hd:'mask',cry:'S·H·I·T! ทรีฟรีซ!'},
+};
+const STANDOF={jotaro:'star',dio:'world',josuke:'crazy',kira:'kq',giorno:'gold',kakyoin:'hiero',polnareff:'chariot',avdol:'magician',bucciarati:'sticky',jolyne:'stone',pucci:'whitesnake',diavolo:'kc',okuyasu:'hand',koichi:'echoes'};
+/* a player's own stand: colours and head chosen from its name, so the same stand always looks the same */
+function standLookOf(name){if(!name)return STANDLOOK.star;let h=0;for(const ch of name)h=(h*31+ch.charCodeAt(0))>>>0;
+  const pal=[['#4a7ad8','#e8c050','#a8d0ff'],['#d84a7a','#2a2a5a','#ffd0e0'],['#3aa870','#e8e0c0','#1e5a3a'],['#8a5ad8','#f0ece0','#e8c050'],['#d8a03a','#3a2a5a','#fff0b0'],['#4ac8c8','#1c1a1f','#e0ffff']][h%6];
+  return{n:name,b:pal[0],t:pal[1],a:pal[2],hd:['pipe','mask','knight','curl','cat','hair'][(h>>3)%6],hc:pal[1],cry:'สแตนด์ของคุณออกหมัด'};}
+/* the stand figure itself, about 46 px tall, its feet hovering at fy; dir 1 faces right; rush>0 throws fists forward */
+function standBody(px,x,fy,L,t,dir=1,rush=0){const b=L.b,tr=L.t,a=L.a,d=dir,bob=Math.round(Math.sin(t/260)*1.5),y0=fy-46+bob,dk='rgba(20,14,30,.55)';
+  for(let i=0;i<3;i++){const r=26-i*6;disc(px,x,y0+22,r,`rgba(${parseInt(b.slice(1,3),16)},${parseInt(b.slice(3,5),16)},${parseInt(b.slice(5,7),16)},${.07+i*.04})`);}
+  if(L.fire)for(let i=0;i<8;i++){const q=((t/500)+i/8)%1;disc(px,x-10+((i*7)%20),y0+40-q*44,3-q*2|0,`rgba(255,${140+((i*20)%80)},40,${(1-q).toFixed(2)})`);}
+  /* legs fade into a wisp, like a stand that never quite touches the ground */
+  px(x-5,y0+30,4,10,b);px(x+1,y0+30,4,10,b);px(x-5,y0+38,4,3,tr);px(x+1,y0+38,4,3,tr);px(x-4,y0+41,2,3,'rgba(255,255,255,.25)');px(x+2,y0+41,2,3,'rgba(255,255,255,.25)');
+  /* torso, belt, shoulder plates */
+  px(x-7,y0+12,14,18,b);px(x-7,y0+12,14,2,tr);px(x-7,y0+26,14,2,tr);px(x-1,y0+14,2,12,dk);
+  px(x-10,y0+12,4,4,tr);px(x+6,y0+12,4,4,tr);
+  if(L.zip){for(let i=0;i<5;i++)px(x-1,y0+14+i*3,2,1,a);}
+  if(L.string)for(let i=0;i<4;i++)px(x-6+i*4,y0+15,1,10,a);
+  if(L===STANDLOOK.kq||L.hd==='cat')disc(px,x,y0+27,2,a);
+  if(L===STANDLOOK.world||L===STANDLOOK.crazy){px(x-5,y0+33,4,3,a);px(x+1,y0+33,4,3,a);}
+  if(L===STANDLOOK.gold)for(const [ox,oy] of [[-4,16],[3,18],[-2,22]])px(x+ox,y0+oy,2,2,a);
+  if(L===STANDLOOK.whitesnake)for(let i=0;i<6;i++)px(x-6+(i%3)*5,y0+15+((i/3)|0)*6,3,1,tr);
+  if(L===STANDLOOK.kc)for(let i=0;i<4;i++)px(x-6+i*4,y0+14,1,12,'rgba(240,236,224,.7)');
+  if(L.a&&L===STANDLOOK.star){px(x-8,y0+10,16,3,a);px(x+d*6,y0+12,3,8,a);}
+  /* arms: either one cocked back or a barrage of after-images */
+  if(rush>0){for(let i=0;i<6;i++){const q=((t/70)+i/6)%1,ax=x+d*(8+q*26),ay=y0+12+((i*5)%14);px(Math.min(ax,ax+d*8),ay,8,4,`${b}${Math.round((1-q)*200+40).toString(16).padStart(2,'0')}`);disc(px,ax+d*9,ay+2,3,`rgba(255,255,255,${(.6*(1-q)).toFixed(2)})`);}}
+  else{px(x-11,y0+16,4,10,b);px(x+7,y0+16,4,10,b);px(x-11,y0+24,4,3,tr);px(x+7,y0+24,4,3,tr);}
+  if(L.sword){px(x+d*11,y0+20,d>0?18:1,1,'#f0f4ff');if(d<0)px(x-29,y0+20,18,1,'#f0f4ff');px(x+d*10,y0+18,2,5,tr);}
+  /* head */
+  const hx=x-5,hy=y0;px(hx,hy+2,10,9,b);px(hx+1,hy+1,8,1,b);
+  if(L.hd==='hair'){px(hx-2,hy-1,14,4,L.hc||'#1c1a1f');px(hx-3,hy+2,3,12,L.hc||'#1c1a1f');px(hx+10,hy+2,3,12,L.hc||'#1c1a1f');for(let i=0;i<4;i++)px(hx-4+i*2-(d>0?2:-2)*Math.sin(t/300+i),hy+12+i*2,2,3,L.hc||'#1c1a1f');}
+  else if(L.hd==='pipe'){px(hx-1,hy,12,3,tr);px(hx-3,hy+3,3,2,tr);px(hx+10,hy+3,3,2,tr);px(hx-4,hy+4,2,6,tr);px(hx+12,hy+4,2,6,tr);}
+  else if(L.hd==='cat'){px(hx,hy-2,3,3,b);px(hx+7,hy-2,3,3,b);px(hx+1,hy-1,1,1,tr);px(hx+8,hy-1,1,1,tr);}
+  else if(L.hd==='curl'){px(hx-1,hy,12,2,tr);for(const ox of [-2,10])disc(px,hx+ox+1,hy+4,2,tr);}
+  else if(L.hd==='knight'){px(hx-1,hy,12,4,tr);px(hx+4,hy-4,2,4,a);px(hx+1,hy+5,8,1,'#1c1a1f');}
+  else if(L.hd==='bird'){px(hx-1,hy-2,12,4,a);px(hx+(d>0?9:-4),hy+5,5,3,'#f0b040');}
+  else if(L.hd==='twoface'){px(hx+3,hy-3,4,4,b);px(hx+4,hy-2,1,1,'#fff');px(hx+5,hy-2,1,1,'#fff');px(hx-1,hy,12,2,tr);}
+  else{px(hx-1,hy,12,2,tr);px(hx+1,hy+8,8,1,tr);}
+  /* eyes: two bright points that glint when it moves */
+  const ey=hy+5,gl=rush>0||(t/400|0)%5===0?'#ffffff':'#fee761';if(L.hd!=='mask'||L===STANDLOOK.whitesnake){px(hx+2,ey,2,2,gl);px(hx+6,ey,2,2,gl);}else{px(hx+2,ey,6,1,gl);}
+  if(L.hd!=='bird')px(hx+3,hy+8,4,1,dk);}
+/* the stand painters used by cut-ins and the battle screen */
+const standPaint=(key,rush)=>(px,t,hx,hy,col,LW,LH,gy)=>{const L=key?STANDLOOK[key]:standLookOf(S?.flags?.stand);standBody(px,hx+10,gy-10,L,t,1,rush);
+  if(rush)for(let i=0;i<14;i++){const q=((t/160)+hrnd(i))%1;disc(px,hx+30+q*70,gy-48+hrnd(i*3)*28,2,`rgba(255,255,255,${(.7*(1-q)).toFixed(2)})`);}};
+ANIM.standrush=standPaint(null,1);ANIM.standability=standPaint(null,0);
+for(const k of Object.keys(STANDLOOK)){ANIM['st_'+k]=standPaint(k,1);CIUNDER.push('st_'+k);ENAN['st_'+k]=STANDLOOK[k].n;}
+/* the crusaders, Dio, Diavolo and Jolyne */
+Object.assign(CAST.jojo,{dio:'ดิโอ แบรนโด้',polnareff:'ฌอง ปิแอร์ โปลนาเรฟ',kakyoin:'คาเคียวอิน โนริอากิ',avdol:'มุฮัมหมัด อับดุล',joseph:'โจเซฟ โจสตาร์',jolyne:'คูโจ โจลีน',diavolo:'ดิอาโวโล่'});
+Object.assign(CASTLOOK,{dio:CL('m','#f0d060','short','#e8c050',{eye:'#c83a3a',sash:'#2a7a4a'}),polnareff:CL('m','#e8e8f0','spiky','#1c1a1f',{eye:'#4f86b8'}),
+  kakyoin:CL('m','#b04a3a','short','#2a7a4a',{btn:1,bang:1,eye:'#8a5a3a'}),avdol:CL('m','#1c1a1f','short','#c8502a',{skin:'#8a5a3a',robe:'#c8502a'}),
+  joseph:CL('m','#8a7a6a','short','#5a6a4a',{eye:'#3e8948'}),jolyne:CL('f','#3a2a5a','bun','#3aa860',{eye:'#4f86b8'}),diavolo:CL('m','#e88ab8','long','#2a2a3a',{eye:'#3e8948',spots:1})});
+for(const id of ['jolyne'])FEM.add(id);
+Object.assign(CASTPOW,{dio:96,polnareff:74,kakyoin:70,avdol:72,joseph:72,jolyne:82,diavolo:94});
+Object.assign(JOJO.castMeta,{dio:{b:1868,d:1989,at:S=>S.place==='cairo'&&S.year>=1987&&S.year<=1988},polnareff:{b:1966,d:2001,at:S=>S.place==='cairo'&&S.year===1988||S.place==='naples'&&S.year===2001},
+  kakyoin:{b:1971,d:1989,at:S=>S.place==='cairo'&&S.year===1988},avdol:{b:1958,d:1989,at:S=>S.place==='cairo'&&S.year>=1980&&S.year<=1988},
+  joseph:{b:1920,at:S=>S.place==='cairo'&&S.year===1988||S.place==='morioh'&&S.year===1999},jolyne:{b:1992,at:S=>false},diavolo:{b:1965,d:2001,at:S=>false}});
+Object.assign(CASTANIM,Object.fromEntries(Object.entries(STANDOF).map(([id,k])=>[id,'st_'+k])));
+DESC.jojo.push([/แวมไพร์ผมทอง|ชายผมทองตาแดง/,'dio'],[/ผมตั้ง.{0,6}ฝรั่งเศส/,'polnareff'],[/บาทหลวงผิวคล้ำ/,'pucci']);
+/* a player's stand floats behind them in the live view now and then, so you can see what it looks like */
+{const dp=drawPerson;drawPerson=function(px,a,gy){try{if(a&&a.me&&S&&W?.id==='jojo'&&standU(S)&&S.flags.stand&&!a.hidden){const t=LIVE.t||0,ph=(t%12000)/12000;
+  if(ph<.4){const c=px.c,al=Math.sin(ph/.4*Math.PI);if(c){c.save();c.globalAlpha=Math.min(.85,al*1.4);}standBody(px,Math.round(a.x)-(a.dir>0?10:-10),gy-4,standLookOf(S.flags.stand),t,a.dir||1,0);if(c)c.restore();}}}catch(e){}
+  return dp.apply(this,arguments);};}
+
+/* ===================== LOOKISM (Korean manhwa): street fighters of Seoul from Gen 0 to Gen 2, crews, the Workers company,
+   the Yamazaki yakuza family, and a boy who wakes up in a second body ===================== */
+const lkF=S=>(S.sk?.fight||0)>=25||['crewm','workers','yakuza','gym'].includes(S.job?.id)||powersOf(S).some(p=>/^lk_/.test(p));
+Object.assign(POWERS,{lk_body2:{n:'ร่างที่สอง',cat:'ปริศนา',c:18,fame:8},lk_ui:{n:'อัลตร้าอินสติงต์ (ร่างกายสู้เองตอนหมดสติ)',cat:'สภาวะ',c:36,fame:15},
+  lk_copy:{n:'ก๊อปปี้ท่า',cat:'พรสวรรค์',c:24,fame:8},lk_unlock:{n:'ปลดล็อก',cat:'สภาวะ',c:30,fame:12},lk_gap:{n:'หมัดของคิม กัปรยอง',cat:'สายเลือด',c:40,fame:20},
+  lk_karate:{n:'คาราเต้เคียวคุชิน',cat:'ศิลปะการต่อสู้',c:12},lk_box:{n:'มวยสากล',cat:'ศิลปะการต่อสู้',c:10},lk_systema:{n:'ซิสเตมา',cat:'ศิลปะการต่อสู้',c:12},
+  lk_tkd:{n:'เทควันโด',cat:'ศิลปะการต่อสู้',c:10},lk_sword:{n:'ดาบจันทรา (ใช้อะไรก็ได้เป็นดาบ)',cat:'ศิลปะการต่อสู้',c:22,fame:6},lk_yama:{n:'วิชาตระกูลยามาซากิ',cat:'สายเลือด',c:30,fame:10}});
+const LK={
+  id:'lookism',title:'ลุคิซึม',sub:'Lookism (มันฮวาเกาหลี)',style:'jp',gi:1,blurb:'เกิดในโซลยุคที่หน้าตาตัดสินทุกอย่าง และถนนทุกสายมีเจ้าของ ตั้งแต่ตำนานรุ่น 0 ของคิม กัปรยอง ถึงแก๊งของเด็กมัธยมรุ่น 2 บริษัทเวิร์กเกอร์ส และยากูซ่ายามาซากิที่รออยู่อีกฝั่งทะเล',
+  cur:'วอน',mult:10000,yl:y=>`ปี ${y}`,range:[1970,2040],def:1997,fitL:'ฝีมือข้างถนน',trainL:'ซ้อมต่อสู้',jobMin:15,originL:'บ้านเกิด',postY:2030,
+  keyEvents:['lk_gen0','lk_gapdeath','lk_twobody','lk_big4'],firstWord:'ฮยอง',tlNote:'คุณรู้อนาคต ตัวละครของคุณไม่รู้',cloth:'#262b44',
+  ruins:'ตึกร้างที่แก๊งใช้เป็นฐาน',promo:'ได้เลื่อนตำแหน่ง',street:'คุณนอนในร้านเกมเปิดยี่สิบสี่ชั่วโมง',exec:'ถูกยากูซ่าโยนลงแม่น้ำฮัน',
+  gifts:['รองเท้าผ้าใบรุ่นลิมิเต็ด','กล่องข้าวจากร้านสะดวกซื้อ','บัตรสมาชิกยิมมวย','แจ็กเก็ตของแก๊ง','โทรศัพท์รุ่นใหม่'],
+  food:S=>pick(['รามยอนในร้านสะดวกซื้อ','ต๊อกบกกีข้างถนน','ไก่ทอดกับเบียร์','ข้าวกล่องคิมบับ','หมูย่างซัมกยอบซัล']),
+  law:S=>'ตำรวจโซล',
+  exposed(what){S.flags.wanted=1;say(`ตำรวจโซลออกหมายเรียกคุณ ${what}`,'bad');},
+  betray:(S,p)=>pick([`คุณขายข้อมูลของ${p.short}ให้บริษัทเวิร์กเกอร์ส`,`คุณโพสต์คลิปทำให้${p.short}อับอายไปทั้งโรงเรียน`,`คุณพาแก๊งไปดักรุม${p.short}`]),
+  accidents:S=>lkF(S)?['ถูกแก๊งคู่อริรุมในซอย','หมัดพลาดชนกำแพงจนนิ้วหัก','ตกบันไดหนีไฟระหว่างไล่จับ']:['ถูกรถส่งของชน','ลื่นล้มบนถนนน้ำแข็ง','อาหารเป็นพิษจากร้านข้างทาง'],
+  statusX:S=>S.flags.body2?` · ร่าง${S.flags.bodyNow===2?'ที่สอง':'เดิม'}`:'',
+  festivals:['ชูซ็อก (เทศกาลไหว้พระจันทร์)','เทศกาลดอกซากุระยออีโด','คอนเสิร์ตเคป๊อปกลางเมือง'],
+  kidPaths:[['เป็นนักสู้ข้างถนน','เป็นนักเรียนดีเด่น'],['เป็นสตรีมเมอร์','เป็นนายแบบ'],['เข้าบริษัทใหญ่','เปิดร้านอาหาร']],
+  famName:n=>n.split(' ')[0],join:(f,l)=>`${l} ${f}`,
+  studyTxt:['คุณติวสอบซูนึงจนตีสอง','คุณเรียนพิเศษภาษาอังกฤษสามคอร์ส','คุณจดเลกเชอร์จนมือชา'],
+  trainTxt:['คุณต่อยกระสอบในยิมจนเลือดซึมผ้าพันมือ','คุณวิ่งขึ้นเขานัมซานตอนตีห้า','คุณดูคลิปท่าต่อสู้ซ้ำร้อยรอบ'],
+  funTxt:['คุณร้องคาราโอเกะทั้งคืน','คุณเล่นเกมในพีซีบังจนเช้า','คุณดูไลฟ์ของสตรีมเมอร์ดัง'],
+  hurtTxt:['คุณโดนหมัดหลงในการตะลุมบอน','คุณบิดข้อเท้าตอนวิ่งหนีตำรวจ','คุณโดนขวดแตกบาดแขน'],
+  places:{
+    seoul:{n:'โซล ย่านกังบุก',d:'ย่านเก่าของโซล ที่ตั้งโรงเรียนมัธยมเจ และร้านสะดวกซื้อที่ไม่เคยปิด',money:35,v:'jtown'},
+    gangnam:{n:'กังนัม',d:'ตึกกระจกของบริษัทใหญ่ คลินิกศัลยกรรม และคนที่หน้าตาดีทุกคน',money:65,v:'metro'},
+    busan:{n:'ปูซาน',d:'เมืองท่าริมทะเล นักสู้ที่นี่ไม่เคยยอมใคร',money:30,v:'isle'},
+    ansan:{n:'อันซาน',d:'เมืองโรงงานที่เคยมีราชาเป็นของตัวเอง',money:22,v:'jtown'},
+    osaka:{n:'โอซาก้า ญี่ปุ่น',d:'อาณาเขตของตระกูลยามาซากิ',money:40,v:'metro'},
+  },
+  mkName(sx){return pick(NAMES.lookism.l)+' '+pick(NAMES.lookism[sx]);},
+  jobs:[
+    {id:'cvs',n:'พนักงานร้านสะดวกซื้อกะดึก',pay:6,sk:'trade'},
+    {id:'streamer',n:'สตรีมเมอร์',pay:14,sk:'charm',need:{charm:40},y:2008},
+    {id:'model',n:'นายแบบ/นางแบบ',pay:24,sk:'charm',need:{charm:65}},
+    {id:'crewm',n:'สมาชิกแก๊ง',pay:8,sk:'fight',need:{fight:20}},
+    {id:'gym',n:'โค้ชยิมมวย',pay:12,sk:'fight',need:{fight:45}},
+    {id:'workers',n:'พนักงานบริษัทเวิร์กเกอร์ส (สายบู๊)',pay:22,sk:'fight',need:{fight:55},y:2016,where:'seoul'},
+    {id:'hnh',n:'พนักงานเครือ HNH',pay:26,sk:'trade',need:{iq:65},where:'gangnam',y:1998},
+    {id:'police',n:'ตำรวจ',pay:16,sk:'fight',need:{fit:45}},
+    {id:'yakuza',n:'ยากูซ่าตระกูลยามาซากิ',pay:20,sk:'fight',where:'osaka'},
+  ],
+  mil:[{id:'kmil',n:'ทหารเกณฑ์',pay:4,mil:1,train:1}],
+  special(S){const o=[];if(S.sex==='m'&&S.age>=19&&S.age<=28&&!S.flags.served&&!isMil(S))o.push({l:'เข้ารับราชการทหาร',h:'ผู้ชายเกาหลีทุกคนต้องเป็นทหารสิบแปดเดือน',f(S){S.flags.served=1;setJob('kmil');st('fit',4);say('คุณโกนหัวแล้วขึ้นรถไปค่ายทหาร','plain');}});
+    if(S.age>=15&&lkF(S)&&!S.job)o.push({l:'เข้าร่วมแก๊ง',h:'มีพวกพ้อง มีศัตรู และได้เงินนิดหน่อย',f(S){setJob('crewm');S.flags.crew=pick(['บิ๊กดีล','โฮสเทล','ก็อดด็อก','เบิร์นนัคเคิลส์']);say(`คุณได้แจ็กเก็ตของแก๊ง${S.flags.crew}`,'good');}});
+    if(hasB('yamazaki')&&S.age>=16&&S.job?.id!=='yakuza')o.push({l:'กลับไปรับใช้ตระกูลยามาซากิ',h:'เลือดของคุณเรียกหา',f(S){dk(15);if(S.place!=='osaka'){S.place='osaka';}setJob('yakuza');say('ชายสวมสูทดำโค้งให้คุณที่สนามบินคันไซ "ยินดีต้อนรับกลับบ้าน"','bad');}});return o;},
+  isWhere(j,S){return(!j.where||j.where===S.place)&&(!j.y||S.year>=j.y);},
+  canon:[
+    {id:'lk_gen0',y:1985,mo:3,t:'ยุครุ่น 0',major:true,play(S){news(this.t,'ชายชื่อคิม กัปรยอง และเพื่อนอีกไม่กี่คนคุมถนนทั้งโซลโดยไม่ใช้อาวุธและไม่ยุ่งกับยาเสพติด คนเรียกยุคนี้ว่ารุ่น 0 ใครที่โดนกัปรยองต่อยไม่เคยลุกมาท้าซ้ำ');
+      if(S.age>=15&&S.place==='seoul')return{text:'ชายตัวไม่ใหญ่แต่ไหล่กว้างยืนขวางแก๊งยี่สิบคนที่กำลังรุมเด็กคนหนึ่ง เขาหันมามองคุณ "จะช่วยหรือจะดู?"',choices:[
+        {l:'ร่วมสู้ข้างคิม กัปรยอง',g:'brave hero',foe:['อันธพาลยุค 80',40],f(S){if(live(.8+fitb(250),'ถูกแก๊งรุมในซอยโซล')){bond('gapryong',14);fm(8);skill('fight',5);say('เขาตบไหล่คุณครั้งเดียว "ใช้ได้" แล้วเดินไปซื้อโซจู','good');}}},
+        {l:'ดูอยู่ห่างๆ',g:'safe',f(S){say('ยี่สิบคนล้มภายในสองนาที ไม่มีใครตาย ไม่มีใครลุกได้','plain');}}]};}},
+    {id:'lk_yama0',y:1993,mo:6,t:'รุ่น 0 กับตระกูลยามาซากิ',major:true,play(S){news(this.t,'ตระกูลยามาซากิจากโอซาก้าพยายามขยายอิทธิพลเข้าโซล แต่ชนกับกลุ่มของคิม กัปรยอง ชินเก็น ยามาซากิ ต้องถอยกลับญี่ปุ่น และสัญญาว่าจะไม่แตะโซลตราบที่กัปรยองยังมีชีวิต');}},
+    {id:'lk_imf',y:1997,mo:11,t:'วิกฤตไอเอ็มเอฟ',major:true,play(S){news(this.t,'เกาหลีใต้เข้าสู่วิกฤตการเงิน บริษัทล้มละลายทั่วประเทศ คนตกงานหลายล้าน ชาร์ลส์ ชเว ใช้วิกฤตนี้กว้านซื้อบริษัทจนสร้างเครือ HNH ขึ้นมา');if(S.age>=18&&!S.job?.mil){mon(-Math.min(S.money||0,10));say('เงินเก็บของคุณหายไปครึ่งหนึ่งในเดือนเดียว','bad');}}},
+    {id:'lk_gen1',y:2006,mo:4,t:'ราชาแห่งรุ่น 1',major:true,play(S){news(this.t,'รุ่นใหม่ขึ้นมาแทน เจมส์ ลี ถูกยกให้เป็นคนที่แข็งแกร่งที่สุดของรุ่น 1 มีพัค จงกอนกับคิม กูเป็นตำนานคู่ขนาน และมา แทซูเป็นราชาของอันซาน');}},
+    {id:'lk_gapdeath',y:2010,mo:10,t:'ตำนานจากไป',major:true,play(S){news(this.t,'คิม กัปรยองเสียชีวิต คนทั้งวงการถนนมางานศพโดยไม่มีใครต่อยกัน หลังจากนั้นแก๊งใหญ่สี่แก๊งเริ่มก่อตัวขึ้นในหมู่เด็กมัธยม และตระกูลยามาซากิก็เริ่มนับวันกลับมา');st('joy',-2);if((S.bonds?.gapryong||0)>=10){trauma(10);say('คุณยืนหน้ารูปของเขาอยู่นาน จำวันที่เขาตบไหล่คุณได้','bad');}}},
+    {id:'lk_twobody',y:2014,mo:2,t:'สองร่าง',major:true,play(S){news(this.t,'เด็กชายตัวอ้วนที่ถูกรังแกชื่อพัค ฮยองซอก ตื่นมาในร่างที่สูงและหล่อจนคนหันมอง ร่างเดิมนอนหลับอยู่ข้างๆ เขาย้ายไปเรียนที่มัธยมเจในโซล และเป็นคนดังภายในหนึ่งวัน');}},
+    {id:'lk_burn',y:2014,mo:9,t:'เบิร์นนัคเคิลส์',major:true,play(S){news(this.t,'วาสโกนำแก๊งเบิร์นนัคเคิลส์ไล่จัดการคนรังแกเด็กทั่วโซลด้วยหมัด เขาเข้าใจผิดว่าฮยองซอกเป็นคนเลว และได้รู้จักเจย์ ฮง ที่พูดภาษามือเพราะไม่ยอมพูด');}},
+    {id:'lk_hostel',y:2016,mo:3,t:'โฮสเทล',major:true,play(S){news(this.t,'อีไล จาง สร้างโฮสเทล ที่พักของเด็กที่หนีออกจากบ้าน เขาสู้เหมือนสัตว์ป่าเพื่อหาเงินเลี้ยงทุกคน ข่าวลือว่ามีบริษัทใหญ่อยู่เบื้องหลังเงินของโฮสเทล');}},
+    {id:'lk_big4',y:2017,mo:5,t:'สี่แก๊งใหญ่',major:true,play(S){news(this.t,'บิ๊กดีลของเจค คิม โฮสเทลของอีไล จาง ก็อดด็อกของโยฮัน ซอง และเบิร์นนัคเคิลส์ของวาสโก ถูกเรียกรวมกันว่าสี่แก๊งใหญ่ ทั้งโซลถูกแบ่งเป็นสี่ส่วน');}},
+    {id:'lk_workers',y:2018,mo:4,t:'บริษัทเวิร์กเกอร์ส',major:true,play(S){news(this.t,'บริษัทชื่อเวิร์กเกอร์สจ้างนักสู้มัธยมเป็นพนักงาน แบ่งเป็นสาขาหนึ่งและสาขาสอง ซามูเอล ซอ กับวอร์เรน แช เป็นหัวหน้า ข่าวลือว่าพัค จงกอนกับคิม กูทำงานให้บริษัทนี้แบบสัญญาจ้าง');}},
+    {id:'lk_uiev',y:2019,mo:7,t:'อัลตร้าอินสติงต์',major:true,play(S){news(this.t,'คลิปหลุดในโซลแสดงพัค ฮยองซอกที่หมดสติแล้ว แต่ร่างกายยังลุกขึ้นสู้เองจนคู่ต่อสู้ล้มทั้งห้อง คนเรียกสภาวะนี้ว่าอัลตร้าอินสติงต์');}},
+    {id:'lk_gungoo',y:2020,mo:10,t:'คืนที่กอนกับกูสู้กัน',major:true,play(S){news(this.t,'พัค จงกอน กับคิม กู สองตำนานรุ่น 1 สู้กันอีกครั้งหลังหลายปี กูใช้ปากกาเป็นดาบได้ กอนใช้ท่าที่ก๊อปจากคนทั้งโลก คนที่เห็นบอกว่ามันไม่ใช่การต่อสู้ของมนุษย์');}},
+    {id:'lk_japan',y:2021,mo:6,t:'ทายาทตระกูลยามาซากิ',major:true,play(S){news(this.t,'ชินเก็น ยามาซากิ ประกาศหาทายาท ตระกูลยามาซากิกลับมาเคลื่อนไหวในโซลเป็นครั้งแรกตั้งแต่กัปรยองตาย สายเลือดของพัค จงกอนถูกพูดถึงในหมู่ยากูซ่า');}},
+    {id:'lk_truth',y:2022,mo:3,t:'ความจริงของรุ่น 0',major:true,play(S){news(this.t,'ชาร์ลส์ ชเว ประธานเครือ HNH ถูกเปิดโปงว่าอยู่เบื้องหลังแก๊งและบริษัทเวิร์กเกอร์สมาตลอด เขาเคยเป็นหนึ่งในกลุ่มของคิม กัปรยอง ความลับเรื่องการตายของกัปรยองถูกเปิดออกทีละชิ้น');}},
+  ],
+  lore:[{id:'lk_viral',at:()=>R(2015,2020),t:'คลิปต่อสู้ไวรัล',play(S){news(this.t,'คลิปต่อสู้ของเด็กมัธยมโซลมียอดวิวทะลุสิบล้าน ทุกคนอยากเป็นนักสู้ที่มีชื่อ');}}],
+  makeLore(L){},
+  newsFor(S){return['คลินิกศัลยกรรมในกังนัมลดราคาครึ่งหนึ่ง','สตรีมเมอร์ดังโดนแฉเรื่องหน้าตาก่อนศัลยกรรม','ตำรวจโซลจับแก๊งมัธยมได้สิบสองคน','วงไอดอลใหม่เปิดตัวกลางเมียงดง','ร้านสะดวกซื้อเปิดใหม่ทุกหัวมุมถนน'];},
+  miles:[
+    {id:'lkBody2',once:1,when:S=>S.age>=14&&S.age<=22&&chance(.012),play(S){S.flags.body2=1;S.flags.bodyNow=2;gainPower('lk_body2','คุณตื่นขึ้นในร่างที่สูง หล่อ และแข็งแรง ร่างเดิมของคุณนอนหลับอยู่ข้างเตียง พอร่างหนึ่งหลับ อีกร่างจะตื่น');S.st.charm=Math.min(100,(S.st.charm||40)+25);S.st.fit=Math.min(100,S.st.fit+15);remember('สองร่าง','ตื่นมาในร่างที่สอง','power',3);}},
+    {id:'lkUI',once:1,when:S=>(S.sk?.fight||0)>=60&&(S.trauma||0)>=20&&chance(.08),play(S){gainPower('lk_ui','คุณหมดสติกลางการต่อสู้ แต่ตื่นมาเห็นทุกคนรอบตัวนอนอยู่บนพื้น ร่างกายของคุณสู้เองโดยไม่ต้องคิด');}},
+    {id:'lkCopy',once:1,when:S=>(S.st.iq||0)>=70&&(S.sk?.fight||0)>=35&&chance(.015),play(S){gainPower('lk_copy','คุณเห็นท่าของคู่ต่อสู้ครั้งเดียว แล้วร่างกายก็ทำตามได้ทันที');}},
+    {id:'lkUnlock',once:1,when:S=>(S.sk?.fight||0)>=78&&chance(.08),play(S){gainPower('lk_unlock','บางอย่างในตัวคุณถูกปลดล็อก ขีดจำกัดที่เคยมีหายไป ทุกหมัดหนักขึ้นเป็นเท่าตัว');}},
+  ],
+  pool:[
+    {id:'lk_bully',w:3,when:S=>S.age>=12&&S.age<=19,play(S){return{text:pick(['เด็กโตกว่ากลุ่มหนึ่งยึดขนมปังของคุณแล้วสั่งให้วิ่งไปซื้อใหม่','คนในห้องถ่ายคลิปตอนคุณโดนผลักล้มแล้วอัปขึ้นกลุ่มแชท','รุ่นพี่ยืมเงินคุณเป็นครั้งที่สิบโดยไม่เคยคืน']),choices:[
+      {l:'สู้กลับ',g:'brave',f(S){if(chance(.35+fitb(200))){skill('fight',4);fm(3);say('ทั้งห้องเงียบ ไม่มีใครกล้ายุ่งกับคุณอีก','good');}else{st('hp',-R(5,12));trauma(6);say('คุณแพ้ แต่ครั้งหน้าคุณจะไม่แพ้','bad');}}},
+      {l:'ทนไปก่อน',g:'safe',f(S){trauma(8);st('joy',-4);say('คุณกลับบ้านแล้วร้องไห้ในห้องน้ำ','bad');}}]};}},
+    {id:'lk_crewfight',w:3,when:S=>lkF(S)&&S.age>=15,play(S){return{text:pick(['แก๊งคู่อริส่งคนมาท้าคุณที่ลานจอดรถหลังโรงเรียน','มีคนเอาชื่อแก๊งของคุณไปอ้างตอนรีดไถเด็ก','หัวหน้าแก๊งอื่นอยากเห็นฝีมือคุณกับตา']),choices:[
+      {l:'ไปสู้ตามนัด',g:'brave',f(S){if(chance(.45+fitb(200))){skill('fight',5);fm(4);say('ข่าวว่าคุณชนะแพร่ไปทั้งย่านภายในคืนเดียว','good');}else if(live(.95,'ถูกรุมจนเลือดคั่งในสมอง')){st('hp',-R(8,16));say('คุณแพ้ แต่ไม่มีใครหัวเราะ','bad');}}},
+      {l:'เจรจา',g:'kind',f(S){skill('charm',3);say('คุณซื้อไก่ทอดให้อีกฝ่าย แล้วเรื่องก็จบที่โต๊ะ','plain');}}]};}},
+    {id:'lk_stream',w:2,when:S=>S.job?.id==='streamer',play(S){return{text:'ไลฟ์ของคุณมีคนดูหนึ่งหมื่นคน มีคนท้าให้ไลฟ์ตอนไปท้าแก๊งดัง',choices:[
+      {l:'รับคำท้า',g:'brave',f(S){if(chance(.4+fitb(250))){fm(8);mon(6);say('ยอดผู้ติดตามคุณพุ่งเป็นสามเท่า','good');}else{fm(-3);st('hp',-10);say('คลิปที่คุณโดนต่อยกลายเป็นมีม','bad');}}},
+      {l:'ไลฟ์กินรามยอนแทน',g:'safe',f(S){mon(2);st('joy',2);say('คนดูชอบความสงบของคุณ','plain');}}]};}},
+    {id:'lk_cvs',w:2,when:S=>S.job?.id==='cvs',play(S){return{text:'ตีสองในร้านสะดวกซื้อ ลูกค้าเมาคนหนึ่งไม่ยอมจ่ายเงินและเริ่มทุบตู้',choices:[
+      {l:'จัดการเขา',g:'brave',f(S){if(chance(.6+fitb(250))){skill('fight',3);say('เขานอนอยู่หน้าร้านจนตำรวจมา','good');}else st('hp',-8);}},
+      {l:'โทรแจ้งตำรวจ',g:'safe',f(S){say('ตำรวจมาถึงในยี่สิบนาที ตู้แตกไปสองใบ','plain');}}]};}},
+    {id:'lk_yamarec',once:1,w:3,when:S=>hasB('yamazaki')&&S.age>=14,play(S){return{text:'ชายสวมสูทดำยื่นนามบัตรตระกูลยามาซากิให้คุณ "เลือดในตัวเจ้ามีราคาสูงกว่าที่เจ้ารู้"',choices:[
+      {l:'รับนามบัตร',g:'dark curious',f(S){dk(10);gainPower('lk_yama','ชายแก่ในโอซาก้าสอนท่าของตระกูลให้คุณสามคืน');say('คุณกลับมาพร้อมรอยสักเล็กๆ ที่ข้อมือ','bad');}},
+      {l:'ฉีกนามบัตรทิ้ง',g:'brave',f(S){fm(2);say('ชายคนนั้นยิ้ม "ตระกูลไม่เคยลืมใคร"','plain');}}]};}},
+  ],
+  surprise:[{id:'s_viral',w:1,when:S=>S.age>=13,play(S){return{text:'คลิปที่คุณช่วยคนแก่ข้ามถนนกลายเป็นไวรัล',then(S){fm(4);say('มีคนจำหน้าคุณได้ในรถไฟใต้ดิน','good');}};}}],
+  nightmares:['คุณฝันว่าตื่นมาแล้วหน้าตาเปลี่ยนไปทั้งหมด','คุณฝันว่าชายในชุดสูทดำยืนอยู่ปลายเตียง','คุณฝันว่าคลิปที่คุณโดนต่อยถูกเปิดวนในจอยักษ์กลางเมือง'],
+  mini:[{id:'lk_ramen',w:2,when:S=>S.age>=8,play(S){return{text:'คุณกินรามยอนถ้วยที่สามของวันริมแม่น้ำฮัน',then(S){st('joy',2);say('แสงไฟจากสะพานบันโพสะท้อนบนน้ำ','plain');}};}}],
+  hangPlaces:['ร้านสะดวกซื้อหน้าโรงเรียนมัธยมเจ','พีซีบังในกังบุก','ริมแม่น้ำฮัน','ยิมมวยใต้ดิน','คาเฟ่ในกังนัม'],
+  castMeta:{hyungseok:{b:1997,at:S=>S.place==='seoul'&&S.year>=2014},zack:{b:1997,at:S=>S.place==='seoul'&&S.year>=2014},jay:{b:1997,at:S=>S.place==='seoul'&&S.year>=2014},
+    vasco:{b:1997,at:S=>S.place==='seoul'&&S.year>=2014},mira:{b:1997,at:S=>S.place==='seoul'&&S.year>=2014},logan:{b:1997,at:S=>S.place==='seoul'&&S.year>=2014&&S.year<=2016},
+    crystal:{b:1997,at:S=>S.place==='gangnam'&&S.year>=2014},vinjin:{b:1997,at:S=>S.place==='seoul'&&S.year>=2015},eli:{b:1996,at:S=>S.place==='seoul'&&S.year>=2015},
+    jake:{b:1996,at:S=>S.place==='seoul'&&S.year>=2016},johan:{b:1996,at:S=>S.place==='seoul'&&S.year>=2016},samuel:{b:1996,at:S=>S.place==='seoul'&&S.year>=2018},
+    warren:{b:1997,at:S=>S.place==='seoul'&&S.year>=2018},gun:{b:1989,at:S=>S.year>=2018&&['seoul','osaka'].includes(S.place)},goo:{b:1989,at:S=>S.year>=2018&&S.place==='seoul'},
+    james:{b:1988,at:S=>S.year>=2005&&S.year<=2012&&S.place==='seoul'},taesoo:{b:1988,at:S=>S.place==='ansan'&&S.year>=2004},
+    gapryong:{b:1962,d:2010,at:S=>S.place==='seoul'&&S.year>=1980},shingen:{b:1955,at:S=>S.place==='osaka'},charles:{b:1963,at:S=>S.place==='gangnam'}},
+  skL:{fight:'ต่อสู้',gear:'อ่านเกม',ride:'ขับมอเตอร์ไซค์',trade:'ค้าขาย',medic:'ปฐมพยาบาล',craft:'งานช่าง',cook:'ทำอาหาร',charm:'เสน่ห์',art:'ศิลปะ'},
+  acts:{
+    learn:[{l:'ติวสอบซูนึง',c:2,st:{iq:[2,5]},txt:'คุณทำข้อสอบเก่าย้อนหลังสิบปี'},{l:'เรียนตัดต่อคลิป',c:3,min:12,sk:{art:[3,6]},txt:'คลิปของคุณเริ่มมีคนดู'}],
+    train:[{l:'ซ้อมในยิมมวย',c:2,st:{fit:[2,5]},sk:{fight:[2,4]},a:'run',txt:'โค้ชเตะกระสอบให้คุณดูหนึ่งครั้ง แล้วให้คุณเตะต่ออีกพันครั้ง'},{l:'ดูคลิปท่าแล้วฝึกตาม',c:0,min:10,sk:{fight:[2,5]},a:'sword',txt:'คุณพยายามทำท่าของตำนานรุ่น 1 จนข้อเท้าแพลง'},{l:'วิ่งขึ้นนัมซาน',c:0,st:{fit:[2,4]},a:'run',txt:'โซลทั้งเมืองอยู่ใต้เท้าคุณตอนพระอาทิตย์ขึ้น'}],
+    date:[{l:'ไปคาเฟ่ในกังนัม',c:4,find:1},{l:'ให้เพื่อนแนะนำ',c:2,find:1,bonus:.1},{l:'เดินเล่นริมแม่น้ำฮัน',c:1,love:[5,9]},{l:'ดินเนอร์หมูย่าง',c:6,love:[8,13]}],
+    fun:[{l:'ร้องคาราโอเกะ',c:2,joy:[4,7],txt:'คุณร้องเพลงไอดอลจนเสียงแหบ'},{l:'เล่นเกมในพีซีบัง',c:1,joy:[3,6],txt:'คุณแรงก์ขึ้นสองขั้นในคืนเดียว'}],
+  },
+  shop:[{id:'h1',n:'ห้องเช่าโกชีวอน',cost:40,tier:1,d:'ห้องกว้างเท่าเตียง'},{id:'h2',n:'อพาร์ตเมนต์ในกังบุก',cost:180,tier:2,d:'มีห้องครัวของตัวเอง'},{id:'h3',n:'เพนต์เฮาส์ในกังนัม',cost:500,tier:3,d:'มองเห็นแม่น้ำฮันทั้งสาย'}],
+  meets:[
+    {id:'lk_mhs',once:1,w:4,when:S=>S.year>=2014&&S.place==='seoul'&&S.age>=14&&S.age<=20,play(S){return{text:'นักเรียนใหม่ที่สูงและหล่อจนทั้งโรงเรียนหันมอง เดินมาขอยืมปากกาคุณ เขาดูประหม่ากว่าที่หน้าตาบอก',choices:[
+      {l:'ให้ยืมแล้วชวนคุย',g:'kind',f(S){bond('hyungseok',14);say('เขาเล่าว่าเพิ่งย้ายมา และทำงานร้านสะดวกซื้อตอนกลางคืน','good');}},{l:'มองเขาแบบระวัง',g:'safe',f(S){say('ไม่กี่วันต่อมาเขาเป็นคนดังที่สุดในโรงเรียน','plain');}}]};}},
+    {id:'lk_mvasco',once:1,w:3,when:S=>S.year>=2014&&S.place==='seoul'&&S.age>=14,play(S){return{text:'ชายร่างยักษ์ผมตั้งหยุดหน้าคุณ "นายรังแกเด็กหรือเปล่า? บอกมาตรงๆ"',choices:[
+      {l:'บอกว่าไม่',g:'kind',f(S){bond('vasco',10);say('เขายิ้มกว้างแล้วชวนไปกินซุปเลือดหมู','good');}},{l:'ท้ากลับ',g:'brave',f(S){if(live(.95,'ถูกหมัดของวาสโก')){skill('fight',3);st('hp',-10);bond('vasco',6);say('หมัดเดียวของเขาทำให้คุณนอนสองวัน แต่เขาจำชื่อคุณได้','plain');}}}]};}},
+  ],
+  pivots:{},
+  quiet:['ปีที่ไม่มีแก๊งไหนตีกันจนเป็นข่าว','โซลสงบจนน่าสงสัย','ทุกแก๊งรอดูว่าใครจะขยับก่อน'],
+  gossip:['ว่ากันว่าในกังนัมมีคนที่ไม่เคยแพ้ใครเลย','มีคนบอกว่าตำนานรุ่น 0 ยังมีชีวิตอยู่บางคน','บริษัทเวิร์กเกอร์สจ่ายเงินเด็กมัธยมให้ต่อยคน'],
+  epitaph(S){return hp_('lk_gap')?'ทายาทหมัดของคิม กัปรยอง':hp_('lk_ui')?'นักสู้ที่ร่างกายไม่เคยยอมแพ้':S.flags.crew?`สมาชิกแก๊ง${S.flags.crew}`:'ชาวโซลคนหนึ่งในยุคของตำนาน';},
+  afterlife(cause){return false;},
+  banner:{place:'seoul',y:2017,draw(px,cx,gy,lw,lh){chibi(px,cx,gy,{...castSpec('hyungseok'),dir:1,pose:'arm'});chibi(px,cx-18,gy,{...castSpec('vasco'),dir:1,md:'angry'});chibi(px,cx+18,gy,{...castSpec('jay'),dir:-1});}},
+};
+WORLDS.lookism=LK;
+Object.assign(CAST,{lookism:{hyungseok:'พัค ฮยองซอก',zack:'แซ็ค ลี',jay:'เจย์ ฮง',vasco:'วาสโก',mira:'คิม มีรา',logan:'โลแกน ลี',crystal:'คริสตัล ชเว',vinjin:'วินจิน',
+  eli:'อีไล จาง',jake:'เจค คิม',johan:'โยฮัน ซอง',samuel:'ซามูเอล ซอ',warren:'วอร์เรน แช',gun:'พัค จงกอน',goo:'คิม กู',james:'เจมส์ ลี',taesoo:'มา แทซู',
+  gapryong:'คิม กัปรยอง',shingen:'ชินเก็น ยามาซากิ',charles:'ชาร์ลส์ ชเว'}});
+Object.assign(CASTLOOK,{hyungseok:CL('m','#1c1a1f','short','#f0ece0',{md:'happy'}),zack:CL('m','#3e2731','short','#262b44',{btn:1}),jay:CL('m','#1c1a1f','short','#262b44',{btn:1,mask:1}),
+  vasco:CL('m','#1c1a1f','spiky','#a22633',{md:'happy'}),mira:CL('f','#1c1a1f','pony','#262b44',{eye:'#5a3a2a'}),logan:CL('m','#e2c15a','short','#3a4466',{md:'angry'}),
+  crystal:CL('f','#1c1a1f','long','#f0ece0',{eye:'#5a3a2a'}),vinjin:CL('m','#e2c15a','short','#3a3a44',{shades:1}),eli:CL('m','#1c1a1f','long','#3a3a44',{scar:1,md:'angry'}),
+  jake:CL('m','#e2c15a','short','#1c1a1f',{coat:'#1c1a1f'}),johan:CL('m','#e8e8f0','short','#262b44',{eye:'#4f86b8'}),samuel:CL('m','#e2c15a','short','#3a3a44',{coat:'#3a3a44'}),
+  warren:CL('m','#1c1a1f','short','#a22633'),gun:CL('m','#1c1a1f','short','#1c1a1f',{coat:'#1c1a1f',md:'angry'}),goo:CL('m','#1c1a1f','bob','#3a4466',{md:'happy'}),
+  james:CL('m','#f0ece0','short','#f0ece0'),taesoo:CL('m','#1c1a1f','short','#3e2731',{md:'angry'}),gapryong:CL('m','#1c1a1f','short','#3a3a44',{scar:1}),
+  shingen:CL('m','#8a8a8a','short','#1c1a1f',{robe:'#1c1a1f',beard:1}),charles:CL('m','#3e2731','short','#3a4466',{coat:'#3a4466'})});
+Object.assign(CASTPOW,{gapryong:99,james:98,gun:97,shingen:96,goo:95,taesoo:88,charles:85,jake:84,eli:84,johan:83,hyungseok:86,vasco:80,samuel:78,warren:76,zack:72,jay:70,vinjin:70,mira:50,logan:28,crystal:8});
+for(const id of ['mira','crystal'])FEM.add(id);
+NAMES.lookism={l:['คิม','อี','พัค','ชเว','จอง','คัง','โช','ยุน','จาง','ฮัน','ซอ','ฮง','ควอน','แช','มา','นา'],
+  m:['มินจุน','ซอจุน','โดฮยอน','จีโฮ','ฮยอนอู','ซองมิน','แทยัง','จีฮุน','อึนโฮ','ยองซู','ดงฮา','จินอู','แทซอก','ฮันกยอล'],f:['ซอยอน','จีอู','ฮาอึน','มินซอ','ยูนา','ซูอา','เยจิน','ดาฮยอน','จีมิน','ฮเยวอน','นายอง','ซึลกิ']};
+LOOKS.lookism={hair:[['ดำ','#1c1a1f'],['น้ำตาล','#3e2731'],['ทอง','#e2c15a'],['เทา','#c0cbdc'],['แดง','#a22633']],eye:[['ดำ','#262b44'],['น้ำตาล','#5a3a2a']]};
+FESTIVALS.lookism={8:['ชูซ็อก',['ทุกครอบครัวกลับบ้านเกิด','ร้านในโซลปิดเกือบหมด']],3:['ดอกซากุระยออีโด',['คู่รักเดินเต็มถนน','ร้านไก่ทอดคิวยาว']]};
+AMB.lookism=['เสียงเพลงเคป๊อปจากร้านเสื้อผ้า','เด็กมัธยมกลุ่มหนึ่งใส่แจ็กเก็ตแก๊งเดินผ่าน','ป้ายคลินิกศัลยกรรมเรืองแสงทั้งตึก','มอเตอร์ไซค์ส่งอาหารวิ่งสวนกันทุกนาที'];
+FOES.lookism=[CL('m','#1c1a1f','short','#3a3a44',{md:'angry'}),CL('m','#e2c15a','spiky','#262b44',{md:'angry'}),CL('m','#3e2731','short','#a22633',{md:'angry'})];
+HOUSEPAL.lookism=[['#e0d8c8','#3a4466'],['#f0ece0','#a22633'],['#c8ccd6','#262b44']];
+RENTS.lookism=[{id:'r0',n:'ห้องโกชีวอน',tier:0,rent:3,d:'ห้องกว้างเท่าเตียงเดียว'},{id:'r1',n:'ห้องใต้ดินบันจีฮา',tier:1,rent:7,d:'หน้าต่างอยู่ระดับเท้าคนเดินผ่าน'}];
+DESC.lookism=[[/นักเรียนใหม่ที่สูงและหล่อ/,'hyungseok'],[/ชายร่างยักษ์ผมตั้ง/,'vasco'],[/ชายสวมสูทดำ.{0,20}ยามาซากิ/,'shingen']];
+Object.assign(OUTFIT,{crewm:'#1c1a1f',workers:'#3a3a44',yakuza:'#1c1a1f',hnh:'#3a4466',gym:'#a22633',kmil:'#5a6a4a',cvs:'#3e8948'});
+Object.assign(AURA,{lk_ui:'#e8f4ff',lk_unlock:'#e43b44',lk_gap:'#fee761',lk_copy:'#9fd3e8',lk_yama:'#b55088',lk_body2:'#f6a0b8'});
+CLANS.lookism=[
+  {id:'gapryong',n:'สายเลือดคิม กัปรยอง',d:'ลูกหลานของตำนานรุ่น 0 ร่างกายแข็งแกร่งตั้งแต่เกิด และวันหนึ่งอาจปล่อยหมัดแบบเดียวกับเขา',hidden:1,p:.005,pl:'seoul',on(S){S.st.fit=Math.min(100,S.st.fit+15);S.flags.gapBlood=1;}},
+  {id:'yamazaki',n:'สายเลือดตระกูลยามาซากิ',d:'ทายาทยากูซ่าจากโอซาก้า เกิดมาพร้อมพรสวรรค์การต่อสู้และเงาของตระกูลที่ตามตัวไปทุกที่',pl:'osaka',on(S){S.st.fit=Math.min(100,S.st.fit+10);S.money=(S.money||0)+20;}},
+  {id:'choi',n:'ตระกูลชเว (เครือ HNH)',d:'ลูกหลานแชโบล เงินไม่เคยขาด แต่ทุกคนในตระกูลเป็นหมากของประธาน',pl:'gangnam',on(S){S.money=(S.money||0)+80;S.st.iq=Math.min(100,S.st.iq+8);}},
+];
+DREAMS.lookism=[{id:'lk_king',n:'เป็นราชาแห่งรุ่น',p:'ไม่มีใครในรุ่นเดียวกันต่อยคุณล้มได้',ok:S=>(S.sk?.fight||0)>=85},{id:'lk_star',n:'เป็นคนดังที่ทุกคนจำหน้าได้',p:'มีผู้ติดตามเป็นล้าน',ok:S=>(S.fame||0)>=60},
+  {id:'lk_crew',n:'สร้างแก๊งของตัวเอง',p:'มีพวกพ้องที่ยอมตายแทนกัน',ok:S=>S.flags.ownCrew},{id:'lk_yakuza',n:'ขึ้นเป็นหัวหน้าตระกูลยามาซากิ',p:'ทายาทที่ไม่มีใครกล้าค้าน',dark:1,ok:S=>S.flags.yamaHeir}];
+TECHDEF.lookism=[
+  T('lk_combo','คอมโบหมัดเท้า',S=>(S.sk?.fight||0)>=25,{chant:'หมัดซ้าย หมัดขวา เข่า แล้วเตะก้านคอ ในหนึ่งลมหายใจ',anim:'lk_combo',col:'#f0ece0',lv:.18}),
+  T('lk_box','หมัดมวยสากล',S=>hp_('lk_box'),{chant:'ย่อตัวหลบแล้วสวนหมัดตรงเข้าคาง',anim:'lk_combo',col:'#e43b44',lv:.24}),
+  T('lk_karate','คาราเต้เคียวคุชิน',S=>hp_('lk_karate'),{chant:'ยืนนิ่งรับหมัด แล้วสวนด้วยเซย์เคนสึกิที่หนักเหมือนค้อน',anim:'lk_gap',col:'#f0ece0',lv:.3}),
+  T('lk_systema','ซิสเตมา',S=>hp_('lk_systema'),{chant:'ไหลตามแรงของศัตรู ปล่อยให้มันล้มเพราะน้ำหนักของตัวเอง',anim:'lk_copy',col:'#9fd3e8',lv:.28}),
+  T('lk_tkd','เทควันโด',S=>hp_('lk_tkd'),{chant:'หมุนตัวกลางอากาศ เตะสามครั้งก่อนเท้าแตะพื้น',anim:'lk_combo',col:'#5fcde4',lv:.26}),
+  T('lk_copy','ก๊อปปี้ท่า',S=>hp_('lk_copy'),{chant:'คุณเห็นท่าของศัตรูครั้งเดียว แล้วส่งมันกลับไปแรงกว่าเดิม',anim:'lk_copy',col:'#9fd3e8',lv:.42}),
+  T('lk_sword','ดาบจันทรา',S=>hp_('lk_sword'),{chant:'ปากกาในมือกลายเป็นดาบ เส้นแสงพระจันทร์ผ่าอากาศ',anim:'slash',col:'#e8f4ff',lv:.5}),
+  T('lk_yama','วิชาตระกูลยามาซากิ',S=>hp_('lk_yama'),{chant:'ท่าของตระกูลที่ส่งต่อกันในห้องมืดของโอซาก้า',anim:'lk_gap',col:'#b55088',lv:.5}),
+  T('lk_unlock','ปลดล็อก',S=>hp_('lk_unlock'),{chant:'เสียงบางอย่างในหัวแตกออก ร่างกายเร็วขึ้นจนตาตามไม่ทัน',anim:'kaioken',col:'#e43b44',lv:.58}),
+  T('lk_ui','อัลตร้าอินสติงต์',S=>hp_('lk_ui'),{chant:'ตาของคุณว่างเปล่า แต่ร่างกายหลบและสวนเองทุกหมัด',anim:'lk_ui',col:'#e8f4ff',lv:.66}),
+  T('lk_gap','หมัดของคิม กัปรยอง',S=>hp_('lk_gap'),{chant:'หมัดเดียวที่ไม่มีเทคนิค ไม่มีท่า มีแค่น้ำหนักของทั้งชีวิต',anim:'lk_gap',col:'#fee761',lv:.8}),
+];
+Object.assign(ANIM,{
+  lk_combo(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<7;i++){const q=((tt/120)+i/7)%1,x=hx+10+q*110,y=gy-30+((i*11)%22);px(x,y,10-q*6,3,`rgba(240,236,224,${(1-q).toFixed(2)})`);if(q<.15)disc(px,x+10,y+1,3,'#ffffff');}},
+  lk_gap(px,tt,hx,hy,col,LW,LH,gy){const p=Math.min(1,tt/700);px(hx+8,hy-3,p*120,6,'rgba(254,231,97,.8)');if(p>=1){const r=6+((tt-700)/30)%30;for(let a=0;a<16;a++)px(hx+128+Math.cos(a)*r,hy+Math.sin(a)*r,2,2,'#fff8c0');px(0,0,LW,LH,`rgba(255,248,192,${Math.max(0,.4-(tt-700)/1500).toFixed(2)})`);}},
+  lk_copy(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<3;i++){const x=hx+20+i*26+((tt/8)%10);px(x,gy-34,8,26,`rgba(159,211,232,${(.5-i*.12).toFixed(2)})`);disc(px,x+4,gy-38,4,`rgba(159,211,232,${(.5-i*.12).toFixed(2)})`);}},
+  lk_ui(px,tt,hx,hy,col,LW,LH,gy){px(0,0,LW,LH,'rgba(10,14,30,.25)');for(let i=0;i<18;i++){const a=i/18*6.283+tt/350;px(hx-2+Math.cos(a)*20,gy-22+Math.sin(a)*18,1.5,1.5,'#e8f4ff');}px(hx-4,gy-42,3,1,'#ffffff');px(hx+1,gy-42,3,1,'#ffffff');},
+});
+CIUNDER.push('lk_ui');
+LEGS.lookism=[
+  LQ('lk_gym','ยิมมวยใต้ดินของวาสโก','หมัดที่ใช้ปกป้องคนอ่อนแอ',{need:S=>S.age>=12&&!hp_('lk_box'),steps:3,win(){gainPower('lk_box','คุณออกหมัดตรงได้โดยไม่ต้องคิด');}}),
+  LQ('lk_dojo','สำนักคาราเต้เคียวคุชิน','ยืนรับหมัดพันครั้งก่อนได้เรียนท่าแรก',{need:S=>S.age>=10&&!hp_('lk_karate'),steps:3,p:()=>.4+(S.st.fit||0)/300,win(){gainPower('lk_karate','คุณผ่านการต่อสู้ร้อยคนติดกัน');}}),
+  LQ('lk_sys','ซิสเตมาจากครูชาวรัสเซีย','การต่อสู้ที่ไหลเหมือนน้ำ',{need:S=>S.age>=14&&!hp_('lk_systema'),steps:3,win(){gainPower('lk_systema','ร่างกายของคุณเรียนรู้ที่จะไม่ฝืนแรง');}}),
+  LQ('lk_tkdg','ชิงสายดำเทควันโด','ศิลปะประจำชาติเกาหลี',{need:S=>S.age>=8&&!hp_('lk_tkd'),steps:2,win(){gainPower('lk_tkd','คุณได้สายดำดั้งหนึ่ง');}}),
+  LQ('lk_moon','ตามหาคิม กู','ขอให้เขาสอนท่าดาบที่ใช้อะไรก็ได้เป็นดาบ',{need:S=>S.year>=2018&&(S.sk?.fight||0)>=60&&!hp_('lk_sword'),steps:4,p:()=>.3,win(){gainPower('lk_sword','คุณฟันขวดแก้วขาดด้วยตะเกียบ');}}),
+  LQ('lk_fist','หมัดของตำนาน','สืบหาวิธีที่คิม กัปรยองต่อย',{need:S=>S.flags.gapBlood&&(S.sk?.fight||0)>=80&&!hp_('lk_gap'),steps:5,p:()=>.2,win(){gainPower('lk_gap','หมัดของคุณหนักเหมือนตำนานที่ทุกคนเล่าถึง');}}),
+];
+ACTV.lookism=[['กินไก่ทอดกับเบียร์กับเพื่อน',{joy:3,m:-1},['เสียงหัวเราะดังทั้งร้าน'],[.08,'ชายร่างยักษ์ผมตั้งโต๊ะข้างๆ สั่งไก่สิบตัวแล้วแบ่งให้ทั้งร้าน']],
+  ['ซ้อมในยิมใต้ดิน',{fit:2,sk:['fight',3]},['กลิ่นเหงื่อกับยางกระสอบ'],[.06,'มีคนถอดเสื้อเผยรอยแผลเต็มตัวแล้วซ้อมเงียบๆ อยู่มุมยิม']],
+  ['ไลฟ์สดกลางเมียงดง',{joy:2,m:1},['คนดูส่งหัวใจเต็มจอ'],[.07,'มีคนในแชทพิมพ์ว่าเห็นเด็กหน้าเหมือนคุณแต่ตัวอ้วนกว่า']]];
+DRESS.lookism=[['แจ็กเก็ตแก๊ง',{out:'#1c1a1f'}],['ชุดนักเรียนมัธยมเจ',{out:'#262b44',btn:1}],['สูทบริษัทเวิร์กเกอร์ส',{coat:'#3a3a44'}],['ชุดซ้อมยิมมวย',{out:'#a22633'}]];
+EGG.lookism=['ป้ายบนตึกเขียนว่า "หน้าตาไม่ใช่ทุกอย่าง" แต่มีป้ายคลินิกศัลยกรรมติดอยู่ข้างๆ','มีคนพูดว่า "ฉันเคยเห็นคนต่อยแบบนี้เมื่อยี่สิบปีก่อน"'];
+TOWNJOB.lookism=['เด็กร้านสะดวกซื้อ','สตรีมเมอร์','โค้ชยิมมวย','สมาชิกแก๊ง','คนส่งอาหาร','ตำรวจสายตรวจ'];
+MIS.lookism=[['D','เฝ้าร้านสะดวกซื้อกะดึก','','g:react','ลูกค้าเมาเข้ามาทุกครึ่งชั่วโมง'],['C','ไล่แก๊งรีดไถหน้าโรงเรียน','แก๊งรีดไถ','','เด็กมัธยมต้นถูกล้อมในซอย'],
+  ['B','ทวงหนี้ให้ยิมมวย','นักเลงคุมบ่อน','','ห้องใต้ดินกลิ่นบุหรี่',[2000,2040]],['A','ปะทะสาขาบริษัทเวิร์กเกอร์ส','หัวหน้าทีมเวิร์กเกอร์ส','','ชายในสูทพับแขนเสื้อ',[2018,2040]],
+  ['S','สกัดยากูซ่ายามาซากิ','มือสังหารตระกูลยามาซากิ','b','รถสีดำสามคันจอดหน้าตึก',[2021,2040]]];
+TOUR.lookism=[{n:'ศึกชิงแชมป์สี่แก๊งใหญ่',need:S=>S.year>=2017&&S.age>=15,r:[['สมาชิกเบิร์นนัคเคิลส์','',40],['หัวหน้าหน่วยก็อดด็อก','',60],['เจค คิม','b',84]],win(){fm(14);mon(10);S.flags.ownCrew=1;say('ทั้งโซลรู้ชื่อคุณ แก๊งเล็กสามแก๊งขอเข้าร่วมกับคุณ','good');}},
+  {n:'ไฟต์ใต้ดินของยิมมวย',need:S=>S.age>=16,r:[['นักมวยหน้าใหม่','',30],['นักมวยไทยจากพัทยา','',50],['แชมป์ไฟต์ใต้ดิน','b',66]],win(){mon(12);fm(6);say('คุณได้เข็มขัดแชมป์ที่ทำจากโซ่','good');}}];
+TRAIN.lookism=[['ต่อยเป้าของโค้ช','time','fight','โค้ชตะโกนนับจังหวะ'],['ต่อยกระสอบนับร้อยครั้ง','mash','fight','กระสอบหนักกว่าตัวคุณสองเท่า'],['หลบลูกเทนนิสที่ยิงมา','react','gear','เครื่องยิงลูกตั้งความเร็วสูงสุด']];
+WBOSS.lookism=[['พัค จงกอน (โหมดเอาจริง)','b',96],['คิม กู กับดาบจันทรา','b',94],['ชินเก็น ยามาซากิ','b',96]];
+Object.assign(BTEN,{lookism:'สตามินา'});Object.assign(BTMOTE,{lookism:'240,236,224'});Object.assign(BTPH2,{lookism:'มันถอดแจ็กเก็ตออก ท่ายืนเปลี่ยนไปทั้งตัว'});
+SERVERS.push({id:'lk-1',w:'lookism',n:'ยุครุ่น 0 ของคิม กัปรยอง',start:1980,span:30},{id:'lk-2',w:'lookism',n:'ยุครุ่น 2 สี่แก๊งใหญ่',start:2010,span:20});
+{const af=ambushFoe;ambushFoe=function(){if(W.id!=='lookism')return af.apply(this,arguments);return pick([['แก๊งคู่อริ','',R(16,34),'เด็กห้าคนใส่แจ็กเก็ตแก๊งเดินตามคุณมาสามช่วงตึก'],['พนักงานเวิร์กเกอร์ส','',R(34,56),'ชายในสูทพับแขนเสื้อยืนรอคุณหน้าบ้าน'],
+  ...(S.year>=2021?[['ยากูซ่ายามาซากิ','',R(46,66),'รถสีดำจอดข้างคุณ ประตูเปิดออกพร้อมกันสามบาน']]:[])]);};}
+ARCWHO.lookism=lkF;
+ARC('lookism',2014,[
+  {id:'lk_logan',mo:3,t:'วันแรกของร่างที่สอง',mood:'day',cap:'สนามหลังโรงเรียนมัธยมเจ',
+   n:'โลแกน ลี เด็กรวยที่ชอบรังแกคนอ้วน ไม่รู้ว่านักเรียนหล่อคนใหม่คือคนที่เขาเคยรังแก ฮยองซอกยังไม่รู้วิธีต่อย แต่เริ่มรู้ว่าร่างใหม่แข็งแรงแค่ไหน',
+   x:'โลแกนกับลูกน้องสองคนล้อมเด็กอ้วนคนหนึ่งไว้หลังโรงยิม เขาหันมามองคุณ "มองอะไร?"',
+   c:[K('สู้กับโลแกน','brave hero',{foe:['โลแกน ลี',30],p:.95,fm:6,sk:4,b:{hyungseok:6},s:'โลแกนวิ่งหนีไปพร้อมจมูกเลือดออก เด็กอ้วนขอบคุณคุณเบาๆ'}),
+      K('เรียกครู','safe',{s:'ครูมาถึงตอนทุกอย่างจบแล้ว','k':'plain'})]},
+  {id:'lk_vasco2',mo:9,t:'ศึกกับเบิร์นนัคเคิลส์',mood:'red',cap:'โกดังของเบิร์นนัคเคิลส์',
+   n:'วาสโกเชื่อข่าวลือว่ามีคนในมัธยมเจรังแกเด็ก เขาบุกมาพร้อมแก๊งทั้งแก๊ง เจย์ ฮงยืนขวางเพื่อปกป้องฮยองซอก ความเข้าใจผิดจบลงด้วยมิตรภาพ',
+   x:'ชายร่างยักษ์ผมตั้งถอดเสื้อ "ฉันจะต่อยคนเลวทุกคนในห้องนี้" เขามองมาที่คุณ',
+   c:[K('สู้กับวาสโก','brave',{foe:['วาสโก',80],p:.7,d:'ถูกหมัดของวาสโกต่อยจนเลือดคั่งในสมอง',fm:12,sk:6,b:{vasco:10},s:'หมัดของเขาหนักที่สุดที่คุณเคยรับ แต่เขาหยุดเมื่อรู้ว่าเข้าใจผิด แล้วโค้งขอโทษ'}),
+      K('อธิบายความจริงกับเขา','kind',{b:{vasco:8,jay:6},f(S){skill('charm',3);},s:'วาสโกร้องไห้เพราะเกือบต่อยคนบริสุทธิ์ เขาชวนคุณเข้าแก๊ง'})]},
+]);
+ARC('lookism',2016,[
+  {id:'lk_hostel2',mo:4,t:'ศึกที่โฮสเทล',mood:'night',cap:'ชั้นใต้ดินของโฮสเทล',
+   n:'อีไล จาง ใช้เงินจากใครบางคนเลี้ยงเด็กหนีออกจากบ้าน เขาสู้เหมือนหมาป่าที่ไม่มีอะไรจะเสีย พอรู้ว่าคนให้เงินคือบริษัทที่ใช้เด็กเป็นเครื่องมือ เขาเลือกเด็กมากกว่าเงิน',
+   x:'เด็กผู้หญิงตัวเล็กคนหนึ่งเกาะขาของชายผมยาวที่มีรอยแผลเต็มหน้า เขามองคุณด้วยตาของสัตว์ป่า "แกมาจากบริษัทหรือเปล่า"',
+   c:[K('สู้กับอีไล จาง','brave',{foe:['อีไล จาง',84],p:.55,d:'ถูกอีไล จางกัดคอในโฮสเทล',fm:16,sk:7,s:'อีไลหยุดเมื่อเด็กผู้หญิงร้องไห้ เขาไม่เคยสู้ต่อหน้าเธอ'}),
+      K('ช่วยเด็กในโฮสเทลหาที่อยู่ใหม่','kind',{b:{eli:12},fm:6,j:4,s:'อีไลจำชื่อคุณไว้ "ถ้ามีใครแตะแก ฉันจะไปหา"'})]},
+]);
+ARC('lookism',2017,[
+  {id:'lk_big4b',mo:6,t:'สงครามสี่แก๊ง',mood:'red',cap:'ลานจอดรถใต้ดินในโซล',
+   n:'บริษัทเวิร์กเกอร์สยุให้สี่แก๊งใหญ่ตีกันเอง โยฮัน ซอง หัวหน้าก็อดด็อก ก๊อปท่าของทุกคนที่เห็น เจค คิม หัวหน้าบิ๊กดีล ปล่อยหมัดแบบเดียวกับพ่อของเขา แก๊งเกือบล่มทั้งหมดก่อนที่ทุกคนจะรู้ว่าใครชักใยอยู่',
+   x:'สองแก๊งยืนเผชิญหน้ากันคนละฝั่งลานจอดรถ ชายผมเงินฝั่งก็อดด็อกยิ้มให้คุณ "นายใช้ท่าอะไร? ขอดูหน่อย"',
+   c:[K('สู้กับโยฮัน ซอง','brave',{foe:['โยฮัน ซอง',83],p:.5,d:'ถูกโยฮัน ซองสวนด้วยท่าของคุณเอง',fm:16,sk:7,f(S){if(!hasP('lk_copy')&&chance(.25))gainPower('lk_copy','คุณเห็นโยฮันก๊อปท่าของคุณ แล้วร่างกายคุณก็ก๊อปท่าของเขากลับ');},s:'โยฮันหัวเราะ "นายก๊อปฉันกลับเหรอ?"'}),
+      K('สู้กับเจค คิม','brave hero',{foe:['เจค คิม',84],p:.5,d:'ถูกหมัดของเจค คิม',fm:16,sk:7,b:{jake:8},s:'เจคบอกว่าหมัดของคุณมีอะไรบางอย่างคล้ายพ่อของเขา'}),
+      K('หยุดสงครามด้วยหลักฐาน','kind curious',{f(S){st('iq',3);},fm:10,s:'คุณส่งคลิปเสียงของผู้บริหารเวิร์กเกอร์สให้ทั้งสี่แก๊ง สงครามจบในคืนนั้น'})]},
+]);
+ARC('lookism',2018,[
+  {id:'lk_workers2',mo:5,t:'บุกสาขาเวิร์กเกอร์ส',mood:'night',cap:'ตึกสาขาของบริษัทเวิร์กเกอร์ส',
+   n:'สี่แก๊งรวมกันบุกสาขาสองของบริษัทเวิร์กเกอร์ส ซามูเอล ซอ ที่อยากเป็นราชาแบบกัปรยอง ปะทะกับฮยองซอก และวอร์เรน แช ที่หมัดหนักจนกระดูกแตก ทุกชั้นของตึกกลายเป็นสนามรบ',
+   x:'ลิฟต์เปิดที่ชั้นสิบ ชายในสูทแขนพับยืนรออยู่ห้าคน หัวหน้าทีมคลายเนกไท "ค่าจ้างวันนี้คือหัวของพวกแก"',
+   c:[K('สู้กับวอร์เรน แช','brave',{foe:['วอร์เรน แช',76],p:.6,d:'ถูกหมัดของวอร์เรน แชทุบจนกะโหลกร้าว',fm:16,sk:7,s:'วอร์เรนล้มลงพร้อมยิ้ม "นายต่อยหนักกว่าที่ข้อมูลบอก"'}),
+      K('สู้กับซามูเอล ซอ','brave hero',{foe:['ซามูเอล ซอ',78],p:.55,d:'ถูกซามูเอล ซอเตะตกบันไดหนีไฟ',fm:18,sk:7,s:'ซามูเอลพูดถึงกัปรยองตลอดการต่อสู้ เหมือนพยายามพิสูจน์อะไรบางอย่าง'})]},
+]);
+ARC('lookism',2021,[
+  {id:'lk_yama2',mo:7,t:'คืนแห่งตระกูลยามาซากิ',mood:'red',cap:'โกดังท่าเรือโอซาก้า',
+   n:'ทายาทของตระกูลยามาซากิสู้กันเพื่อชิงตำแหน่ง ฝั่งเกาหลีส่งนักสู้ข้ามทะเลไปหยุดไม่ให้ตระกูลกลับเข้าโซล พัค จงกอนยืนอยู่ตรงกลาง ระหว่างสายเลือดกับเพื่อน',
+   x:'ยากูซ่าร้อยคนยืนเรียงแถวในโกดัง ชายแก่ในชุดกิโมโนดำนั่งอยู่ปลายแถว "เด็กเกาหลีข้ามทะเลมาตายถึงที่"',
+   c:[K('สู้กับมือสังหารยามาซากิ','brave hero',{foe:['มือสังหารตระกูลยามาซากิ',82],p:.4,d:'ถูกยากูซ่ายามาซากิฆ่าที่ท่าเรือโอซาก้า',fm:22,sk:8,s:'แถวยากูซ่าแหวกทางให้คุณ ชินเก็นพยักหน้าเหมือนเคยเห็นแววตาแบบนี้เมื่อสามสิบปีก่อน'}),
+      K('เจรจากับชินเก็น ยามาซากิ','curious',{p:.8,d:'ถูกตระกูลยามาซากิประหารเพราะพูดผิดคำเดียว',f(S){skill('charm',4);},fm:10,s:'ชินเก็นหัวเราะ "เจ้าพูดเหมือนกัปรยอง" แล้วสั่งให้ทุกคนวางอาวุธคืนนั้น'})]},
+]);
+Object.assign(CASTANIM,{gun:'lk_copy',goo:'slash',hyungseok:'lk_ui',vasco:'lk_combo',jake:'lk_gap',johan:'lk_copy',eli:'lk_combo',gapryong:'lk_gap',shingen:'lk_gap',samuel:'lk_combo',warren:'lk_combo',james:'lk_ui',taesoo:'lk_gap'});
+
+/* ===== faces: every person card shows that person's chibi head, drawn live at their age right now, bobbing, blinking and doing a
+   small gimmick of their world (chakra sparks, cursed wisps, ki, steam, reiatsu, the JoJo "ゴゴゴ", a sweat drop on the street).
+   Opening a person shows a live full-body portrait. Looks are seeded exactly like the live view, so a face matches the sprite ===== */
+const FACEW=new WeakMap();let FACERAF=0;
+const faceHair=(h,age)=>age>=75?'#e8e8e6':age>=60?'#a9a9a6':h;
+function faceGeneric(seed,age,sex,hair,skin,out){const a={id:seed,age,sex,hair:faceHair(hair,age),skin,out,works:age>=6};try{return{...actorSpec(a),age};}catch(e){return{sex,hair:a.hair,st:sex==='f'?'long':'short',out,skin,age};}}
+/* the spec for a person reference, the same way wantActors() seeds family and partner sprites */
+function faceSpecOf(ref){try{const rr=s=>rng(hash(s)),pk=(r,a)=>a[Math.floor(r()*a.length)],yr=S.year;
+  if(ref.t==='cast')return castAt(ref.id,yr);
+  if(ref.t==='me'){const a=LIVE.actors.get('me');return a?{...actorSpec(a),age:S.age}:faceGeneric('me',S.age,S.sex,S.look.hair[1],S.look.skin,OUTFIT[S.job?.id]||W.cloth||'#a0705a');}
+  if(ref.t==='mate'){const o=S.partner;if(!o)return null;if(o.cast&&castSpec(o.cast))return castAt(o.cast,yr);const r=rr(o.n);return faceGeneric('pa',yr-(o.b??S.birth),S.sex==='m'?'f':'m',W.castMeta?.[o.cast]?.h||pk(r,HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}
+  if(ref.t==='kid'){const kd=S.kids[ref.i];if(!kd)return null;const r=rr(kd.n+kd.y);return faceGeneric('k',yr-kd.y,kd.sx,r()<.5?S.look.hair[1]:pk(r,HAIRS),r()<.5?S.look.skin:pk(r,LOOKS.skin),pk(r,OUTS));}
+  if(ref.t==='par'){const p=S.fam[ref.r];if(!p)return null;const r=rr(p.n);return faceGeneric('p',S.age+p.off,ref.r==='mom'?'f':'m',pk(r,HAIRS),S.look.skin,pk(r,OUTS));}
+  if(ref.t==='sib'){const s=S.sibs[ref.i];if(!s)return null;const r=rr(s.n);return faceGeneric('s',yr-s.by,s.sx,r()<.6?S.look.hair[1]:pk(r,HAIRS),S.look.skin,pk(r,OUTS));}
+  if(ref.t==='npc'){const o=S.npcs?.[ref.i];if(!o)return null;const r=rr(o.n+'npc');return faceGeneric('n',o.age||30,o.sx||'m',pk(r,HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}
+  if(ref.t==='folk'){const r=rr(ref.n+'folk');return faceGeneric('f',ref.age,ref.sx,pk(r,LOOKS[W.id]?.hair?.map(h=>h[1])||HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}
+  if(ref.t==='peer'){const r=rr(ref.n+'peer');return faceGeneric('o',ref.age||20,ref.sx||'m',pk(r,HAIRS),pk(r,LOOKS.skin),pk(r,OUTS));}}catch(e){}return null;}
+/* draw one chibi on a scratch canvas, find its top row, and blit the head (or the whole body) scaled up */
+const FACESCR=typeof document!=='undefined'&&document.createElement?document.createElement('canvas'):null;
+function faceRender(cv,o,t){const sc=FACESCR;if(!sc||!sc.getContext)return;sc.width=48;sc.height=72;const c=sc.getContext('2d');if(!c)return;c.clearRect(0,0,48,72);
+  const px=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));};px.c=c;px.k=1;
+  const tt=t+o.seed,hov=o.hov,blink=(tt%3400)<140,spec={...o.spec,dir:o.dir||1,f:0,md:hov?'happy':blink?'sleep':o.spec.md||''};if(hov&&((tt/260)|0)%2)spec.pose='arm';
+  try{if((spec.age??20)<3&&typeof babyAt==='function')babyAt(px,24,66,spec.skin||'#e8b796');else chibi(px,24,66,spec);}catch(e){return;}
+  let top=0;try{const d=c.getImageData(0,0,48,72).data;outer:for(let y=0;y<72;y++)for(let x=0;x<48;x++)if(d[(y*48+x)*4+3]>40){top=y;break outer;}}catch(e){top=36;}
+  const x2=cv.getContext('2d');if(!x2)return;x2.imageSmoothingEnabled=false;x2.clearRect(0,0,cv.width,cv.height);
+  const bob=hov?-(((tt/130)|0)%2):Math.round(Math.sin(tt/520)*.6),full=o.full,sw=full?34:20,sh=full?Math.min(70,68-top+2):18,sx=24-sw/2,sy=Math.max(0,top-2),k=Math.min(cv.width/sw,cv.height/sh);
+  const dx=(cv.width-sw*k)/2,dy=(cv.height-sh*k)/2+bob*k*.5;faceFx(x2,cv.width,cv.height,o,tt,'back');x2.drawImage(sc,sx,sy,sw,sh,dx,dy,sw*k,sh*k);faceFx(x2,cv.width,cv.height,o,tt,'front');}
+/* a world's little gimmick around the head */
+function faceFx(c,w,h,o,t,layer){const g=o.g;if(!g)return;const u=w/48;
+  if(layer==='back'&&g.aura){const a=.18+.12*Math.sin(t/300);c.fillStyle=g.aura.replace('A',a.toFixed(2));c.beginPath();c.arc(w/2,h*.55,w*.44,0,6.283);c.fill();}
+  if(layer!=='front')return;
+  if(g.spark)for(let i=0;i<3;i++){const q=((t/900)+i/3)%1;c.fillStyle=g.spark.replace('A',(1-q).toFixed(2));c.fillRect(w*(.2+.3*i)+Math.sin(t/200+i)*3*u,h*(.9-q*.8),2.4*u,2.4*u);}
+  if(g.menace){const q=(t/1200)%1;c.fillStyle=`rgba(200,120,220,${(.9-q*.6).toFixed(2)})`;c.font=`bold ${Math.round(9*u)}px sans-serif`;c.fillText('ゴ',w*.74,h*(.4-q*.25));c.fillText('ゴ',w*.84,h*(.62-q*.25));}
+  if(g.steam)for(let i=0;i<2;i++){const q=((t/1500)+i/2)%1;c.fillStyle=`rgba(240,240,240,${(.5*(1-q)).toFixed(2)})`;c.beginPath();c.arc(w*(.3+.4*i),h*(.3-q*.25),(3+q*5)*u,0,6.283);c.fill();}
+  if(g.sweat&&((t/2200)|0)%3===0){c.fillStyle='#8fd3ff';c.beginPath();c.ellipse(w*.8,h*.3+((t%2200)/2200)*h*.2,2*u,3*u,0,0,6.283);c.fill();}
+  if(g.heart){const s=1+.15*Math.sin(t/180);c.fillStyle='#ff5c8a';c.font=`${Math.round(10*u*s)}px sans-serif`;c.fillText('♥',w*.72,h*.28);}
+  if(g.star&&((t/700)|0)%2){c.fillStyle='#fee761';c.fillRect(w*.82,h*.12,2*u,6*u);c.fillRect(w*.82-2*u,h*.12+2*u,6*u,2*u);}}
+const FACEG={naruto:{spark:'rgba(254,160,60,A)'},jjk:{spark:'rgba(181,80,200,A)'},heian:{spark:'rgba(181,80,200,A)'},jjedo:{spark:'rgba(181,80,200,A)'},db:{aura:'rgba(254,231,97,A)'},
+  op:{spark:'rgba(255,255,255,A)'},bleach:{aura:'rgba(120,200,255,A)'},jojo:{menace:1},aot:{steam:1},lookism:{sweat:1}};
+function faceGimmick(ref){const base=FACEG[W.id]||{};if(ref.t==='mate')return{heart:1};if(ref.t==='cast')return{...base,star:1};if(ref.t==='folk'||ref.t==='npc')return W.id==='lookism'?{sweat:1}:{};if(ref.t==='peer')return{star:1};return {};}
+function faceCanvas(ref,size=40,full=false){const spec=faceSpecOf(ref);if(!spec||typeof document==='undefined')return null;const cv=document.createElement('canvas');cv.width=size*2;cv.height=size*2;cv.className=full?'facebig':'facei';
+  cv.style.width=cv.style.height=size+'px';cv.setAttribute('aria-hidden','true');FACEW.set(cv,{spec,seed:(hash(JSON.stringify(ref))%5000)|0,g:faceGimmick(ref),full,hov:false,dir:1});faceLoop();return cv;}
+function faceLoop(){if(FACERAF||typeof requestAnimationFrame!=='function')return;let last=0;const step=t=>{const L=[...document.querySelectorAll('canvas.facei,canvas.facebig')];if(!L.length){FACERAF=0;return;}
+  if(t-last>=80||last===0){last=t;for(const cv of L){const o=FACEW.get(cv);if(!o)continue;o.hov=!!(cv.parentElement&&cv.parentElement.matches(':hover'));faceRender(cv,o,typeof REDUCED!=='undefined'&&REDUCED?0:t);}}
+  FACERAF=requestAnimationFrame(step);};FACERAF=requestAnimationFrame(step);}
+/* the people panel: each card gets its face */
+{const tp0=townPanel;townPanel=function(){const r=tp0.apply(this,arguments);try{const d=document.getElementById('townP');if(!d)return r;const secs={};
+  secs['ตัวละครหลักที่อยู่แถวนี้']=Object.keys(CAST[W.id]||{}).filter(id=>{try{return castHere(id);}catch(e){return false;}}).map(id=>({t:'cast',id}));
+  secs['คนที่คุณรู้จัก']=pRefs().filter(r=>r.t!=='cast').filter(r=>{const p=pOf(r);return p&&p.alive;});
+  secs['ผู้คนบนถนน']=townFolk().map(f=>({t:'folk',n:f.n,sx:f.sx,age:f.age}));
+  if(typeof inMyWorld==='function'&&typeof onlineNow==='function'&&onlineNow())secs['ผู้เล่นจริงในโลกนี้']=inMyWorld().map(p=>({t:'peer',n:p.presence.n,age:p.presence.a|0}));
+  for(const h of d.querySelectorAll('h4')){const key=Object.keys(secs).find(k=>h.textContent.startsWith(k));const g=h.nextElementSibling;if(!key||!g)continue;[...g.querySelectorAll('button.tp')].forEach((b,i)=>{const ref=secs[key][i];const cv=ref&&faceCanvas(ref,40);if(cv){b.classList.add('hasface');b.prepend(cv);}});}}catch(e){}return r;};}
+/* the family list on the side: match each row by name to its person */
+function faceRefByName(n){if(!S)return null;const cid=Object.keys(CAST[W.id]||{}).find(id=>CAST[W.id][id]===n);if(cid)return{t:'cast',id:cid};if(S.partner&&S.partner.n===n)return{t:'mate'};
+  for(const r of ['dad','mom'])if(S.fam[r]?.n===n)return{t:'par',r};let i=(S.sibs||[]).findIndex(s=>s.n===n);if(i>=0)return{t:'sib',i};i=(S.kids||[]).findIndex(k=>k.n===n);if(i>=0)return{t:'kid',i};
+  i=(S.npcs||[]).findIndex(k=>k.n===n);if(i>=0)return{t:'npc',i};return null;}
+{const r0=render;render=function(){const r=r0.apply(this,arguments);try{for(const b of document.querySelectorAll('button.pp:not(.hasface)')){const nm=(b.querySelector('b')?.textContent||'').replace(/^[^·]*·\s*/,'').trim();const ref=faceRefByName(nm)||faceRefByName(b.querySelector('b')?.textContent?.trim());
+    b.classList.add('hasface');const cv=ref&&faceCanvas(ref,28);if(cv)b.prepend(cv);}}catch(e){}return r;};}
+/* opening a person: a live full-body portrait at their age, beside the dialog text */
+let FACEREF=null;
+{const op0=openPerson;openPerson=async function(ref){FACEREF=ref;try{return await op0.apply(this,arguments);}finally{FACEREF=null;}};}
+{const a0=ask;ask=function(){const pr=a0.apply(this,arguments);try{if(FACEREF){const m=document.getElementById('modal'),tx=document.getElementById('mText');if(m&&tx&&!m.querySelector('.facebig')){const cv=faceCanvas(FACEREF,92,true);if(cv){cv.classList.add('facebig');tx.parentNode.insertBefore(cv,tx);
+    const kill=()=>{if(m.hidden){cv.remove();clearInterval(iv);}},iv=setInterval(kill,400);}}}}catch(e){}return pr;};}
+(function(){try{const st=document.createElement('style');st.textContent=`.tp.hasface{display:grid;grid-template-columns:40px 1fr;column-gap:8px;align-items:center}.tp.hasface>canvas{grid-row:1/3;image-rendering:pixelated;border-radius:8px;background:rgba(255,255,255,.04)}
+.pp.hasface{display:grid;grid-template-columns:28px 1fr auto;column-gap:8px;align-items:center}.pp.hasface>canvas{image-rendering:pixelated;border-radius:6px;background:rgba(255,255,255,.04)}
+canvas.facebig{float:left;margin:0 12px 6px 0;image-rendering:pixelated;border-radius:10px;background:radial-gradient(circle at 50% 60%,rgba(255,255,255,.08),transparent 70%)}`;document.head.append(st);}catch(e){}})();
+
+/* townsfolk jobs for worlds that had none, so Dragon Ball passers-by stop wearing Attack on Titan jobs */
+if(!TOWNJOB.db)TOWNJOB.db=['ช่างซ่อมแคปซูล','พ่อค้าไดโนเสาร์ย่าง','ตำรวจเวสต์ซิตี้','นักสู้ฝึกหัด','คนขับรถลอยฟ้า'];
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
