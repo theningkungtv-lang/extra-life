@@ -9097,8 +9097,8 @@ function techGate(c,kind,go,box,choices){if(BT.on)return true;if(!isFight(c)||ki
   const title=$('#mTitle').textContent||'',text=$('#mText').textContent||'';const E=btEnemy(title+' '+text+' '+c.l);
   battle(E,{lethal:true,title}).then(res=>{const others=(choices||[]).filter(x=>x!==c&&!x.skip&&!isFight(x));
     if(res.r==='skip')return go(c);
-    if(res.r==='win')return go({...c,f(S){say(`คุณเอาชนะ${E.n}ในการต่อสู้แบบประชิดตัว`,'good');TECH={live:1.2,fb:1.2,t:res.t};try{c.f(S);}finally{TECH=null;}if(res.t?.risk&&S.alive)res.t.risk(S);}});
-    if(res.r==='lose')return go({...c,f(S){say(`คุณแพ้${E.n}`,'bad');TECH={live:-.55,fb:-.5,t:res.t};try{c.f(S);}finally{TECH=null;}if(S.alive){S.st.hp=Math.max(3,Math.min(S.st.hp,12));say('คุณบาดเจ็บสาหัส แต่ยังหายใจอยู่','bad');}}});
+    if(res.r==='win')return go({...c,f(S){say(`คุณเอาชนะ${E.n}ในการต่อสู้แบบประชิดตัว`,'good');TECH={live:1.2,fb:5,t:res.t};try{c.f(S);}finally{TECH=null;}if(res.t?.risk&&S.alive)res.t.risk(S);}});
+    if(res.r==='lose')return go({...c,f(S){say(`คุณแพ้${E.n}`,'bad');TECH={live:-.55,fb:-5,t:res.t};try{c.f(S);}finally{TECH=null;}if(S.alive){S.st.hp=Math.max(3,Math.min(S.st.hp,12));say('คุณบาดเจ็บสาหัส แต่ยังหายใจอยู่','bad');}}});
     if(res.r==='flee'){const a=others.find(x=>/หนี|ถอย|ซ่อน|วิ่ง/.test(x.l)||/safe/.test(x.g||''));return go(a?{...a,l:a.l}:{l:'หนี',g:'safe',f(S){say(`คุณหนีพ้น${E.n}มาได้ ใจยังเต้นแรง`,'plain');}});}
     if(res.r==='talk'){const a=others.find(x=>/คุย|เจรจา|ยอม|ช่วย|ปล่อย|ขอ/.test(x.l)||/kind/.test(x.g||''));return go(a||{l:'เจรจา',g:'kind',f(S){skill('charm',2);say(`คุณกับ${E.n}ลดอาวุธลงพร้อมกัน การต่อสู้จบลงโดยไม่มีใครตาย`,'good');}});}
     go(c);});
@@ -10687,7 +10687,7 @@ const LK={
     {id:'lk_workers',y:2018,mo:4,t:'บริษัทเวิร์กเกอร์ส',major:true,play(S){news(this.t,'บริษัทชื่อเวิร์กเกอร์สจ้างนักสู้มัธยมเป็นพนักงาน แบ่งเป็นสาขาหนึ่งและสาขาสอง ซามูเอล ซอ กับวอร์เรน แช เป็นหัวหน้า ข่าวลือว่าพัค จงกอนกับคิม กูทำงานให้บริษัทนี้แบบสัญญาจ้าง');}},
     {id:'lk_uiev',y:2019,mo:7,t:'อัลตร้าอินสติงต์',major:true,play(S){news(this.t,'คลิปหลุดในโซลแสดงพัค ฮยองซอกที่หมดสติแล้ว แต่ร่างกายยังลุกขึ้นสู้เองจนคู่ต่อสู้ล้มทั้งห้อง คนเรียกสภาวะนี้ว่าอัลตร้าอินสติงต์');}},
     {id:'lk_gungoo',y:2020,mo:10,t:'คืนที่กอนกับกูสู้กัน',major:true,play(S){news(this.t,'พัค จงกอน กับคิม กู สองตำนานรุ่น 1 สู้กันอีกครั้งหลังหลายปี กูใช้ปากกาเป็นดาบได้ กอนใช้ท่าที่ก๊อปจากคนทั้งโลก คนที่เห็นบอกว่ามันไม่ใช่การต่อสู้ของมนุษย์');}},
-    {id:'lk_japan',y:2021,mo:6,t:'ทายาทตระกูลยามาซากิ',major:true,play(S){news(this.t,'ชินเก็น ยามาซากิ ประกาศหาทายาท ตระกูลยามาซากิกลับมาเคลื่อนไหวในโซลเป็นครั้งแรกตั้งแต่กัปรยองตาย สายเลือดของพัค จงกอนถูกพูดถึงในหมู่ยากูซ่า');}},
+    {id:'lk_japan',y:2021,mo:6,t:'ทายาทตระกูลยามาซากิ',major:true,play(S){news(this.t,'ผู้นำตระกูลยามาซากิรุ่นปัจจุบันประกาศหาทายาท ตระกูลกลับมาเคลื่อนไหวในโซลเป็นครั้งแรกตั้งแต่ยุคของกัปรยอง สายเลือดของพัค จงกอนถูกพูดถึงในหมู่ยากูซ่า');}},
     {id:'lk_truth',y:2022,mo:3,t:'ความจริงของรุ่น 0',major:true,play(S){news(this.t,'ชาร์ลส์ ชเว ประธานเครือ HNH ถูกเปิดโปงว่าอยู่เบื้องหลังแก๊งและบริษัทเวิร์กเกอร์สมาตลอด เขาเคยเป็นหนึ่งในกลุ่มของคิม กัปรยอง ความลับเรื่องการตายของกัปรยองถูกเปิดออกทีละชิ้น');}},
   ],
   lore:[{id:'lk_viral',at:()=>R(2015,2020),t:'คลิปต่อสู้ไวรัล',play(S){news(this.t,'คลิปต่อสู้ของเด็กมัธยมโซลมียอดวิวทะลุสิบล้าน ทุกคนอยากเป็นนักสู้ที่มีชื่อ');}}],
@@ -10726,7 +10726,7 @@ const LK={
     jake:{b:1996,at:S=>S.place==='seoul'&&S.year>=2016},johan:{b:1996,at:S=>S.place==='seoul'&&S.year>=2016},samuel:{b:1996,at:S=>S.place==='seoul'&&S.year>=2018},
     warren:{b:1997,at:S=>S.place==='seoul'&&S.year>=2018},gun:{b:1989,at:S=>S.year>=2018&&['seoul','osaka'].includes(S.place)},goo:{b:1989,at:S=>S.year>=2018&&S.place==='seoul'},
     james:{b:1988,at:S=>S.year>=2005&&S.year<=2012&&S.place==='seoul'},taesoo:{b:1988,at:S=>S.place==='ansan'&&S.year>=2004},
-    gapryong:{b:1962,d:2010,at:S=>S.place==='seoul'&&S.year>=1980},shingen:{b:1955,at:S=>S.place==='osaka'},charles:{b:1963,at:S=>S.place==='gangnam'}},
+    gapryong:{b:1962,d:2010,at:S=>S.place==='seoul'&&S.year>=1980},shingen:{b:1955,d:1986,at:S=>S.place==='osaka'},charles:{b:1963,at:S=>S.place==='gangnam'}},
   skL:{fight:'ต่อสู้',gear:'อ่านเกม',ride:'ขับมอเตอร์ไซค์',trade:'ค้าขาย',medic:'ปฐมพยาบาล',craft:'งานช่าง',cook:'ทำอาหาร',charm:'เสน่ห์',art:'ศิลปะ'},
   acts:{
     learn:[{l:'ติวสอบซูนึง',c:2,st:{iq:[2,5]},txt:'คุณทำข้อสอบเก่าย้อนหลังสิบปี'},{l:'เรียนตัดต่อคลิป',c:3,min:12,sk:{art:[3,6]},txt:'คลิปของคุณเริ่มมีคนดู'}],
@@ -10815,15 +10815,15 @@ EGG.lookism=['ป้ายบนตึกเขียนว่า "หน้า�
 TOWNJOB.lookism=['เด็กร้านสะดวกซื้อ','สตรีมเมอร์','โค้ชยิมมวย','สมาชิกแก๊ง','คนส่งอาหาร','ตำรวจสายตรวจ'];
 MIS.lookism=[['D','เฝ้าร้านสะดวกซื้อกะดึก','','g:react','ลูกค้าเมาเข้ามาทุกครึ่งชั่วโมง'],['C','ไล่แก๊งรีดไถหน้าโรงเรียน','แก๊งรีดไถ','','เด็กมัธยมต้นถูกล้อมในซอย'],
   ['B','ทวงหนี้ให้ยิมมวย','นักเลงคุมบ่อน','','ห้องใต้ดินกลิ่นบุหรี่',[2000,2040]],['A','ปะทะสาขาบริษัทเวิร์กเกอร์ส','หัวหน้าทีมเวิร์กเกอร์ส','','ชายในสูทพับแขนเสื้อ',[2018,2040]],
-  ['S','สกัดยากูซ่ายามาซากิ','มือสังหารตระกูลยามาซากิ','b','รถสีดำสามคันจอดหน้าตึก',[2021,2040]]];
+  ['S','สกัดยากูซ่ายามาซากิ','มือสังหารตระกูลยามาซากิ','b','รถสีดำสามคันจอดหน้าตึก',[2021,2022]]];
 TOUR.lookism=[{n:'ศึกชิงแชมป์สี่แก๊งใหญ่',need:S=>S.year>=2017&&S.age>=15,r:[['สมาชิกเบิร์นนัคเคิลส์','',40],['หัวหน้าหน่วยก็อดด็อก','',60],['เจค คิม','b',84]],win(){fm(14);mon(10);S.flags.ownCrew=1;say('ทั้งโซลรู้ชื่อคุณ แก๊งเล็กสามแก๊งขอเข้าร่วมกับคุณ','good');}},
   {n:'ไฟต์ใต้ดินของยิมมวย',need:S=>S.age>=16,r:[['นักมวยหน้าใหม่','',30],['นักมวยไทยจากพัทยา','',50],['แชมป์ไฟต์ใต้ดิน','b',66]],win(){mon(12);fm(6);say('คุณได้เข็มขัดแชมป์ที่ทำจากโซ่','good');}}];
 TRAIN.lookism=[['ต่อยเป้าของโค้ช','time','fight','โค้ชตะโกนนับจังหวะ'],['ต่อยกระสอบนับร้อยครั้ง','mash','fight','กระสอบหนักกว่าตัวคุณสองเท่า'],['หลบลูกเทนนิสที่ยิงมา','react','gear','เครื่องยิงลูกตั้งความเร็วสูงสุด']];
-WBOSS.lookism=[['พัค จงกอน (โหมดเอาจริง)','b',96],['คิม กู กับดาบจันทรา','b',94],['ชินเก็น ยามาซากิ','b',96]];
+WBOSS.lookism=[['พัค จงกอน (โหมดเอาจริง)','b',96],['คิม กู กับดาบจันทรา','b',94],['ผู้นำซินดิเคตยามาซากิ','b',95]];
 Object.assign(BTEN,{lookism:'สตามินา'});Object.assign(BTMOTE,{lookism:'240,236,224'});Object.assign(BTPH2,{lookism:'มันถอดแจ็กเก็ตออก ท่ายืนเปลี่ยนไปทั้งตัว'});
 SERVERS.push({id:'lk-1',w:'lookism',n:'ยุครุ่น 0 ของคิม กัปรยอง',start:1980,span:30},{id:'lk-2',w:'lookism',n:'ยุครุ่น 2 สี่แก๊งใหญ่',start:2010,span:20});
 {const af=ambushFoe;ambushFoe=function(){if(W.id!=='lookism')return af.apply(this,arguments);return pick([['แก๊งคู่อริ','',R(16,34),'เด็กห้าคนใส่แจ็กเก็ตแก๊งเดินตามคุณมาสามช่วงตึก'],['พนักงานเวิร์กเกอร์ส','',R(34,56),'ชายในสูทพับแขนเสื้อยืนรอคุณหน้าบ้าน'],
-  ...(S.year>=2021?[['ยากูซ่ายามาซากิ','',R(46,66),'รถสีดำจอดข้างคุณ ประตูเปิดออกพร้อมกันสามบาน']]:[])]);};}
+  ...(S.year>=2021&&S.year<=2022?[['ยากูซ่ายามาซากิ','',R(46,66),'รถสีดำจอดข้างคุณ ประตูเปิดออกพร้อมกันสามบาน']]:[])]);};}
 ARCWHO.lookism=lkF;
 ARC('lookism',2014,[
   {id:'lk_logan',mo:3,t:'วันแรกของร่างที่สอง',mood:'day',cap:'สนามหลังโรงเรียนมัธยมเจ',
@@ -10862,9 +10862,9 @@ ARC('lookism',2018,[
 ARC('lookism',2021,[
   {id:'lk_yama2',mo:7,t:'คืนแห่งตระกูลยามาซากิ',mood:'red',cap:'โกดังท่าเรือโอซาก้า',
    n:'ทายาทของตระกูลยามาซากิสู้กันเพื่อชิงตำแหน่ง ฝั่งเกาหลีส่งนักสู้ข้ามทะเลไปหยุดไม่ให้ตระกูลกลับเข้าโซล พัค จงกอนยืนอยู่ตรงกลาง ระหว่างสายเลือดกับเพื่อน',
-   x:'ยากูซ่าร้อยคนยืนเรียงแถวในโกดัง ชายแก่ในชุดกิโมโนดำนั่งอยู่ปลายแถว "เด็กเกาหลีข้ามทะเลมาตายถึงที่"',
-   c:[K('สู้กับมือสังหารยามาซากิ','brave hero',{foe:['มือสังหารตระกูลยามาซากิ',82],p:.4,d:'ถูกยากูซ่ายามาซากิฆ่าที่ท่าเรือโอซาก้า',fm:22,sk:8,s:'แถวยากูซ่าแหวกทางให้คุณ ชินเก็นพยักหน้าเหมือนเคยเห็นแววตาแบบนี้เมื่อสามสิบปีก่อน'}),
-      K('เจรจากับชินเก็น ยามาซากิ','curious',{p:.8,d:'ถูกตระกูลยามาซากิประหารเพราะพูดผิดคำเดียว',f(S){skill('charm',4);},fm:10,s:'ชินเก็นหัวเราะ "เจ้าพูดเหมือนกัปรยอง" แล้วสั่งให้ทุกคนวางอาวุธคืนนั้น'})]},
+   x:'ยากูซ่าร้อยคนยืนเรียงแถวในโกดัง ผู้นำตระกูลในชุดกิโมโนดำนั่งอยู่ปลายแถว "เด็กเกาหลีข้ามทะเลมาตายถึงที่"',
+   c:[K('สู้กับมือสังหารยามาซากิ','brave hero',{foe:['มือสังหารตระกูลยามาซากิ',82],p:.4,d:'ถูกยากูซ่ายามาซากิฆ่าที่ท่าเรือโอซาก้า',fm:22,sk:8,s:'แถวยากูซ่าแหวกทางให้คุณ ผู้นำตระกูลพยักหน้าช้าๆ ราวกับนึกถึงเรื่องเล่าของกัปรยองเมื่อสามสิบปีก่อน'}),
+      K('เจรจากับผู้นำตระกูลยามาซากิ','curious',{p:.8,d:'ถูกตระกูลยามาซากิประหารเพราะพูดผิดคำเดียว',f(S){skill('charm',4);},fm:10,s:'ผู้นำตระกูลหัวเราะ "เจ้าพูดเหมือนกัปรยองในเรื่องเล่า" แล้วสั่งให้ทุกคนวางอาวุธคืนนั้น'})]},
 ]);
 Object.assign(CASTANIM,{gun:'lk_copy',goo:'slash',hyungseok:'lk_ui',vasco:'lk_combo',jake:'lk_gap',johan:'lk_copy',eli:'lk_combo',gapryong:'lk_gap',shingen:'lk_gap',samuel:'lk_combo',warren:'lk_combo',james:'lk_ui',taesoo:'lk_gap'});
 
@@ -10958,7 +10958,7 @@ VIEW.lkcity=function(c,w,h,r,y,fx,L){const base=h*.8,era=lkEra(y||2015);
   e===1?['ราชาแห่งอันซานต่อยหินแตกให้ลูกน้องดู','ว่ากันว่าอินชอนมีราชาสองคนพร้อมกัน','พีซีบังเปิดใหม่ทั่วประเทศ','บริษัทใหญ่ฟื้นจากวิกฤตไอเอ็มเอฟ','อพาร์ตเมนต์ใหม่ในกังนัมขายหมดในวันเดียว']:nf.call(this,S);};}
 const AMB0=AMB.lookism;Object.defineProperty(AMB,'lookism',{configurable:true,get(){const e=S&&W?.id==='lookism'?lkEra(S.year):2;return e===0?['รถเมล์เก่าพ่นควันดำ','แม่ค้าข้างถนนขายมันเผา','ชายในสูทดำเดินเก็บเงินตามร้าน','เสียงวิทยุทรานซิสเตอร์จากร้านตัดผม']:e===1?['ป้ายพีซีบังเรืองแสงทั้งซอย','โทรศัพท์ฝาพับดังพร้อมกันทั้งรถไฟ','เด็กมัธยมกลุ่มหนึ่งคุยถึงราชาของเมือง','ป้ายโฆษณาอพาร์ตเมนต์ใหม่']:AMB0;}});
 {LK.jobs.push({id:'factory',n:'คนงานโรงงาน',pay:5,sk:'craft',y0:1970,y1:2000},{id:'gangrun',n:'ลูกน้องแก๊งของราชาประจำเมือง',pay:10,sk:'fight',need:{fight:30},y:1996,y1:2014});
-  const iw=LK.isWhere;LK.isWhere=function(j,S){return iw.call(this,j,S)&&(!j.y0||S.year>=j.y0)&&(!j.y1||S.year<=j.y1)&&(j.id!=='crewm'||S.year>=2010);};}
+  const iw=LK.isWhere;LK.isWhere=function(j,S){return iw.call(this,j,S)&&(j.id!=='yakuza'||S.year<=2022||S.flags.yamaHeir)&&(!j.y0||S.year>=j.y0)&&(!j.y1||S.year<=j.y1)&&(j.id!=='crewm'||S.year>=2010);};}
 /* lore paths: the Fist Gang (Gen 0), a regional king (Gen 1), one of Charles Choi's Ten Geniuses, a crew boss (Gen 2), the Yamazaki heir */
 const lkFight=(title,E,win,lose)=>setTimeout(async()=>{if(busy)return;busy=true;try{const r=await battle(E,{lethal:true,title});if(r.r==='win'||r.r==='skip')win(r);else if(lose)lose(r);}finally{busy=false;save();render();}},350);
 const LKKING={seoul:'ราชาแห่งโซล',busan:'ราชาแห่งปูซาน',daegu:'ราชาแห่งแทกู',ansan:'ราชาแห่งอันซาน',incheon:'ราชาแห่งอินชอน',gangnam:'ราชาแห่งโซลใต้'};
@@ -10967,7 +10967,7 @@ const LKKING={seoul:'ราชาแห่งโซล',busan:'ราชาแ�
   if(lkEra(S.year)===1&&LKKING[S.place]&&f>=72&&!S.flags.lkKing)o.push({l:`ท้าชิงตำแหน่ง${LKKING[S.place]}`,h:'ล้มราชาประจำเมืองต่อหน้าทุกคน',f(S){const k=LKKING[S.place];lkFight(`ชิงตำแหน่ง${k}`,fE('ราชาประจำเมือง','b',R(84,90)),()=>{S.flags.lkKing=k;fm(25);setJob('gangrun');say(`ทั้งเมืองรู้แล้วว่าใครคือ${k}คนใหม่`,'good');remember(k,'ล้มราชาประจำเมือง','fight',3);},()=>say('คุณแพ้ ราชายังเป็นราชา','bad'));}});
   if(S.year>=2005&&f>=82&&!S.flags.genius&&!S.flags.genNo)o.push({l:'รับคำเชิญของชาร์ลส์ ชเว',h:'เป็นหนึ่งในสิบอัจฉริยะ เงินไม่จำกัด แต่ต้องทำทุกอย่างที่ประธานสั่ง',f(S){S.flags.genius=1;dk(15);mon(40);fm(12);say('ชาร์ลส์ ชเว ยิ้มบางๆ "ยินดีต้อนรับสู่สิบอัจฉริยะ"','bad');}});
   if(lkEra(S.year)===2&&f>=60&&S.job?.id==='crewm'&&!S.flags.ownCrew)o.push({l:'ตั้งแก๊งของตัวเอง',h:'มีพวกพ้องที่ยอมตายแทนกัน',f(S){S.flags.ownCrew=1;fm(8);say('คุณออกแบบโลโก้แก๊งบนผ้าเช็ดหน้าในร้านไก่ทอด','good');}});
-  if(hasB('yamazaki')&&S.job?.id==='yakuza'&&f>=75&&!S.flags.yamaHeir)o.push({l:'ชิงตำแหน่งทายาทยามาซากิ',h:'ฆ่าหรือถูกฆ่า ตามกฎของตระกูล',f(S){lkFight('ศึกทายาทยามาซากิ',fE('ทายาทยามาซากิอีกคน','b',R(86,92)),()=>{S.flags.yamaHeir=1;dk(20);fm(25);say('ชินเก็นวางดาบของตระกูลไว้ตรงหน้าคุณ','bad');},()=>{if(!live(.5,'แพ้ศึกทายาทและถูกประหารตามกฎตระกูลยามาซากิ'))return;say('คุณแพ้ และถูกไล่ออกจากโอซาก้า','bad');});}});
+  if(hasB('yamazaki')&&S.job?.id==='yakuza'&&f>=75&&!S.flags.yamaHeir)o.push({l:'ชิงตำแหน่งทายาทยามาซากิ',h:'ฆ่าหรือถูกฆ่า ตามกฎของตระกูล',f(S){lkFight('ศึกทายาทยามาซากิ',fE('ทายาทยามาซากิอีกคน','b',R(86,92)),()=>{S.flags.yamaHeir=1;dk(20);fm(25);say('ผู้นำตระกูลวางดาบของยามาซากิไว้ตรงหน้าคุณ','bad');},()=>{if(!live(.5,'แพ้ศึกทายาทและถูกประหารตามกฎตระกูลยามาซากิ'))return;say('คุณแพ้ และถูกไล่ออกจากโอซาก้า','bad');});}});
   return o;};}
 /* era events, Pre-Generation to Second Generation */
 addCanon('lookism',[
@@ -10976,8 +10976,12 @@ addCanon('lookism',[
   {id:'lk_fistgang',y:1982,mo:4,t:'แก๊งหมัดของคิม กัปรยอง',major:true,play(S){news(this.t,'คิม กัปรยอง ตั้งแก๊งหมัดกับเพื่อนผู้ก่อตั้ง ทั้งแบคโฮ พัค จินยอง อีอึนฮา และบักกู แล้วชวนทอม ลี กับชาร์ลส์ ชเว เข้ามา กัปรยองให้ชาร์ลส์เป็นรองหัวหน้า เพราะเขาเย็นชาและมองความจริงกว่าทุกคน');
     if(S.age>=15&&S.place==='seoul')return{text:'ชายตัวไม่ใหญ่แต่ไหล่กว้างยืนขวางยากูซ่ายี่สิบคนที่กำลังรุมเด็กคนหนึ่ง เขาหันมามองคุณ "จะช่วยหรือจะดู?"',choices:[{l:'ร่วมสู้ข้างคิม กัปรยอง',g:'brave hero',foe:['ยากูซ่ายามาซากิ',48],f(S){if(live(.8+fitb(250),'ถูกยากูซ่ารุมในซอยโซล')){bond('gapryong',14);S.flags.fistGang=1;fm(8);skill('fight',5);say('เขาตบไหล่คุณครั้งเดียว "ใช้ได้" แล้วชวนเข้าแก๊ง','good');}}},{l:'ดูอยู่ห่างๆ',g:'safe',f(S){say('ยี่สิบคนล้มภายในสองนาที ไม่มีใครตาย ไม่มีใครลุกได้','plain');}}]};}},
   {id:'lk_moojin',y:1984,mo:8,t:'ตำนานซิรึมพเนจร',play(S){news(this.t,'ชายชื่อจินมูจิน ตำนานซิรึมที่ไม่สังกัดใคร เดินทางไปทั่วประเทศ ทุ่มนักสู้ทุกเมืองที่ผ่าน คนในวงการบอกว่ามีแค่คิม กัปรยองที่สู้กับเขาได้สูสี');}},
-  {id:'lk_yamawar',y:1986,mo:6,t:'สงครามแก๊งหมัดกับยามาซากิ',major:true,play(S){news(this.t,'แก๊งหมัดโตเกินสามสิบคน เคนโซ ยามาซากิตายในการต่อสู้กับคิม กัปรยอง ชินเก็น ยามาซากิ บุกเข้ามาคนเดียวหลังมีคนในแก๊งบอกที่ตั้งฐาน แต่แพ้ แล้วอิทธิพลของยามาซากิในเกาหลีก็จบลง');
+  {id:'lk_yamawar',y:1986,mo:6,t:'สงครามแก๊งหมัดกับยามาซากิ',major:true,play(S){news(this.t,'แก๊งหมัดโตเกินสามสิบคน เคนโซ ยามาซากิตายในการต่อสู้กับคิม กัปรยอง ชินเก็น ยามาซากิ บุกเข้ามาคนเดียวหลังมีคนในแก๊งบอกที่ตั้งฐาน แต่แพ้ และถูกสังหารในคืนนั้นเอง อิทธิพลของยามาซากิในเกาหลีจบลง');
+    if((hasB('yamazaki')||hasB('yamaaff')||S.job?.id==='yakuza')&&S.age>=16)return{text:'ชินเก็นพ่ายแพ้ให้แก๊งหมัด และมีนักฆ่าตามไปจบชีวิตเขาในคืนนั้น คุณอยู่ใกล้พอจะเข้าไปขวาง',choices:[
+      {l:'สู้ปกป้องชินเก็น',g:'brave loyal',foe:['นักฆ่าที่ตามล่าชินเก็น',72],f(S){if(live(.5+fitb(300),'ตายขณะปกป้องชินเก็น ยามาซากิ')){S.flags.saved_shingen=1;fm(10);say('ชินเก็นรอดจากคืนที่เขาควรตาย ประวัติศาสตร์ของยามาซากิเปลี่ยนไปเพราะคุณ','power');remember('ช่วยชินเก็น','เปลี่ยนชะตาของยามาซากิ','fight',3);}}},
+      {l:'ปล่อยให้เป็นไปตามชะตา',g:'safe',f(S){say('ชินเก็น ยามาซากิ ตายในคืนนั้นตามที่ทุกคนเล่าขาน','bad');}}]};
     if(S.flags.fistGang&&S.age>=16)return{text:'คืนนั้นชินเก็น ยามาซากิเดินเข้าประตูฐานของแก๊งคนเดียว ทุกคนรู้ทันทีว่ามีคนทรยศบอกที่ตั้งฐาน',choices:[{l:'สู้กับชินเก็น ยามาซากิ',g:'brave hero',foe:['ชินเก็น ยามาซากิ',95,'b'],f(S){if(live(.25+fitb(500),'ถูกชินเก็น ยามาซากิฆ่าในคืนสงคราม')){fm(25);skill('fight',8);say('คุณถ่วงชินเก็นไว้จนกัปรยองมาถึง แล้วตำนานก็จบศึกด้วยหมัดเดียว','good');remember('คืนสงครามกับยามาซากิ','ยืนข้างกัปรยอง','fight',3);}}},
+      {l:'ลากชินเก็นที่แพ้ออกไปซ่อนก่อนจะถูกฆ่า',g:'curious dark',f(S){if(live(.6,'ถูกคนที่ตามล่าชินเก็นฆ่าไปด้วย')){S.flags.saved_shingen=1;dk(10);say('คุณซ่อนชินเก็นไว้ในเรือประมงจนรุ่งเช้า ประวัติศาสตร์ที่ควรเกิดขึ้นคืนนั้นไม่เกิด เขาจำหน้าคุณได้','bad');remember('ช่วยชินเก็น','เปลี่ยนชะตาของยามาซากิ','dark',3);}}},
       {l:'ตามหาคนทรยศ',g:'curious loyal',f(S){st('iq',2);fm(6);say('คุณไม่เจอตัวคนทรยศ แต่สังเกตว่าบางคนในแก๊งไม่เคยกลัวเลยแม้แต่น้อย','plain');}}]};}},
   {id:'lk_disband',y:1990,mo:3,t:'แก๊งหมัดยุบ',major:true,play(S){news(this.t,'ชาร์ลส์ ชเว ทะเลาะกับพัค จินยองไม่หยุดจนเดินออกจากแก๊ง ไปเปิดตลาดอึนฮากับภรรยา คิม กัปรยองวางมือจากโลกใต้ดินแล้วหันไปเล่นการเมือง พัค จินยองเรียนเป็นเภสัชกร ทอม ลี ยังเป็นราชาขอทานเหมือนเดิม');if(S.flags.fistGang){S.flags.fistGang=0;say('แจ็กเก็ตของแก๊งถูกพับเก็บไว้ในตู้ คุณไม่เคยทิ้งมัน','plain');}}},
   {id:'lk_kings',y:2004,mo:5,t:'ยุคราชาประจำภูมิภาค',major:true,play(S){news(this.t,'รุ่น 1 แบ่งเกาหลีเป็นอาณาเขตของราชา คว็อก จีชังเป็นราชาแห่งโซล จินรังราชาแห่งปูซาน จีกงซอบพระหมัดเหล็กราชาแห่งแทกู มา แทซูหมัดที่สุดยอดราชาแห่งอันซาน และอินชอนมีราชาสองคนคือนา แจกยอนกับซอน ยูแจ');}},
@@ -10985,6 +10989,8 @@ addCanon('lookism',[
   {id:'lk_magpurge',y:2009,mo:4,t:'การกวาดล้างตระกูลในเครือ',play(S){news(this.t,'ยามาซากิกวาดล้างตระกูลในเครือ พัค จงกอนฆ่าริวโจ มากามิ ครูที่สอนคาราเต้ให้เขา เคนตะ มากามิ ลูกชายรอดมาได้และสาบานว่าจะสร้างตระกูลขึ้นใหม่');
     if(hasB('magami')||hasB('yamaaff'))return{text:'ชายชุดดำผมยาวเดินเข้าโดโจของตระกูลคุณ ไม่มีใครในห้องขยับได้ทัน',choices:[{l:'สู้กับพัค จงกอน',g:'brave',foe:['พัค จงกอน',97,'b'],f(S){if(live(.12+fitb(600),'ถูกพัค จงกอนฆ่าในการกวาดล้างตระกูล')){fm(20);skill('fight',8);trauma(20);say('เขาหยุดดาบตรงคอคุณ แล้วเดินจากไปโดยไม่พูดอะไร','plain');}}},{l:'หนีไปกับเคนตะ มากามิ',g:'safe loyal',f(S){if(live(.7,'ถูกตามล่าระหว่างหนีการกวาดล้าง')){trauma(25);S.flags.kentaFriend=1;say('คุณกับเคนตะซ่อนในเรือประมงสามวัน เขาสาบานว่าตระกูลจะกลับมา','bad');}}}]};}},
   {id:'lk_kitae',y:2011,mo:7,t:'ราชาแห่งโซลคนใหม่',play(S){news(this.t,'คิม คีแท ลูกชายของคิม กัปรยองที่เคยอยู่เม็กซิโก กลับมาล้มคว็อก จีชังจนต้องย้ายไปเป็นราชาแห่งชุงชอง คีแทขึ้นเป็นราชาแห่งโซล');}},
+  {id:'lk_yamafall',y:2022,mo:9,t:'การล่มสลายของซินดิเคตยามาซากิ',major:true,play(S){if(S.flags.yamaHeir){news(this.t,'ทุกตระกูลรอให้ยามาซากิพังเหมือนที่ใครๆ คาดไว้ แต่ทายาทคนใหม่ยังยืนอยู่ ตระกูลที่ควรล่มสลายรอดมาได้เพราะคุณ');fm(15);remember('ตระกูลไม่ล่ม','ทายาทที่เปลี่ยนชะตายามาซากิ','power',3);return;}
+    news(this.t,`ศึกชิงทายาทและการกวาดล้างภายในกลืนกินตัวเอง ซินดิเคตยามาซากิที่ครองโลกใต้ดินมาครึ่งศตวรรษล่มสลาย ตระกูลในเครือแตกกระจาย${S.flags.saved_shingen?' ข่าวลือว่าชินเก็นแก่ๆ ที่ใครๆ คิดว่าตายไปตั้งแต่ปี 1986 นั่งดูทุกอย่างพังอยู่เงียบๆ':''}`);if(S.job?.id==='yakuza'){setJob(null);say('ตระกูลที่คุณรับใช้ไม่มีอีกแล้ว คุณตกงานในคืนเดียว','bad');}}},
   {id:'lk_cheonliang',y:2020,mo:5,t:'ชอนรยาง',major:true,play(S){news(this.t,'ศึกที่ชอนรยางดึงทุกฝ่ายเข้ามา ประธานแห่งยามาซากิปรากฏตัวต่อหน้าคนเกาหลีเป็นครั้งแรก และจินมูจิน ตำนานซิรึมรุ่น 0 ก็โผล่มาหลังหายไปหลายสิบปี');}},
 ]);
 Object.assign(CAST.lookism,{kitae:'คิม คีแท',jichang:'คว็อก จีชัง',jinrang:'จินรัง',gongseob:'จีกงซอบ',jaegyeon:'นา แจกยอน',tomlee:'ทอม ลี',moojin:'จินมูจิน',kenta:'เคนตะ มากามิ',kenzo:'เคนโซ ยามาซากิ'});
@@ -11039,7 +11045,8 @@ const CASTHT={jotaro:1.18,josuke:1.08,koichi:.84,dio:1.12,polnareff:1.1,avdol:1.
   c.save();c.translate(x*k,gy*k);c.scale(sx,hs);c.translate(-x*k,-gy*k);let r;try{r=ch0.call(this,px,x,gy,{...o,hs:undefined});}finally{c.restore();}if(r&&r.top!=null)r={...r,top:Math.round(gy-(gy-r.top)*hs),hy:Math.round(gy-(gy-r.hy)*hs),ey:Math.round(gy-(gy-r.ey)*hs)};return r;};}
 /* closer looks for the Lookism cast */
 Object.assign(CASTLOOK,{zack:CL('m','#5a3a2a','spiky','#262b44',{btn:1}),vasco:CL('m','#1c1a1f','short','#a22633',{md:'happy'}),gun:CL('m','#1c1a1f','short','#1c1a1f',{coat:'#1c1a1f'}),
-  goo:CL('m','#1c1a1f','bob','#262b44',{coat:'#262b44',md:'happy'}),johan:CL('m','#d8d8e0','short','#262b44',{eye:'#c0cbdc'}),kitae:CL('m','#1c1a1f','short','#f0ece0',{coat:'#f0ece0'})});
+  goo:CL('m','#1c1a1f','bob','#262b44',{coat:'#262b44',md:'happy'}),johan:CL('m','#d8d8e0','short','#262b44',{eye:'#c0cbdc'}),kitae:CL('m','#1c1a1f','short','#f0ece0',{coat:'#f0ece0'}),
+  shingen:CL('m','#cfcfcf','pony','#1c1a1f',{robe:'#1c1a1f',beard:1,md:'angry',eye:'#262b44',skin:'#e0b090'}),kenzo:CL('m','#1c1a1f','short','#1c1a1f',{coat:'#1c1a1f',md:'angry',beard:1})});
 for(const [id,h] of Object.entries(CASTHT))if(CASTLOOK[id])CASTLOOK[id].hs=h;
 /* the Yamazaki unconscious state (Black Eyes): the will to fight stays when the mind leaves. Uncontrolled it cannot tell friend
    from foe; Shintaro held it from childhood, Gun keeps it running. Five steps of control training */
@@ -11122,7 +11129,7 @@ function faceFx(c,w,h,o,t,layer){const g=o.g;if(!g)return;const u=w/48;
   if(g.star&&((t/700)|0)%2){c.fillStyle='#fee761';c.fillRect(w*.82,h*.12,2*u,6*u);c.fillRect(w*.82-2*u,h*.12+2*u,6*u,2*u);}}
 const FACEG={naruto:{spark:'rgba(254,160,60,A)'},jjk:{spark:'rgba(181,80,200,A)'},heian:{spark:'rgba(181,80,200,A)'},jjedo:{spark:'rgba(181,80,200,A)'},db:{aura:'rgba(254,231,97,A)'},
   op:{spark:'rgba(255,255,255,A)'},bleach:{aura:'rgba(120,200,255,A)'},jojo:{menace:1},aot:{steam:1},lookism:{sweat:1}};
-function faceGimmick(ref){const base=FACEG[W.id]||{};if(ref.t==='mate')return{heart:1};if(ref.t==='cast')return{...base,star:1};if(ref.t==='folk'||ref.t==='npc')return W.id==='lookism'?{sweat:1}:{};if(ref.t==='peer')return{star:1};return {};}
+function faceGimmick(ref){const base=FACEG[W.id]||{};if(ref.t==='mate')return{heart:1};if(ref.t==='cast')return{...base,sweat:0,star:1};if(ref.t==='folk'||ref.t==='npc')return W.id==='lookism'?{sweat:1}:{};if(ref.t==='peer')return{star:1};return {};}
 function faceCanvas(ref,size=40,full=false){const spec=faceSpecOf(ref);if(!spec||typeof document==='undefined')return null;const cv=document.createElement('canvas');cv.width=size*2;cv.height=size*2;cv.className=full?'facebig':'facei';
   cv.style.width=cv.style.height=size+'px';cv.setAttribute('aria-hidden','true');FACEW.set(cv,{spec,seed:(hash(JSON.stringify(ref))%5000)|0,g:faceGimmick(ref),full,hov:false,dir:1});faceLoop();return cv;}
 function faceLoop(){if(FACERAF||typeof requestAnimationFrame!=='function')return;let last=0;const step=t=>{const L=[...document.querySelectorAll('canvas.facei,canvas.facebig')];if(!L.length){FACERAF=0;return;}
@@ -11178,6 +11185,78 @@ function npcBirth(o){if(o.by==null){const a=NPCAGE[o.r]||[22,45];o.by=o.r==='riv
 /* a few events whose fight choice names no target: say who you actually fight */
 const addFoe=(w,id,lbl,foe)=>{for(const k of ['pool','canon','meets','mini','surprise','miles']){const ev=(WORLDS[w]?.[k]||[]).find(e=>e.id===id);if(!ev)continue;const p0=ev.play;ev.play=function(S){const r=p0.apply(this,arguments);if(r&&r.choices)for(const c of r.choices)if(c.l===lbl&&!c.foe)c.foe=foe;return r;};}};
 addFoe('jjk','jj_q','ร่วมโจมตี',['โกโจ ซาโตรุ (ม.ปลาย)',90,'b']);
+
+/* ===== online legends and co-op missions.
+   Deeds: a big moment in your life (pri-3 memory, a famous power, a sudden fall into darkness) becomes a deed carried in presence `dd`.
+   Everyone on the same server hears it as news, with "(ผู้เล่น)" after the name so a real player is never mistaken for an NPC; the
+   world reacts with praise or fear, and later townsfolk retell it as a legend. Missions: every world has lore missions by rank and era,
+   picked from a list when you invite another player, and fought side by side ===== */
+ON.deeds=[];ON.seenDeed={};ON.legends=(()=>{try{return JSON.parse(localStorage.getItem('el-leg')||'[]');}catch(e){return[];}})();
+const legSave=()=>{try{localStorage.setItem('el-leg',JSON.stringify(ON.legends.slice(0,40)));}catch(e){}};
+const DEEDRE={good:['ผู้คนสรรเสริญชื่อนี้ไปทั่วเมือง','เด็กๆ เริ่มเล่นเป็นคนคนนี้ในสนามเด็กเล่น','ร้านเหล้าทุกร้านเล่าเรื่องนี้ซ้ำทั้งคืน','ชาวบ้านจุดธูปขอให้คนคนนี้ปลอดภัย'],
+  dark:['ผู้คนกระซิบชื่อนี้ด้วยความหวาดกลัว','แม่ๆ ใช้ชื่อนี้ขู่ลูกให้รีบนอน','ไม่มีใครกล้าเดินผ่านทางที่คนคนนี้อยู่','ทางการติดประกาศเตือนภัยไปทั่วเมือง'],
+  feat:['ข่าวนี้แพร่ไปทั่วโลก','ทุกคนในวงการพูดถึงเรื่องนี้','ผู้คนเริ่มเรียกคนคนนี้ว่าตำนาน']};
+const deedTone=(t,x)=>{const s=(t||'')+' '+(x||'');if((S.dark||0)>=45||/ฆ่า|สังหาร|ประหาร|ทรยศ|ลอบ|ปล้น|มาจิน|ตาดำ/.test(s)&&(S.dark||0)>=25)return'dark';return /ชนะ|ปราบ|ล้ม|ช่วย|ปกป้อง|ราชา|แชมป์|สู้กับ|โค่น|รอด|กัน|ผลัด|ศิษย์/.test(s)?'good':'feat';};
+function deedPush(x,k){if(!S||!S.online||typeof onTxt!=='function')return;const d={i:(Date.now()%1e9)+R(0,999),t:Date.now(),x:onTxt(String(x),140),k:k||'feat',y:S.year};ON.deeds.unshift(d);ON.deeds=ON.deeds.slice(0,4);try{pushPresence();}catch(e){}}
+{const r0=remember;remember=function(t,x,pose,pri=2){const r=r0.apply(this,arguments);try{if(S&&S.online&&pri>=3&&!/ลืมตาดูโลก|จากไป|งานศพ/.test(t))deedPush(`${t}${x&&x!==t?` (${onTxt(x,60)})`:''}`,deedTone(t,x));}catch(e){}return r;};}
+{const g0=gainPower;gainPower=function(id,txt){const had=hasP(id),r=g0.apply(this,arguments);try{if(S&&S.online&&!had&&(POWERS[id]?.fame||0)>=10)deedPush(`ตื่นพลัง ${POWERS[id].n}`,'feat');}catch(e){}return r;};}
+{const d0=dk;dk=function(d){const r=d0.apply(this,arguments);try{if(S&&S.online&&d>=15)deedPush('ทำเรื่องโหดร้ายจนคนทั้งเมืองรู้','dark');}catch(e){}return r;};}
+{const mp=myPresence;myPresence=function(){const p=mp();delete p.ev;if(ON.deeds.length)p.dd=ON.deeds.map(d=>({i:d.i,t:d.t,x:d.x,k:d.k,y:d.y}));return p;};}
+/* hearing other players' deeds: only from the same server (or the same world when there are no servers) */
+function deedListen(){try{if(!S||!S.online)return;const now=Date.now();for(const p of ON.peers||[]){const pr=p.presence;if(!pr||pr.g!=='el1'||(p.isMe&&p.sameTab)||!Array.isArray(pr.dd))continue;
+    if(ON.sv?pr.sv!==ON.sv.id:pr.w!==W?.id)continue;
+    for(const d of pr.dd.slice(0,4)){const key=p.peer+':'+(d.i|0);if(ON.seenDeed[key])continue;ON.seenDeed[key]=1;const k=['good','dark','feat'].includes(d.k)?d.k:'feat',who=`${onTxt(pr.n,40)||'ผู้เล่นคนหนึ่ง'} (ผู้เล่น)`,x=onTxt(String(d.x||''),140);if(!x)continue;
+      const re=DEEDRE[k][(d.i|0)%DEEDRE[k].length],line=`${who} ${x} — ${re}`;ON.legends.unshift({t:+d.t||0,n:who,x,k,re,y:d.y|0});ON.legends=ON.legends.slice(0,40);legSave();
+      if(now-(+d.t||0)<10*60000){onNote(`${k==='dark'?'☠':'✦'} ${line}`,k==='dark'?'bad':'good',true);if(S.alive)news(k==='dark'?'ข่าวร้ายจากผู้เล่น':'ตำนานของผู้เล่น',line);}}}}catch(e){console.error('deedListen',e&&e.message);}}
+setInterval(deedListen,2000);
+/* months later, townsfolk retell what players did */
+{const mp0=monthPass;monthPass=async function(){const r=await mp0.apply(this,arguments);try{if(S&&S.alive&&S.online&&ON.legends.length&&chance(.04)){const L=pick(ON.legends.slice(0,10));
+  say(L.k==='dark'?`คนแก่ในร้านน้ำชาลดเสียงลง "รู้ไหม ${L.n} ${L.x}" ทุกคนในร้านเงียบไป`:`เด็กข้างบ้านเล่าอย่างตื่นเต้นว่า ${L.n} ${L.x} ${L.re}`,'plain');}}catch(e){}return r;};}
+/* server tab: the board of player legends */
+{const or4=onRender;onRender=function(){or4.apply(this,arguments);try{const pan=document.getElementById('onPanel');if(!pan||pan.hidden||ON.tab!=='server')return;const body=pan.querySelector('#onBody');if(!body||body.querySelector('.ollegend'))return;
+  const box=document.createElement('div');box.className='ollegend';const h=document.createElement('b');h.textContent='ข่าวและตำนานของผู้เล่น';box.append(h);
+  if(!ON.legends.length){const s=document.createElement('small');s.textContent='ยังไม่มีผู้เล่นคนไหนทำเรื่องใหญ่ ลองเป็นคนแรกดูสิ';box.append(s);}
+  for(const L of ON.legends.slice(0,12)){const r=document.createElement('div');r.className='lg '+L.k;r.textContent=`${L.k==='dark'?'☠':'✦'} ${L.y?`ปี ${L.y} · `:''}${L.n} ${L.x}`;const s=document.createElement('small');s.textContent=L.re;r.append(s);box.append(r);}
+  body.append(box);}catch(e){}};}
+(function(){try{const st=document.createElement('style');st.textContent=`.ollegend{margin-top:10px;display:grid;gap:6px}.ollegend .lg{padding:6px 8px;border-radius:8px;border:1px solid var(--line,#444);font-size:13px}.ollegend .lg small{display:block;opacity:.7}.ollegend .lg.dark{border-color:#a22633}.ollegend .lg.good{border-color:#3e8948}.ollegend .lg.feat{border-color:#feae34}`;document.head.append(st);}catch(e){}})();
+
+/* ---- co-op missions: [name, scene, foe, flags, pow, rank, fromYear, toYear] ---- */
+Object.assign(OQUEST,{
+  aot:[['ลาดตระเวนเขตกำแพงโรส','titan','ไททัน 7 เมตร','t',45,'D'],['ล่าไททันผิดปกติที่หลุดเข้ามาในเขต','titan','ไททันผิดปกติ','t',58,'C'],['ร่วมกองสำรวจออกนอกกำแพง','titan','ฝูงไททันในป่าต้นไม้ยักษ์','t',64,'B',820,853],
+    ['สู้กับหน่วยต่อต้านมนุษย์ของเคนนี่','ninja','หน่วยต่อต้านมนุษย์','',72,'A',850,850],['ทวงคืนกำแพงมาเรีย','titan','ไททันวานร','tb',86,'S',850,850],['บุกเลเบลิโอ','ninja','ทหารมาร์เลย์','',68,'A',854,854],['หยุดฟ้าดินส่องสว่าง','titan','ไททันกำแพง','tb',92,'S',854,854]],
+  naruto:[['ตามจับแมวโทระของภรรยาท่านไดเมียว','ninja','แมวโทระ','',15,'D'],['คุ้มกันพ่อค้าข้ามแคว้น','ninja','โจรภูเขา','',36,'C'],['ไล่ล่านินจาแยกตัว','ninja','นินจาแยกตัวระดับ B','',56,'B'],
+    ['ตามหาซาสึเกะ','ninja','สี่ทหารเสียง','b',72,'A',62,63],['ต่อต้านแสงอุษา','ninja','สมาชิกแสงอุษา','b',84,'S',60,67],['สงครามนินจาครั้งที่ 4: กองทัพเซ็ทสึขาว','ninja','กองทัพเซ็ทสึขาว','',70,'A',67,67]],
+  jjk:[['ไล่คำสาประดับ 4 ในโรงพยาบาลร้าง','curse','คำสาประดับ 4','c',30,'D',1990,2080],['ปราบคำสาประดับ 2 ในโรงเรียนร้าง','curse','คำสาประดับ 2','c',56,'C',1990,2080],['เก็บนิ้วของสุคุนะ','curse','คำสาประดับ 1','cb',74,'B',2000,2018],
+    ['เคลียร์ม่านในชิบุยะ','curse','คำสาประดับพิเศษ','cb',84,'A',2018,2018],['ล่าแต้มในเกมคัดสรร','ninja','ผู้เล่นจากยุคเฮอัน','b',82,'S',2018,2018]],
+  heian:[['ปราบคำสาปที่ประตูราโชมง','curse','คำสาปที่ประตูราโชมง','c',50,'C'],['คุ้มกันขบวนเสด็จ','ninja','นักฆ่าของตระกูลคู่แข่ง','',58,'B'],['ล่าคำสาปที่ลงมาจากภูเขาฮิเอะ','curse','คำสาประดับพิเศษ','cb',82,'A']],
+  jjedo:[['ปราบคำสาปที่หมู่บ้านบนภูเขา','curse','คำสาปในหมู่บ้าน','c',50,'C'],['กำจัดโรนินผู้ใช้คุณไสย','ninja','โรนินผู้ใช้คุณไสย','',62,'B'],['ปกป้องเอโดะในคืนไฟไหม้ใหญ่','curse','คำสาปไฟ','cb',78,'A',1657,1657]],
+  op:[['ล่าค่าหัวโจรสลัดอีสต์บลู','sea','โจรสลัดค่าหัวสิบล้าน','',40,'C'],['ปล้นเรือขนสมบัติของรัฐบาลโลก','sea','ทหารเรือคุ้มกัน','',60,'B'],['หนีพลเรือโทกลางทะเล','sea','พลเรือโท','b',78,'A'],
+    ['บุกอิมเพลดาวน์','sea','ผู้คุมอิมเพลดาวน์','b',84,'S',1522,1522],['ต้านกองทัพบิ๊กมัมที่เกาะเงือก','sea','ลูกเรือบิ๊กมัม','',72,'A',1524,1525]],
+  bleach:[['ปราบฮอลโลว์กลางเมืองคาราคุระ','hollow','ฮอลโลว์','cm',50,'C'],['ไล่ล่าเมนอสแกรนเด','hollow','เมนอสแกรนเด','cm',66,'B'],['ป้องกันคาราคุระจากอารันคาร์','hollow','อารันคาร์','cmb',80,'A',2001,2002],['ต้านการบุกของวานเดนไรค์','ninja','ซันซ์ตาร์ริตเตอร์','b',84,'S',2004,2004]],
+  jojo:[['ตามล่าผู้ใช้สแตนด์ที่ซ่อนตัวในเมือง','ninja','ผู้ใช้สแตนด์ศัตรู','',60,'B'],['หยุดซอมบี้ของดิโอ','ninja','อัศวินซอมบี้','',58,'B',1888,1889],['ตามรอยฆาตกรในโมริโอ','ninja','ผู้ใช้สแตนด์ที่ถูกลูกธนูปลุก','',72,'A',1999,1999],
+    ['คุ้มกันทริชข้ามอิตาลี','ninja','ทีมลาสต์','b',78,'A',2001,2001],['ฝ่าคฤหาสน์ของดิโอ','ninja','ผู้ใช้สแตนด์ของดิโอ','b',84,'S',1988,1989]],
+  db:[['ตามหาดราก้อนบอลด้วยกัน','ninja','ทหารกองทัพริบบอนแดง','',40,'C',749,760],['กำจัดไซบาแมน','ninja','ไซบาแมน','',60,'B',762,762],['สู้กับเซลจูเนียร์','ninja','เซลจูเนียร์','b',74,'A',767,767],
+    ['ต้านกองทัพฟรีเซอร์ที่ฟื้นคืน','ninja','ทหารของฟรีเซอร์','',66,'B',779,779],['ศึกแห่งพลังจำลอง','ninja','นักรบจากจักรวาลอื่น','b',88,'S',780,800],['ฝึกสู้กันในห้องแรงโน้มถ่วง','ninja','หุ่นซ้อมของแคปซูลคอร์ป','',45,'D']],
+  lookism:[['ไล่แก๊งรีดไถหน้าโรงเรียน','ninja','แก๊งรีดไถ','',30,'D',2000,2040],['บุกฐานแก๊งคู่อริ','ninja','แก๊งคู่อริ','',50,'C',2010,2040],['สู้กับพนักงานเวิร์กเกอร์ส','ninja','หัวหน้าทีมเวิร์กเกอร์ส','',66,'B',2018,2040],
+    ['ศึกสี่แก๊งใหญ่','ninja','หัวหน้าแก๊งใหญ่','b',80,'A',2017,2040],['ต้านยามาซากิที่ท่าเรือ','ninja','มือสังหารตระกูลยามาซากิ','b',88,'S',2021,2022],['ต่อต้านยากูซ่ายามาซากิในโซล','ninja','ยากูซ่ายามาซากิ','',62,'B',1975,1986]],
+});
+const oqAvail=()=>{const L=OQUEST[W?.id]||OQUEST.naruto;return L.map((q,i)=>({q,i})).filter(({q})=>(!q[6]||S.year>=q[6])&&(!q[7]||S.year<=q[7]));};
+{const oq=olQuest;olQuest=function(){const L=OQUEST[W?.id]||OQUEST.naruto;if(ON.qPick!=null&&L[ON.qPick])return{n:L[ON.qPick][0],k:L[ON.qPick][1],i:ON.qPick};const a=S?oqAvail():[];return a.length?{n:a[0].q[0],k:a[0].q[1],i:a[0].i}:oq.apply(this,arguments);};}
+/* inviting: pick the mission first */
+{const a0=onAsk;onAsk=function(p,k){if(k!=='quest'||ON.qPicking)return a0.apply(this,arguments);if(busy)return onNote('รอให้เรื่องตรงหน้าจบก่อน');const pr=p.presence,both=myFit()+(pr.fit|0);
+  const C=oqAvail().map(({q,i})=>{const pw=q[4]||55,odds=oclamp(.35+both/250-(RO[q[5]]||0)*.07,.08,.92);return{l:`[${q[5]||'C'}] ${q[0]}`,g:(RO[q[5]]||0)>=3?'brave':'curious',h:`ศัตรู: ${q[2]} · สำเร็จราว ${Math.round(odds*100)}%${(RO[q[5]]||0)>=3?' · อาจตาย':''}`,close:1,f(){ON.qPick=i;setTimeout(()=>{ON.qPicking=1;try{a0(p,'quest');}finally{ON.qPicking=0;}},250);}};});
+  C.push({l:'ยกเลิก',skip:1,f(){}});ask(`ภารกิจร่วมกับ ${onTxt(pr.n,40)} (ผู้เล่น)`,'เลือกภารกิจตามยุคของโลกนี้ ทั้งสองคนจะสู้เคียงข้างกัน รางวัลแบ่งตามระดับภารกิจ',C);};}
+/* resolving: both sides fight the same mission foe, with the partner beside them */
+questResolve=async function(pr,seed,qi,mine){if(!S||!S.alive)return;const n=onTxt(pr.n,40),L=OQUEST[W.id]||OQUEST.naruto,Q=L[qi%L.length],rk=Q[5]||'C',ro=RO[rk]||1,lk=pr.lk||{};ON.qPick=null;
+  let ok;const fake=typeof document==='undefined'||!document.body||busy||(typeof BT!=='undefined'&&BT.on);
+  if(fake){const p=oclamp(.35+(myFit()+(pr.fit|0))/250-ro*.07,.08,.92);ok=(seed%1000)/1000<p;}
+  else{busy=true;let r;try{r=await battle(fE(Q[2]||'ศัตรู',Q[3]||'',(Q[4]||55)+R(-4,6)),{title:`${Q[0]} กับ ${n} (ผู้เล่น)`,lethal:ro>=3,boss:/b/.test(Q[3]||''),ally:{n:`${n} (ผู้เล่น)`,pow:pr.fit|0,spec:{sex:lk.sx||pr.sx||'m',hair:lk.h||'#3e2731',skin:lk.s||'#e8b796',out:lk.o||'#5a6988',st:lk.st||'short',eye:lk.e||undefined}}});}finally{busy=false;}ok=r&&(r.r==='win'||r.r==='talk'||r.r==='skip');}
+  try{duoScene('quest',`${Q[0]} กับ ${n}`,ok?'ภารกิจสำเร็จ! ทั้งสองคนกลับมาพร้อมรางวัล':'ภารกิจล้มเหลว ทั้งสองคนต้องถอยกลับมา',{...pr,_q:Q[1]});}catch(e){}
+  ON.friends[n]=ON.friends[n]||{w:pr.w,since:S.year};onSave();const mult=[1,1.5,2.2,3.2,4.5][ro];
+  if(ok){mon(Math.round(R(4,8)*mult));fm(Math.round(3*mult));skill('fight',R(2,3)+ro);st('joy',6);say(`คุณกับ ${n} (ผู้เล่น) ทำภารกิจ [${rk}] "${Q[0]}" สำเร็จ`,'good');
+    remember(`ภารกิจ [${rk}] กับ ${n} (ผู้เล่น)`,Q[0],'fight',ro>=2?3:2);}
+  else{st('hp',-R(6,12)*(1+ro*.3));say(`ภารกิจ "${Q[0]}" กับ ${n} (ผู้เล่น) ล้มเหลว คุณกลับมาพร้อมบาดแผล`,'bad');if(ro>=3&&S.st.hp<=0)die(`ตายระหว่างภารกิจ "${Q[0]}" กับ ${n} (ผู้เล่น)`);}
+  render();};
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
