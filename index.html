@@ -11962,6 +11962,7 @@ const TRENDOLD={aot:['ราคาขนมปังขึ้นอีกแล�
   lookism:['แก๊งหมัดปะทะยากูซ่า','เศรษฐกิจปีนี้ซบเซา','ร้านไก่ทอดเปิดใหม่ทั่วโซล'],jjk:['แก๊สรั่วอีกแล้ว','เด็กนักเรียนหายตัวปริศนา','ร้านขนมดังเปิดสาขาใหม่'],bleach:['บ้านถูกรถบรรทุกชนอย่างลึกลับ','คนเห็นผีชุดดำบนหลังคา','ร้านขายขนมเก่าเปิดตลอดคืน'],
   jojo:['คนหายปริศนาในเมือง','ร้านอาหารอิตาเลียนที่กินแล้วหายป่วย','นักวาดการ์ตูนหนุ่มออกเล่มใหม่'],db:['ศึกชิงเจ้ายุทธภพปีนี้','แคปซูลคอร์ปออกสินค้าใหม่','โจรทะเลทรายออกปล้นอีกแล้ว']};
 const oldTx=x=>String(x).replace(/ใครมีคลิป(\S+)บ้าง ขอดูหน่อย ไม่เชื่อว่าคนแบบนั้นมีจริง/,'ใครเคยเห็น$1กับตาบ้าง ไม่เชื่อว่าคนแบบนั้นมีจริง').replace(/คลิป(\S+?)ต่อยคนล้มในหมัดเดียว มีคนดูเป็นแสน/,'คนทั้งตลาดเห็น$1ต่อยคนล้มในหมัดเดียว').replace(/ขอลายเซ็น(\S+?)ได้แล้ว!! ใส่กรอบเรียบร้อย/,'ได้ยืนใกล้$1ครั้งหนึ่ง จะเล่าให้ลูกหลานฟัง').replace('ร้านสะดวกซื้อ','ตลาด').replace('ทุกวันจนแฟนงอน','ทุกวันจนคนในบ้านเบื่อ').replace(/\s*[😳😤]/gu,'');
+const phoneOKy=(w,y)=>w==='jjk'?y>=2004:w==='lookism'?y>=2004:w==='bleach'?y>=2001:w==='jojo'?y>=2005:w==='db'?y>=750:false;
 const phMe=()=>{const p=String(S.name||'').split(' ');return W.gi?p[p.length-1]:p[0];};
 /* the feed is fixed for the month: reopening shows the same posts */
 function phoneFeed(){
@@ -12037,7 +12038,7 @@ function phoneOpen(){try{const pb=document.createElement('b');pb.innerHTML='<i><
 .phonep .phbtn{display:block;width:100%;margin:6px 0;padding:10px 12px;border-left-color:#8bd3ff}.phonep .phbtn:disabled{opacity:.45;cursor:default}`;document.head.append(st);}catch(e){}})();
 /* the phone button sits with the world actions and only shows in modern eras */
 if(typeof WACTS!=='undefined'&&!WACTS.some(a=>a[0]==='phoneBtn'))WACTS.push(['phoneBtn','📰 ข่าวสาร',()=>phoneOpen()]);
-{const rd=render;render=function(){const r=rd.apply(this,arguments);try{const b=document.querySelector('#acts [data-w="phoneBtn"]');if(b){const K=mediaKind();b.hidden=!K;if(K){const t2=`${MEDIA[K].ic} ${MEDIA[K].n}`;if(b.textContent!==t2)b.textContent=t2;}}}catch(e){}return r;};}
+{const rd=render;render=function(){const r=rd.apply(this,arguments);try{const b=document.querySelector('#acts [data-w="phoneBtn"]');if(b){const K=mediaKind(),young=S&&S.alive&&S.age<9;let K2=K;if(young){const w=W.id,y=S.year;K2=(['jjk','lookism','bleach','jojo','db'].includes(w)&&phoneOKy(w,y))||(w==='naruto'&&y>=74)?'phone':w==='heian'||(w==='jjedo'&&y<1615)||w==='naruto'?'letter':'paper';}b.hidden=!K2;b.disabled=!K;if(K2){const t2=`${MEDIA[K2].ic} ${MEDIA[K2].n}${K?'':' · อายุ 9 ปีขึ้นไป'}`;if(b.textContent!==t2)b.textContent=t2;}}}catch(e){}return r;};}
 
 /* ===== v57 fixes: the right face in every scene =====
    a short name that is a shared surname ("ยามาซากิ", "คิม", "มังกี้") or sits inside another name ("มากิ" in "อินุมากิ")
