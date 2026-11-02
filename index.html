@@ -11732,7 +11732,7 @@ const SHOP57={
     RD('o_yagara','ม้าน้ำยาการ่า',25,'พาหนะประจำวอเตอร์เซเว่น'),
     RA('o_logpose','ล็อกโพส',15,'เข็มทิศที่ชี้ไปเกาะถัดไปบนแกรนด์ไลน์',{yr(S){skill('ride',1);}}),
     RA('o_vivre','การ์ดชีวิต (วิเวิร์ดการ์ด)',20,'กระดาษที่บอกว่าเจ้าของยังมีชีวิตอยู่ไหม',{use(S){S.flags.vivre=1;}}),
-    RA('o_fruit','ผลปีศาจไม่ทราบชื่อ',500,'ลายวงก้นหอย รสชาติแย่ที่สุดในโลก ว่ายน้ำไม่ได้อีกตลอดชีวิต',{when:S=>S.age>=8&&!powersOf(S).some(p=>/^df_/.test(p)),use(S){gainPower(pick(['df_para','df_zoan','df_logia']),'คุณกัดผลปีศาจคำเดียว ร่างกายเปลี่ยนไปตลอดกาล');}}),
+    RA('o_fruit','ผลปีศาจไม่ทราบชื่อ',500,'ลายวงก้นหอย รสชาติแย่ที่สุดในโลก ว่ายน้ำไม่ได้อีกตลอดชีวิต',{when:S=>S.age>=8&&!powersOf(S).some(p=>/^df_/.test(p)),use(S){const L=typeof dfAvail==='function'?dfAvail(S):[];if(L.length){dfEat(S,pick(L));return;}gainPower(pick(['df_para','df_zoan','df_logia']),'คุณกัดผลปีศาจคำเดียว ร่างกายเปลี่ยนไปตลอดกาล');}}),
   ],
   bleach:[
     WP('b_bokken','ดาบไม้เคนโด้',4,4,'อาวุธเดียวที่คนธรรมดาพกได้'),
@@ -12257,7 +12257,7 @@ const REPL=new Set(['titan','oozaru','bijuu','zoan','steamblast','rockthrow','bi
 Object.assign(FORMS,{titan:{n:'ไททัน',look:{},aura:null,persist:1,titan:1},oozaru:{n:'โอซารุ',look:{},aura:['#7a5a32','#e43b44'],big:1,persist:1},bijuu:{n:'ร่างสัตว์หางเต็มตัว',look:{whisker:1},aura:['#f77622','#e43b44'],sp:'#feae34',big:1,persist:1},zoan:{n:'ร่างโซออน',look:{},aura:['#a07a4f','#5a4020'],persist:1}});
 {const c0=cutIn;cutIn=function(t,ch,anim){const keep=BTFORM&&formOf(BTFORM)?.persist&&!formOf(anim)?.persist?BTFORM:null;const r=c0.apply(this,arguments);if(keep)BTFORM=keep;return r;};}
 {const c0=chibi;chibi=function(px,x,gy,o){try{if(o&&o.formAura){const anchor={top:gy-30,left:x-8,w:17,h:30,cx:x,hx:x+3,hy:gy-15,ey:gy-21,dir:o.dir??1};
-    if(REPL.has(LASTCI.a)&&performance.now()-LASTCI.t<2600)return anchor;
+    if((REPL.has(LASTCI.a)||(typeof replExtra==='function'&&replExtra(LASTCI.a)))&&performance.now()-LASTCI.t<2600)return anchor;
     const F=formOf(o.formAura);if(F&&F.titan&&typeof titanBody==='function'){const look=(typeof TLOOK!=='undefined'&&(TLOOK[S?.flags?.shiftId]||TLOOK.attack))||{};titanBody(px,x,gy,42,look);return{...anchor,top:gy-42,hy:gy-24};}}}catch(e){}
   return c0.apply(this,arguments);};}
 /* ===== stands that are not a humanoid body, drawn by the lore ===== */
@@ -12353,6 +12353,124 @@ HM('jjk',{id:'hm_geto',y:2017,mo:11,who:'geto',t:'ขบวนพาเหรด
   text:'เกะโต้นั่งพิงกำแพงในตรอกมืด แขนข้างหนึ่งขาดหายไป เขายังยิ้ม "สุดท้ายแล้วก็ต้องเป็นนายสินะ" โกโจเดินเข้ามาช้าๆ',
   save:{l:'ขวางระหว่างโกโจกับเกะโต้',g:'brave hero',p:.5,d:'ถูกพลังที่เหลือของเกะโต้ปะทะจนตายในตรอก',fm:25,s:'โกโจหยุดมือ ทั้งสองคนพูดกันเป็นครั้งแรกในรอบสิบปี เกะโต้ถูกผนึกพลังไว้แทนที่จะตาย และไม่มีร่างให้เคนจาคุยึดไปใช้',m:'ยืนขวางในตรอกคืนนั้น'},
   fate:'โกโจพูดบางอย่างที่ไม่มีใครได้ยิน แล้วเกะโต้ก็หลับตาลงตลอดกาล'});
+/* Lookism: Gun Park kills Yamazaki Shintaro, the man who killed his father */
+if(WORLDS.lookism){LK.castMeta.shintaro={b:1955,d:2009,at:S=>S.place==='osaka'&&S.year>=1975};
+addCanon('lookism',[{id:'lk_gunshin',y:2009,mo:2,t:'พัค จงกอนล้างแค้นให้พ่อ',major:true,play(S){
+  if(S.flags.saved_shintaro){news(this.t,'พัค จงกอนบุกคฤหาสน์ยามาซากิ แต่ชินทาโร่รอดไปได้ เพราะมีคนยืนขวางดาบในคืนนั้น');return;}
+  news(this.t,'คืนหนึ่งในโอซาก้า พัค จงกอน เด็กชายที่รอดจากคืนรัฐประหารเมื่อสิบสามปีก่อน เดินเข้าห้องของยามาซากิ ชินทาโร่ แล้วฆ่าคนที่ฆ่าพ่อของเขา ตระกูลยามาซากิเงียบไปทั้งตระกูล');
+  if((S.place==='osaka'||hasB('yamazaki')||hasB('yamaaff')||hasB('yamaexec')||S.job?.id==='yakuza')&&S.age>=16)return{text:'ไฟในคฤหาสน์ยามาซากิดับลงทีละดวง ชายหนุ่มสวมแว่นถอดแว่นออก ดวงตาของเขาดำสนิทแต่ตาดำเป็นสีขาว เขาเดินผ่านคุณไปที่ห้องของชินทาโร่',choices:[
+    {l:'หลีกทางให้พัค จงกอน',g:'safe loyal',f(S){bond('gun',10);say('เขาพยักหน้าให้คุณครั้งเดียวก่อนเดินเข้าห้อง เสียงในห้องเงียบลงในเวลาไม่ถึงนาที','plain');remember('คืนที่จงกอนล้างแค้น','เขาพยักหน้าให้คุณ','dark',2);}},
+    {l:'สู้กับพัค จงกอนเพื่อปกป้องชินทาโร่',g:'brave dark',foe:['พัค จงกอน',97,'b'],f(S){if(!live(.15+fitb(500),'ถูกพัค จงกอนฆ่าในคืนล้างแค้น'))return;S.flags.saved_shintaro=1;fm(20);bond('gun',-30);say('จงกอนถอยออกไปพร้อมแผลที่คุณฝากไว้ ชินทาโร่รอดชีวิต แต่จงกอนจำหน้าคุณได้แล้ว','power');remember('ขวางจงกอน','ชินทาโร่รอดเพราะคุณ','fight',3);}},
+    {l:'ช่วยจงกอนเปิดประตูห้อง',g:'dark loyal',f(S){bond('gun',20);dk(8);say('คุณเปิดประตูให้ เขาไม่พูดอะไร แต่ตั้งแต่คืนนั้นคุณกลายเป็นคนที่เขาจำชื่อได้','bad');}}]};}}]);}
+
+/* ===== v58: every devil fruit gets its own effect, pose and battle form by the lore ===== */
+const DFX={
+  'ผลคุโมะคุโมะ':{a:'df_cloud',c:'#f0ece0',ch:'ร่างของคุณสลายเป็นเมฆ ทุกหมัดของศัตรูทะลุผ่านไป แล้วเมฆก็ควบแน่นเป็นกำปั้นยักษ์',aura:['#f0ece0','#c0cbdc'],pose:'up'},
+  'ผลโอโตะโอโตะ':{a:'df_sound',c:'#b55088',ch:'คุณปรบมือครั้งเดียว คลื่นเสียงม้วนเป็นวงแหวนพุ่งออกไปจนกระจกแตกทั้งถนน',aura:['#b55088','#f6757a'],pose:'hold'},
+  'ผลอุชิอุชิ โมเดลกระทิง':{a:'df_bull',c:'#8a5a32',ch:'กล้ามเนื้อพองจนเสื้อขาด เขาโค้งงอกจากหัว แล้วร่างครึ่งคนครึ่งกระทิงพุ่งชน',aura:['#8a5a32','#e43b44'],pose:'arm'},
+  'ผลฮาริฮาริ':{a:'df_needle',c:'#c0cbdc',ch:'เข็มเหล็กนับร้อยงอกออกจากผิวหนังทั่วตัว แล้วยิงออกไปพร้อมกัน',aura:['#8b9bb4','#e8f0ff'],pose:'up'},
+  'ผลโทริโทริ โมเดลเหยี่ยว':{a:'df_falcon',c:'#a07a4f',ch:'ปีกสีน้ำตาลกางออกจากแผ่นหลัง คุณบินขึ้นแล้วดิ่งลงมาด้วยกรงเล็บ',aura:['#a07a4f','#feae34'],pose:'up'},
+  'ผลนุมะนุมะ':{a:'df_swamp',c:'#5a4a2a',ch:'พื้นใต้เท้าศัตรูกลายเป็นหนองไร้ก้น ทุกอย่างที่ตกลงไปไม่เคยกลับขึ้นมา',aura:['#5a4a2a','#3a2a1a'],pose:'hold'},
+  'ผลโคโรโคโระ':{a:'df_roll',c:'#feae34',ch:'คุณม้วนตัวเป็นลูกบอล หมุนจนพื้นถนนลุกเป็นไฟแล้วพุ่งชน',aura:['#feae34','#e43b44'],pose:'arm'},
+  'ผลทาเตะทาเตะ':{a:'df_wall',c:'#8bd3ff',ch:'คุณวาดมือกลางอากาศ กำแพงล่องหนตั้งขึ้นรับทุกการโจมตี แล้วผลักกลับไปทั้งหมด',aura:['#8bd3ff','#e8f4ff'],pose:'up'},
+};
+/* a fruit eaten without a name (the shop, a bloodline) becomes one of the real fruits of its type */
+function dfOf(S){if(!S)return null;if(!S.flags.df||!DFX[S.flags.df]){const ty=['df_logia','df_para','df_zoan'].find(t=>(S.powers||[]).includes(t));if(!ty)return null;const L=DFRUIT.filter(f=>f[2]===ty);if(!L.length)return null;S.flags.df=L[hash(String(S.name)+ty)%L.length][0];}return DFX[S.flags.df]||null;}
+{const t=(TECHDEF.op||[]).find(x=>x.id==='df');if(t){const a0=t.anim,c0=t.chant;t.anim=S=>dfOf(S)?.a||(typeof a0==='function'?a0(S):a0);t.chant=S=>{const d=dfOf(S);return d?`${S.flags.df}: ${d.ch}`:(typeof c0==='function'?c0(S):c0);};t.col=t.col||'#feae34';}}
+/* battle form and pose per fruit */
+for(const [n,d] of Object.entries(DFX)){FORMS[d.a]={n,look:{},aura:d.aura,sp:d.a==='df_needle'?'#ffffff':null};FPOSE[d.a]=d.pose;}
+const DFP=(px,x,y,w,h,c)=>px(Math.round(x),Math.round(y),Math.max(1,w),Math.max(1,h),c);
+Object.assign(ANIM,{
+  df_cloud(px,tt,hx,hy,col,LW,LH,gy){const k=Math.min(1,tt/900);for(let i=0;i<9;i++){const a=i/9*6.283+tt/900,r=12+k*22;disc(px,hx-6+Math.cos(a)*r,hy-6+Math.sin(a)*r*.6,5+(i%3),i%2?'rgba(240,236,224,.85)':'rgba(200,210,225,.8)');}
+    if(tt>900){const q=Math.min(1,(tt-900)/700),x=hx+20+q*(LW*.55);disc(px,x,hy-4,10,'rgba(240,236,224,.95)');for(const [dx,dy] of [[-8,-6],[8,-6],[-9,4],[9,4]])disc(px,x+dx,hy-4+dy,5,'rgba(240,236,224,.95)');}},
+  df_sound(px,tt,hx,hy,col,LW,LH,gy){for(let i=0;i<6;i++){const q=((tt/700)+i/6)%1,r=6+q*LW*.5;for(let a=-.7;a<=.7;a+=.07)DFP(px,hx+Math.cos(a)*r,hy-4+Math.sin(a)*r,2,2,`rgba(181,80,136,${(1-q).toFixed(2)})`);}
+    for(let i=0;i<5;i++){const x=hx+20+((tt/6+i*40)%(LW*.6)),y=hy-14-(i%3)*6+Math.sin(tt/120+i)*3;DFP(px,x,y,2,5,'#f6757a');DFP(px,x+2,y,3,1,'#f6757a');disc(px,x,y+5,2,'#f6757a');}},
+  df_bull(px,tt,hx,hy,col,LW,LH,gy){const q=Math.min(1,tt/1300),x=hx-10+q*LW*.55,y=gy-22;DFP(px,x-14,y,30,16,'#7a4a22');DFP(px,x+12,y-6,12,12,'#8a5a32');DFP(px,x+14,y-10,2,5,'#f0ece0');DFP(px,x+21,y-10,2,5,'#f0ece0');DFP(px,x+18,y-2,2,2,'#e43b44');
+    for(const lx of [-12,-4,6,12])DFP(px,x+lx,y+16,4,6,'#5a3a1a');for(let i=0;i<10;i++)disc(px,x-18-i*5,gy-2-((i*7)%6),2+(i%3),'rgba(214,196,160,.6)');if(tt>1250)for(let i=0;i<12;i++)DFP(px,x+24+Math.cos(i)*10*(tt-1250)/200,y+Math.sin(i)*10*(tt-1250)/200,3,3,'#feae34');},
+  df_needle(px,tt,hx,hy,col,LW,LH,gy){const k=Math.min(1,tt/700);for(let i=0;i<24;i++){const a=i/24*6.283,len=4+k*10;for(let s=0;s<len;s++)DFP(px,hx-6+Math.cos(a)*(8+s),hy-6+Math.sin(a)*(8+s),1,1,s===Math.floor(len)-1?'#ffffff':'#8b9bb4');}
+    if(tt>700){for(let i=0;i<10;i++){const q=((tt-700)/600+i*.08)%1,x=hx+10+q*LW*.6,y=hy-14+((i*7)%22);DFP(px,x,y,8,1,'#c0cbdc');DFP(px,x+8,y,2,1,'#ffffff');}}},
+  df_falcon(px,tt,hx,hy,col,LW,LH,gy){const fl=Math.sin(tt/90)*6,k=Math.min(1,tt/600);for(const d of [-1,1])for(let i=0;i<16*k;i++)DFP(px,hx-6+d*(4+i),hy-10-i*.4+(d*fl*i/16),2,3,i%3?'#a07a4f':'#5a3a1a');
+    if(tt>900){const q=Math.min(1,(tt-900)/600),x=hx+q*LW*.55,y=hy-30+q*30;for(let i=0;i<12;i++)DFP(px,x-i*3,y-i*1.6,2,1,'rgba(254,174,52,.6)');DFP(px,x,y,4,4,'#a07a4f');DFP(px,x+4,y+2,2,1,'#feae34');}},
+  df_swamp(px,tt,hx,hy,col,LW,LH,gy){const k=Math.min(1,tt/1000),cx=hx+LW*.45,w=k*LW*.4;for(let j=0;j<5;j++)DFP(px,cx-w/2+j*2,gy-2+j,w-j*4,1,j%2?'#3a2a1a':'#5a4a2a');
+    for(let i=0;i<7;i++){const b=((tt/400)+i/7)%1;if(b<.6)disc(px,cx-w/2+((i*29)%Math.max(1,w)),gy-1-b*4,1+(i%2),'#6a5a3a');}if(tt>1000)for(let i=0;i<3;i++){const h=Math.min(10,(tt-1000)/60);DFP(px,cx-10+i*10,gy-h,2,h,'#5a4a2a');DFP(px,cx-11+i*10,gy-h-1,4,2,'#5a4a2a');}},
+  df_roll(px,tt,hx,hy,col,LW,LH,gy){const q=Math.min(1,tt/1200),x=hx-6+q*LW*.6,r=8,a=tt/40;disc(px,x,gy-r-1,r,'#feae34');disc(px,x,gy-r-1,r-2,'#e43b44');DFP(px,x+Math.cos(a)*5,gy-r-1+Math.sin(a)*5,2,2,'#ffffff');
+    for(let i=0;i<8;i++)DFP(px,x-r-6-i*6,gy-r-4+((i*5)%9),5,1,'rgba(254,174,52,.6)');if(q>.2)for(let i=0;i<6;i++)disc(px,x-r-((i*11+tt/20)%30),gy-2,1+(i%2),'rgba(228,59,68,.6)');},
+  df_wall(px,tt,hx,hy,col,LW,LH,gy){const k=Math.min(1,tt/600),x=hx+24,h=k*(gy-hy+30);px(x,gy-h,6,h,'rgba(139,211,255,.28)');px(x,gy-h,1,h,'rgba(232,244,255,.8)');px(x+5,gy-h,1,h,'rgba(232,244,255,.5)');
+    if(tt>800){const q=((tt-800)/500)%1;ring(px,x+3,hy-4,Math.round(4+q*14),`rgba(232,244,255,${(1-q).toFixed(2)})`,Math.round((4+q*14)*1.4));}if(tt>1300){const q=Math.min(1,(tt-1300)/500);px(x+6+q*LW*.4,hy-14,4,30,'rgba(139,211,255,.45)');}},
+});
+for(const k of ['df_cloud','df_needle','df_falcon'])if(!CIUNDER.includes(k))CIUNDER.push(k);
+for(const k of ['df_bull','df_roll'])REPL.add(k);
+{const t=(TECHDEF.op||[]).find(x=>x.id==='df');if(t){const n0=t.n;try{Object.defineProperty(t,'n',{configurable:true,enumerable:true,get(){try{return S&&dfOf(S)?S.flags.df:n0;}catch(e){return n0;}}});}catch(e){}}}
+
+/* ===== the fruits of the story: find them at sea, then eat, sell, keep or throw them away ===== */
+/* [name, what it does, type, effect shape, colour, canon eater whose history changes if you eat it first, from year, to year] */
+const DFALL=[
+  ['ผลยุกิยุกิ','ร่างกายกลายเป็นหิมะ','df_logia','cloud','#f0f4ff','โมเน่ต์',1450,1517],
+  ['ผลกะสึกะสึ','ร่างกายกลายเป็นแก๊สพิษ','df_logia','cloud','#9fd8a0','ซีซาร์ คราวน์',1450,1505],
+  ['ผลเมระเมระ','ร่างกายกลายเป็นไฟ','df_logia','beam','#f77622','ซาโบ้',1522,1524],
+  ['ผลสุเบะสุเบะ','ผิวลื่นจนทุกการโจมตีไถลออก','df_para','ring','#f6c0d0','อัลวิด้า',1450,1505],
+  ['ผลบาคุบาคุ','กินได้ทุกอย่าง แล้วแปลงร่างเป็นสิ่งที่กิน','df_para','blob','#8b9bb4','วาโพล',1450,1500],
+  ['ผลโดรุโดรุ','สร้างเทียนไขแข็งดุจเหล็ก','df_para','spikes','#f0ece0','มิสเตอร์ 3',1450,1505],
+  ['ผลบาริบาริ','สร้างบาเรียที่ไม่มีอะไรทะลุได้','df_para','cage','#8bd3ff','บาร์โธโลมิว',1450,1515],
+  ['ผลโนโระโนโระ','ยิงลำแสงที่ทำให้ทุกอย่างช้าลง','df_para','beam','#b8a0e0','ฟ็อกซี่',1450,1505],
+  ['ผลโฮโระโฮโระ','ปล่อยวิญญาณที่ทำให้คนหมดกำลังใจ','df_para','ghost','#f0ece0','เพโรน่า',1450,1510],
+  ['ผลซึเกะซึเกะ','ทำให้ตัวเองและสิ่งที่จับล่องหน','df_para','ring','#c0cbdc','อับซาลอม',1450,1515],
+  ['ผลโดคุโดคุ','สร้างและควบคุมพิษ','df_para','cloud','#68386c','มาเจลแลน',1450,1500],
+  ['ผลบาเนะบาเนะ','ขากลายเป็นสปริง','df_para','spikes','#c0cbdc','เบลลามี่',1450,1510],
+  ['ผลคาเงะคาเงะ','ควบคุมและขโมยเงา','df_para','ghost','#1c1a26','เกคโค โมเรีย',1450,1490],
+  ['ผลอิชิอิชิ','หลอมรวมกับหินและควบคุมหิน','df_para','spikes','#8a7a6a','พิก้า',1450,1505],
+  ['ผลมาเนะมาเนะ','ก๊อปปี้หน้าตาของคนที่เคยแตะ','df_para','clone','#f6757a','มิสเตอร์ 2',1450,1505],
+  ['ผลโอริโอริ','สร้างกรงเหล็กจากแขน','df_para','cage','#5a6988','ฮินะ',1450,1505],
+  ['ผลจิกิจิกิ','ควบคุมแม่เหล็ก ดึงเหล็กทุกชิ้นมาเป็นแขน','df_para','ring','#a22633','ยูสตาส คิด',1450,1510],
+  ['ผลซาบิซาบิ','ทำให้เหล็กทุกชิ้นที่แตะเป็นสนิม','df_para','ring','#b86f50','ชู',1450,1505],
+  ['ผลโฮบิโฮบิ','เปลี่ยนคนเป็นของเล่น และลบความทรงจำของทุกคนเกี่ยวกับเขา','df_para','toy','#f6a0b8','ชูก้า',1450,1505],
+  ['ผลบาระบาระ','แยกร่างเป็นชิ้นๆ ฟันไม่เข้า','df_para','clone','#e43b44','บากี้',1450,1490],
+  ['ผลอุชิอุชิ โมเดลยีราฟ','แปลงร่างเป็นยีราฟ คอยาวยืดได้','df_zoan','beast','#e2c15a','คาคุ',1450,1510],
+  ['ผลอินุอินุ โมเดลหมาป่า','แปลงร่างเป็นหมาป่า','df_zoan','beast','#8b9bb4','จาบูร่า',1450,1510],
+  ['ผลเนโกะเนโกะ โมเดลเสือดาว','แปลงร่างเป็นเสือดาวที่ดุร้ายที่สุดใน CP9','df_zoan','beast','#e2c15a','ร็อบ ลุจจี้',1450,1505],
+  ['ผลเฮบิเฮบิ โมเดลอนาคอนดา','แปลงร่างเป็นงูยักษ์','df_zoan','beast','#3e8948','ซันเดอร์โซเนีย',1450,1505],
+  ['ผลริวริว โมเดลอัลโลซอรัส','แปลงร่างเป็นไดโนเสาร์โบราณ','df_zoan','beast','#5a8a3a','เอ็กซ์ เดรค',1450,1510],
+  ['ผลโซโซ โมเดลแมมมอธ','แปลงร่างเป็นแมมมอธยักษ์','df_zoan','beast','#7a5a3a','แจ็ก',1450,1505],
+  ['ผลโทริโทริ โมเดลฟีนิกซ์','แปลงร่างเป็นนกฟีนิกซ์ เปลวไฟสีฟ้ารักษาทุกบาดแผล','df_zoan','wings','#2ce8f5','มาร์โค',1450,1490],
+  ['ผลอินุอินุ โมเดลจิ้งจอกเก้าหาง','แปลงร่างเป็นจิ้งจอกเก้าหางในตำนานวาโนะ','df_zoan','beast','#f0ece0','',1450,1525],
+];
+for(const f of DFALL){if(!DFRUIT.some(x=>x[0]===f[0]))DFRUIT.push([f[0],f[1],f[2]]);if(!DFX[f[0]])DFX[f[0]]={a:'df_gen',c:f[4],sh:f[3],ch:f[1],aura:[f[4],'#ffffff'],pose:f[3]==='beast'?'arm':f[3]==='beam'?'hold':'up',own:f[5]};}
+FORMS.df_gen={n:'พลังผลปีศาจ',look:{},get aura(){const d=S&&dfOf(S);return d?[d.c,'#ffffff']:['#feae34','#ffffff'];}};FPOSE.df_gen='hold';
+/* one painter that takes each fruit's shape and colour */
+ANIM.df_gen=function(px,tt,hx,hy,col,LW,LH,gy){const d=(S&&dfOf(S))||{sh:'ring',c:'#feae34'},c=d.c,k=Math.min(1,tt/800),tx=hx+LW*.5;
+  if(d.sh==='ring')for(let i=0;i<5;i++){const q=((tt/650)+i/5)%1;ring(px,hx-4,hy-4,Math.round(6+q*LW*.35),c,Math.round((6+q*LW*.35)*.6));}
+  if(d.sh==='beam'){if(tt>500){const w=Math.min(LW*.6,(tt-500)/2);px(hx+4,hy-6,w,8,c);px(hx+4,hy-4,w,4,'#ffffff');disc(px,hx+4+w,hy-2,7,c);}else disc(px,hx+2,hy-2,2+Math.floor(tt/80),c);}
+  if(d.sh==='cloud')for(let i=0;i<14;i++){const a=i*1.9+tt/700,r=8+k*28+(i%4)*3;disc(px,hx-4+Math.cos(a)*r*1.3,hy-6+Math.sin(a)*r*.5,4+(i%3),c);}
+  if(d.sh==='spikes')for(let i=0;i<9;i++){const q=Math.min(1,Math.max(0,(tt-i*90)/500)),x=hx+16+i*((LW*.5)/9),h=q*(18+(i%3)*6);px(x,gy-h,3,h,c);px(x+1,gy-h-2,1,2,'#ffffff');}
+  if(d.sh==='cage'){const x=tx-14,h=k*40;for(let i=0;i<7;i++)px(x+i*5,gy-h,1,h,c);px(x,gy-h,31,2,c);px(x,gy-2,31,2,c);}
+  if(d.sh==='blob'){const r=Math.round(6+k*16);disc(px,hx+20+k*30,gy-r,r,c);disc(px,hx+20+k*30-r*.4,gy-r*1.3,Math.round(r*.4),'#ffffff');}
+  if(d.sh==='ghost')for(let i=0;i<5;i++){const x=hx+10+((tt/9+i*40)%(LW*.6)),y=hy-20+Math.sin(tt/200+i)*8;disc(px,x,y,5,c);px(x-5,y,10,6,c);px(x-2,y-2,1,2,'#1c1a1f');px(x+1,y-2,1,2,'#1c1a1f');}
+  if(d.sh==='clone')for(let i=1;i<=3;i++){const x=hx+i*16*k;px(x-3,gy-26,8,8,c);px(x-4,gy-18,10,12,shade(c,.8));px(x-3,gy-6,3,6,shade(c,.6));px(x+2,gy-6,3,6,shade(c,.6));}
+  if(d.sh==='toy')for(let i=0;i<6;i++){const hop=Math.abs(Math.sin(tt/180+i))*6,x=hx+14+i*12;px(x,gy-8-hop,6,8,i%2?c:'#feae34');px(x+1,gy-11-hop,4,3,'#f0ece0');}
+  if(d.sh==='wings'){const fl=Math.sin(tt/120)*5;for(const s of [-1,1])for(let i=0;i<20*k;i++){const yy=hy-12-i*.5+s*fl*i/20;px(hx-6+s*(4+i),yy,2,3,i%3?c:'#fee761');}for(let i=0;i<10;i++){const q=((tt/500)+i/10)%1;px(hx-12+((i*7)%16),hy-q*30,2,3,c);}}
+  if(d.sh==='beast'){const q=Math.min(1,tt/1200),x=hx-6+q*LW*.5,y=gy-20;px(x-12,y,26,13,c);px(x+12,y-7,10,10,shade(c,1.1));px(x+18,y-4,2,2,'#1c1a1f');for(const lx of [-10,-3,5,11])px(x+lx,y+13,4,7,shade(c,.7));px(x-16,y+2,5,2,c);for(let i=0;i<8;i++)disc(px,x-16-i*5,gy-2,2,'rgba(214,196,160,.55)');}};
+/* only zoan beasts replace the whole body, so only they hide the human sprite */
+function replExtra(a){try{return a==='df_gen'&&dfOf(S)?.sh==='beast';}catch(e){return false;}}
+/* the voyage: a new place in the One Piece world */
+const dfAvail=S=>DFALL.filter(f=>S.year>=f[6]&&S.year<=f[7]&&!(S.flags.dfGone||[]).includes(f[0])&&S.flags.df!==f[0]);
+function dfEat(S,f){if(S.flags.df||(S.powers||[]).some(p=>/^df_/.test(p))){if(!live(0,'ร่างกายแตกสลายจากการกินผลปีศาจผลที่สอง'))return;}
+  S.flags.df=f[0];gainPower(f[2],`คุณกัด${f[0]}คำแรก รสชาติแย่ที่สุดในชีวิต แต่ร่างกายของคุณ${f[1]} และคุณจะว่ายน้ำไม่ได้อีกตลอดไป`);S.flags.dfGone=[...(S.flags.dfGone||[]),f[0]];
+  if(f[5]){S.flags.dfStolen=[...(S.flags.dfStolen||[]),f[5]];news('ประวัติศาสตร์เปลี่ยน',`ผลที่${f[5]}ควรจะได้กินในอนาคต ตกเป็นของคุณไปแล้ว`);}remember(`กิน${f[0]}`,'ผู้ใช้พลังผลปีศาจ','power',3);}
+function dfKeepOpts(S){return(S.flags.dfBag||[]).map(n=>{const f=DFALL.find(x=>x[0]===n)||DFRUIT.find(x=>x[0]===n);return f?{l:`กิน${n}ที่เก็บไว้`,g:'curious brave',h:f[1],f(S){S.flags.dfBag=(S.flags.dfBag||[]).filter(x=>x!==n);dfEat(S,f.length>5?f:[f[0],f[1],f[2]]);}}:null;}).filter(Boolean);}
+TOWN.push({w:'op',n:'ออกเรือตามหาผลปีศาจ',d:'ล่องเรือไปเกาะที่ไม่มีในแผนที่ ตามข่าวลือเรื่องผลไม้ลายก้นหอย',min:12,c:8,sc:'port',go(S){
+  const keep=dfKeepOpts(S),L=dfAvail(S),luck=.28+(S.sk?.ride||0)/400;
+  if(L.length&&chance(luck)){const f=pick(L);S.flags.dfGone=[...(S.flags.dfGone||[]),f[0]];
+    return{text:`หลังล่องเรือมาสามสัปดาห์ คุณพบหีบเก่าในถ้ำบนเกาะร้าง ข้างในมีผลไม้ลายก้นหอยหนึ่งลูก คู่มือที่ขาดครึ่งบอกว่ามันคือ${f[0]}: ${f[1]}`,choices:[
+      {l:'กินมันเลย',g:'curious brave',h:`ได้พลัง${POWERS[f[2]]?.n||''} · ว่ายน้ำไม่ได้อีกตลอดชีวิต`,f(S){dfEat(S,f);}},
+      {l:'ขายให้นายหน้าตลาดมืด',g:'selfish',h:'เงินก้อนโต',f(S){const m=R(60,140);mon(m);dk(2);say(`นายหน้าตลาดมืดจ่ายเงินให้ ${fmt(m)} โดยไม่ถามอะไรสักคำ`,'good');}},
+      {l:'เก็บไว้ก่อน ตัดสินใจทีหลัง',g:'safe',f(S){S.flags.dfBag=[...(S.flags.dfBag||[]),f[0]];say(`คุณห่อ${f[0]}ด้วยผ้าแล้วซ่อนไว้ใต้เตียงในเรือ`,'plain');}},
+      {l:'โยนทิ้งลงทะเล',g:'kind safe',f(S){say('ผลไม้ลอยหายไปในคลื่น ว่ากันว่าผลปีศาจจะไปเกิดใหม่ที่ไหนสักแห่งในโลก','plain');}},...keep]};}
+  const o=pick(['storm','king','treasure','nothing']);
+  if(o==='king')return{text:'เจ้าทะเลตัวยาวเท่าเกาะโผล่ขึ้นมาข้างเรือ ตาสีแดงจ้องคุณ',choices:[{l:'สู้กับเจ้าทะเล',g:'brave',foe:['เจ้าทะเล',72],f(S){if(!live(.55+fitb(300),'ถูกเจ้าทะเลกลืนทั้งเรือ'))return;fm(6);mon(R(10,25));say('คุณขายเนื้อเจ้าทะเลได้ราคาดีที่ท่าเรือถัดไป','good');}},{l:'บังคับเรือเข้าแนวหินโสโครก',g:'safe',f(S){if(live(.8,'เรือแตกกลางแนวหินโสโครก'))say('เรือคุณขูดหินจนเป็นรอย แต่รอดมาได้','plain');}},...keep]};
+  if(o==='storm'){skill('ride',3);return{text:'พายุบนแกรนด์ไลน์เปลี่ยนทิศทุกห้านาที คุณไม่เจออะไรนอกจากคลื่นสูงเท่าเสากระโดง แต่ฝีมือเดินเรือของคุณดีขึ้น',choices:[{l:'กลับท่าเรือ',g:'safe',f(){}},...keep]};}
+  if(o==='treasure'){const m=R(8,30);mon(m);return{text:`ไม่มีผลปีศาจ แต่คุณพบเหรียญทองเก่าในซากเรือ มูลค่า ${fmt(m)}`,choices:[{l:'กลับท่าเรือ',g:'safe',f(){}},...keep]};}
+  return{text:'คุณตามข่าวลือไปถึงเกาะแล้วพบแค่ต้นไม้ธรรมดา ผลไม้ลายก้นหอยที่ชาวเกาะพูดถึงเป็นแค่แตงโมทาสี',choices:[{l:'กลับท่าเรือ',g:'safe',f(){}},...keep]};}});
+PLACESC['ออกเรือตามหาผลปีศาจ']='port';
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
