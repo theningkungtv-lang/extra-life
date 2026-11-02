@@ -3399,6 +3399,7 @@ function buildSprite(o){
   if(o.lscar){set(6,ey+3,'#a5442c');set(7,ey+3,'#a5442c');}
   if(o.stitch){for(let x=4;x<12;x+=2)set(x,hy+1,'#a5442c');set(8,hy+2,'#a5442c');}
   if(o.marks2){set(5,ey+2,INK);set(5,ey+3,INK);set(11,ey+2,INK);set(11,ey+3,INK);}
+  if((o.lk||o.lkw)&&typeof lkSprHook==='function')lkSprHook(o,set,R,{hy,by,bh,ly,lh,al,ey,sz,skin,hair,out,sl,f,pose,get:(x,y)=>(x>=0&&y>=0&&x<Wd&&y<Hh)?g[y*Wd+x]:null});
   /* outline every filled shape, then paint */
   cv=document.createElement('canvas');cv.width=Wd+2;cv.height=Hh+2;const c=cv.getContext('2d');
   const at=(x,y)=>x>=0&&y>=0&&x<Wd&&y<Hh&&g[y*Wd+x];
@@ -11257,6 +11258,177 @@ questResolve=async function(pr,seed,qi,mine){if(!S||!S.alive)return;const n=onTx
     remember(`ภารกิจ [${rk}] กับ ${n} (ผู้เล่น)`,Q[0],'fight',ro>=2?3:2);}
   else{st('hp',-R(6,12)*(1+ro*.3));say(`ภารกิจ "${Q[0]}" กับ ${n} (ผู้เล่น) ล้มเหลว คุณกลับมาพร้อมบาดแผล`,'bad');if(ro>=3&&S.st.hp<=0)die(`ตายระหว่างภารกิจ "${Q[0]}" กับ ${n} (ผู้เล่น)`);}
   render();};
+
+/* ===== Lookism v56: manhwa faces, lore looks, every family, Shintaro's coup ===== */
+const lkLum=h=>{const n=parseInt(String(h).slice(1),16);return((n>>16)*.3+((n>>8)&255)*.59+(n&255)*.11)/255;};
+const lkMix=(a,b,k)=>{const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16),f=s=>Math.round(((A>>s)&255)*(1-k)+((B>>s)&255)*k);return'#'+[f(16),f(8),f(0)].map(v=>v.toString(16).padStart(2,'0')).join('');};
+/* called from buildSprite before outlining: o.lk holds the lore look, o.lkw marks any Lookism extra */
+function lkSprHook(o,set,R,G){
+  const L=o.lk||{},{hy,by,bh,al,ey,sz,skin:sk,hair,sl,pose}=G,D=INK,ad=sz==='adult',big=ad||sz==='teen',fem=o.sex==='f';
+  const sw=G.f===1?1:G.f===3?-1:0,isH=(x,y)=>G.get(x,y)===hair,bare=o.st==='bald';
+  /* hair */
+  const hs=L.hs;
+  if(hs&&!bare){
+    if(hs==='slick'||hs==='slickbang'){for(const x of [5,6,7,8,9,10])set(x,hy+3,sk);set(5,hy+4,sk);set(8,hy+4,sk);set(6,hy,shade(hair,1.4));set(9,hy,shade(hair,1.4));set(11,hy+1,shade(hair,1.3));
+      if(L.sides){for(let y=hy+3;y<=hy+6;y++)set(3,y,null);set(12,hy+3,null);set(12,hy+4,null);set(4,hy+5,shade(hair,.7));set(4,hy+6,sk);}
+      if(hs==='slickbang'){set(8,hy+3,hair);set(8,hy+4,hair);set(9,hy+5,hair);}}
+    if(hs==='swept'){for(const x of [6,7,8,9])set(x,hy+3,sk);set(8,hy+4,sk);set(5,hy+4,hair);R(2,hy+3,1,3,hair);set(10,hy+3,hair);set(7,hy,shade(hair,1.4));}
+    if(hs==='center'){set(8,hy-1,sk);set(8,hy,shade(hair,.6));for(const x of [7,8,9])set(x,hy+3,sk);set(8,hy+4,sk);R(11,hy+5,2,2,hair);R(12,hy+3,1,5,hair);R(2,hy+3,1,4,hair);}
+    if(hs==='veil'){R(9,hy+3,3,4,hair);set(8,hy+3,hair);R(12,hy+3,1,7,hair);R(2,hy+3,2,7,hair);set(13,hy+9,hair);set(1,hy+8,hair);set(10,hy+7,shade(hair,.8));}
+    if(hs==='mess'){R(2,hy+2,2,9,hair);R(12,hy+3,2,8,hair);for(const [x,y] of [[2,-1],[5,-2],[9,-2],[12,-1],[1,1],[14,2],[1,6],[14,7],[1,10],[14,10]])set(x,hy+y,hair);}
+    if(hs==='buzz'){set(4,hy-1,null);set(11,hy-1,null);R(5,hy-1,6,1,shade(hair,.85));for(const x of [5,6,7,8,9,10])set(x,hy+3,sk);set(5,hy+4,sk);set(8,hy+4,sk);
+      for(let y=hy+3;y<=hy+6;y++){set(3,y,null);set(4,y,sk);}set(12,hy+3,null);set(12,hy+4,null);set(11,hy+3,sk);set(11,hy+4,sk);}
+  }
+  if(L.roots&&!bare){R(4,hy-1,8,1,L.roots);set(5,hy,L.roots);set(9,hy,L.roots);}
+  if(L.cap){const c=L.cap;R(3,hy-1,10,3,c);R(4,hy-2,8,1,c);R(3,hy+2,11,1,shade(c,.6));set(7,hy-2,shade(c,1.35));}
+  if(L.hat){const c=L.hatC||'#a08860';if(L.hat==='fedora'){R(4,hy-3,8,3,c);R(2,hy,12,1,c);R(4,hy-1,8,1,'#3e2731');}else{R(3,hy-2,10,3,c);R(4,hy-3,8,1,c);set(6,hy-1,shade(c,.7));set(10,hy-2,shade(c,1.2));}}
+  /* face: small manhwa eyes, brows and a nose instead of the round anime eyes and blush */
+  const face=(x,y)=>{if(!isH(x,y))set(x,y,sk);};
+  for(let y=ey;y<=ey+3;y++)for(let x=5;x<=11;x++)face(x,y);
+  const masked=!!o.mask;
+  if(!masked)for(let x=6;x<=10;x++)face(x,hy+9);
+  const bc=L.bc||(lkLum(hair)>.5?shade(hair,.55):lkMix(hair,'#7a5040',.3)),md=o.md||'';
+  const br=L.br||(md==='angry'?'fierce':md==='sad'?'droop':'flat');
+  const B=(x,y)=>{if(!isH(x,y)||y<=ey)set(x,y,bc);};
+  if(br==='flat'){B(6,ey);B(7,ey);B(9,ey);B(10,ey);}
+  if(br==='fierce'){B(6,ey-1);B(7,ey);B(9,ey);B(10,ey-1);}
+  if(br==='droop'){B(6,ey);B(7,ey-1);B(9,ey-1);B(10,ey);}
+  if(br==='thick'){B(5,ey);B(6,ey);B(7,ey);B(9,ey);B(10,ey);B(11,ey);B(6,ey-1);B(10,ey-1);}
+  if(br==='heavy'){B(5,ey);B(6,ey);B(7,ey);B(9,ey);B(10,ey);B(11,ey);set(8,ey,shade(sk,.85));}
+  const ic=L.ec||(o.eye&&o.eye!=='#3a4466'?o.eye:'#2a2018');
+  const ek=md==='sleep'?'shut':(L.ey||'norm');
+  for(const ex of [6,9]){const P=(x,y,c)=>{if(!isH(x,y))set(x,y,c);};
+    if(ek==='norm'){P(ex,ey+1,D);P(ex+1,ey+1,D);P(ex,ey+2,'#f0ece0');P(ex+1,ey+2,ic);if(fem){P(ex===6?5:11,ey+1,D);}}
+    if(ek==='narrow'){P(ex,ey+2,D);P(ex+1,ey+2,ic);}
+    if(ek==='up'){P(ex,ey+2,D);P(ex+1,ey+2,ic);P(ex===6?6:10,ey+1,D);}
+    if(ek==='small'){P(ex+(ex===6?1:0),ey+2,D);}
+    if(ek==='smile'){if(ex===6){P(6,ey+2,D);P(7,ey+1,D);}else{P(9,ey+1,D);P(10,ey+2,D);}}
+    if(ek==='shut'){P(ex,ey+2,D);P(ex+1,ey+2,D);}
+    if(ek==='rev'){P(ex,ey+1,D);P(ex+1,ey+1,D);P(ex,ey+2,D);P(ex+1,ey+2,'#ffffff');}
+    if(L.circ){P(ex,ey+3,shade(sk,.78));P(ex+1,ey+3,shade(sk,.78));}}
+  if(L.gl){const g=L.gl;R(5,ey+1,7,1,g);for(const x of [5,8,11])set(x,ey+2,g);R(5,ey+3,3,1,g);R(9,ey+3,3,1,g);if(L.sun)for(const x of [6,7,9,10])set(x,ey+2,L.sun);}
+  if(!masked&&!L.gl)set(8,ey+3,shade(sk,.8));
+  /* beard, mouth, scars */
+  if(ad&&L.bd&&!masked){const bh2=L.bdC||hair;
+    if(L.bd==='full'){R(4,hy+9,8,2,bh2);set(4,hy+8,bh2);set(11,hy+8,bh2);R(7,hy+8,3,1,bh2);}
+    if(L.bd==='stub')for(const [x,y] of [[4,8],[11,8],[5,9],[10,9],[6,10],[7,10],[8,10],[9,10]])set(x,hy+y,shade(sk,.72));
+    if(L.bd==='mus'||L.bd==='goatee')R(7,hy+8,3,1,bh2);
+    if(L.bd==='goatee')R(7,hy+10,3,1,bh2);}
+  if(!masked){const mc=fem?'#c86a72':'#8a4a3a',mo=L.mo||(md==='happy'?'smile':md==='shout'?'shout':'line');
+    if(mo==='line'){set(8,hy+9,mc);set(9,hy+9,mc);}
+    if(mo==='flat')R(7,hy+9,3,1,shade(sk,.6));
+    if(mo==='smile'){R(7,hy+9,3,1,mc);set(6,hy+8,mc);set(10,hy+8,mc);}
+    if(mo==='grin'){R(6,hy+9,5,1,D);R(7,hy+9,3,1,'#ffffff');set(6,hy+8,D);set(10,hy+8,D);}
+    if(mo==='smirk'){set(8,hy+9,D);set(9,hy+9,D);set(10,hy+8,D);}
+    if(mo==='shout'){R(7,hy+9,3,2,'#733e39');}}
+  if(big&&L.sc){const c='#c0645a';for(const s of L.sc){
+    if(s==='brow'){set(11,ey-1,c);set(10,ey,c);}
+    if(s==='mouth'){set(10,hy+8,c);set(9,hy+10,c);}
+    if(s==='nose'){set(7,hy+8,c);set(9,hy+8,c);}
+    if(s==='cheek'){set(10,hy+8,c);set(11,hy+7,c);}}}
+  if(L.band){R(7,hy+8,3,1,'#f0ece0');set(8,hy+7,'#f0ece0');}
+  if(L.jaw){set(4,hy+10,sk);set(11,hy+10,sk);}
+  /* body */
+  const bulk=ad&&L.bulk&&!pose,ax=bulk?[3,12]:[4,11],lx=bulk?4:5,rx=bulk?11:10;
+  if(bulk){const out=G.out;R(4,by,8,bh-1,out);R(4,by,1,bh-1,shade(out,.75));R(5,by+1,1,bh-3,shade(out,1.14));R(4,by,8,1,shade(out,.82));
+    R(3,by+1,1,al,shade(sl,.8));set(3-sw,by+1+al,sk);R(12,by+1,1,al,sl);set(12+sw,by+1+al,sk);}
+  if(L.open){R(7,by,2,bh-3,sk);set(7,by+2,shade(sk,.86));set(8,by+4,shade(sk,.86));R(lx,by+bh-3,rx-lx+1,1,shade(G.out,.55));}
+  if(L.crest){set(rx,by+1,'#f0ece0');set(rx,by+2,'#c0cbdc');}
+  if(L.shirt)R(7,by,2,bh-3,L.shirt);
+  if(L.tie){set(7,by,L.shirt||'#f0ece0');set(8,by,L.shirt||'#f0ece0');R(7,by+1,1,3,L.tie);set(8,by+1,L.tie);}
+  if(L.turtle)R(6,by,4,1,L.turtle);
+  if(L.jk){const j=L.jk;R(lx,by,2,bh-1,j);R(rx-1,by,2,bh-1,j);if(!pose){R(ax[0],by+1,1,al,shade(j,.8));R(ax[1],by+1,1,al,j);}}
+  if(ad&&L.tat&&!pose&&!L.jk){for(const x of ax){set(x,by+1,x===ax[0]?shade(sl,.8):sl);for(let y=by+2;y<=by+al;y++)set(x,y,y%2?'#2c3550':'#4a5a7a');}}
+  if(L.glove&&!pose)set(ax[0]-sw,by+1+al,'#f0ece0');
+}
+/* every sprite drawn inside the Lookism world gets the manhwa face */
+{const c0=chibi;chibi=function(px,x,gy,o){if(W&&W.id==='lookism'&&o&&!o.lk&&!o.lkw&&o.sz!=='baby')o={...o,lkw:1};return c0.call(this,px,x,gy,o);};}
+/* age: Lookism hair greys from fifty; Tom Lee was a beggar king before the Ten Geniuses */
+{const a0=castAt;castAt=function(id,y){const o=a0.apply(this,arguments);if(!o||!o.lk||!CAST.lookism||!CAST.lookism[id])return o;const M=metaOf(id),age=M&&y?y-M.b:0;
+  if(age>=50&&o.hair&&lkLum(o.hair)<.6)o.hair=lkMix(o.hair,'#b8b8b8',Math.min(.85,(age-50)/22));
+  if(id==='tomlee'&&y&&y<2007){o.out='#6a5e4a';o.scarf=undefined;o.lk={...o.lk,hat:'bum',hatC:'#4a4038',jk:undefined};}
+  if(o.lk&&age<15)o.lk={...o.lk,bulk:0,tat:0,bd:0,sc:null,jk:o.lk.jk&&id!=='gun'?o.lk.jk:undefined};
+  return o;};}
+/* how they look in the manhwa (fandom/Namu descriptions) */
+{const K=(sex,hair,st,out,lk,o={})=>({...CL(sex,hair,st,out,o),lk});
+Object.assign(CASTLOOK,{
+  hyungseok:K('m','#1c1a1f','short','#f0ece0',{hs:'swept',br:'flat'},{pants:'#262b44'}),
+  zack:K('m','#5a3a2a','spiky','#262b44',{br:'fierce',mo:'smirk'},{btn:1}),
+  jay:K('m','#1c1a1f','short','#262b44',{ey:'narrow'},{btn:1,mask:'#e8e8e6'}),
+  vasco:K('m','#1c1a1f','short','#a22633',{hs:'center',bulk:1,tat:1,bd:'stub',band:1,mo:'grin'}),
+  mira:K('f','#1c1a1f','pony','#262b44',{br:'fierce'},{eye:'#5a3a2a'}),
+  crystal:K('f','#1c1a1f','long','#f0ece0',{},{eye:'#5a3a2a'}),
+  logan:K('m','#e2c15a','short','#3a4466',{hs:'slick',br:'fierce',mo:'smirk',roots:'#5a4a2a'}),
+  vinjin:K('m','#e2c15a','short','#3a3a44',{hs:'slick',gl:'#1c1a1f',sun:'#262b44',mo:'smirk',roots:'#3a2a20'}),
+  eli:K('m','#1c1a1f','long','#f0ece0',{br:'fierce',ey:'narrow',sc:['cheek'],tat:1,mo:'grin'}),
+  jake:K('m','#1c1a1f','short','#1c1a1f',{br:'thick',ey:'up',sc:['mouth','nose'],bulk:1,tat:1,mo:'flat'}),
+  johan:K('m','#6b4a2f','long','#262b44',{hs:'veil',mo:'smirk'}),
+  samuel:K('m','#e2c15a','short','#3a3a44',{hs:'slick',br:'fierce',ey:'narrow',sc:['cheek']},{coat:'#3a3a44'}),
+  warren:K('m','#1c1a1f','short','#a22633',{bulk:1,br:'thick',mo:'grin'}),
+  gun:K('m','#1c1a1f','short','#2a2a30',{hs:'slick',sides:1,br:'fierce',ey:'narrow',gl:'#3a3a44',sc:['brow'],tat:1,mo:'flat',fx:{gl:null,ey:'rev',mo:'smirk'}}),
+  goo:K('m','#e8d488','short','#f0ece0',{roots:'#4a3a2a',gl:'#e2c15a',ey:'smile',mo:'grin',shirt:'#f0ece0',tie:'#e2c15a',fx:{ey:'narrow',mo:'smirk'}},{pants:'#e8e4d8'}),
+  james:K('m','#e8e8f0','short','#f0ece0',{ey:'narrow',mo:'flat'}),
+  taesoo:K('m','#1c1a1f','short','#3a3a44',{hs:'buzz',bulk:1,br:'heavy',ey:'narrow',jaw:1,bd:'stub',mo:'flat'}),
+  gapryong:K('m','#1c1a1f','short','#a22633',{br:'droop',cap:'#1c1a1f',turtle:'#c23a44',jk:'#4a4a54',bulk:1,mo:'grin'}),
+  shingen:K('m','#1c1a1f','short','#1c1a1f',{hs:'slick',br:'heavy',jaw:1,ey:'narrow',ec:'#8aa89a',bulk:1,open:1,crest:1,mo:'flat'},{skin:'#e0b090',pants:'#1c1a1f'}),
+  charles:K('m','#3e2731','short','#3a4466',{hs:'slick',bd:'goatee',sc:['cheek'],shirt:'#f0ece0',tie:'#a22633',bulk:1,mo:'smirk'},{cane:1}),
+  kitae:K('m','#1c1a1f','short','#f0ece0',{hs:'slickbang',ey:'narrow',circ:1,mo:'flat',tat:1},{pants:'#1c1a1f'}),
+  jichang:K('m','#3e2731','short','#3a3a44',{hs:'slick',gl:'#1c1a1f',sc:['cheek'],shirt:'#f0ece0',tie:'#262b44'}),
+  jinrang:K('m','#e8e8f0','long','#1c1a1f',{ey:'narrow',mo:'smirk'}),
+  gongseob:K('m','#1c1a1f','bald','#b88a3a',{br:'thick',ey:'narrow',jaw:1,bulk:1,mo:'flat'},{robe:'#b88a3a'}),
+  jaegyeon:K('m','#e2c15a','short','#a22633',{hs:'center',mo:'grin',roots:'#3a2a20'}),
+  tomlee:K('m','#5a4a3a','long','#c8b48a',{hs:'mess',ey:'small',mo:'grin',jaw:1,bulk:1,glove:1,hat:'fedora',hatC:'#a08860',bd:'stub'},{scarf:'#7a5a3a'}),
+  moojin:K('m','#3e2731','short','#f0ece0',{hs:'buzz',bulk:1,br:'heavy',ey:'narrow',jaw:1,bd:'full',mo:'flat'}),
+  kenta:K('m','#1c1a1f','short','#f0ece0',{hs:'slick',br:'fierce',ey:'narrow',mo:'flat'},{sash:'#1c1a1f'}),
+  kenzo:K('m','#1c1a1f','short','#1c1a1f',{hs:'slick',br:'heavy',jaw:1,ey:'narrow',bulk:1,shirt:'#f0ece0',tie:'#1c1a1f',mo:'flat'}),
+  shinji:K('m','#e8e8f0','short','#1c1a1f',{hs:'slick',br:'heavy',ey:'narrow',open:1,crest:1,mo:'flat'},{pants:'#1c1a1f'}),
+  shintaro:K('m','#1c1a1f','short','#3e2731',{hs:'slick',br:'heavy',jaw:1,ey:'narrow',ec:'#a85a5a',bulk:1,open:1,crest:1,mo:'smirk'},{skin:'#e0b090',pants:'#1c1a1f'}),
+  stevehong:K('m','#3e2731','short','#262b44',{hs:'slick',shirt:'#f0ece0',tie:'#a22633',mo:'flat'}),
+});
+Object.assign(CAST.lookism,{shinji:'ยามาซากิ ชินจิ',shintaro:'ยามาซากิ ชินทาโร่',stevehong:'สตีฟ ฮง'});
+Object.assign(LK.castMeta,{shinji:{b:1928,d:1996,at:S=>S.place==='osaka'},shintaro:{b:1955,at:S=>S.place==='osaka'&&S.year>=1975&&S.year<2010},stevehong:{b:1962,at:S=>S.place==='gangnam'&&S.year>=1995}});
+Object.assign(CASTHT,{shinji:.95,shintaro:1.15,stevehong:1.02});
+Object.assign(CASTPOW,{shinji:80,shintaro:94,stevehong:10});
+for(const [id,h] of Object.entries(CASTHT))if(CASTLOOK[id])CASTLOOK[id].hs=h;
+LK.castMeta.shingen.d=1996;}
+/* when they fight for real: Gun takes his glasses off and the reverse eyes show; Goo stops smiling */
+{const b0=battle;battle=function(E,o){try{const L=E&&E.spec&&E.spec.lk;if(L&&L.fx){E.spec={...E.spec,lk:{...L,...L.fx,fx:undefined}};}}catch(e){}return b0.apply(this,arguments);};}
+/* canon: Shingen loses to Gapryong in 1986 and lives; ten years later his twin Shintaro takes the syndicate */
+{const C=LK.canon,ev=id=>C.find(e=>e.id===id);
+const w=ev('lk_yamawar');if(w)w.play=function(S){news(this.t,'แก๊งหมัดโตเกินสามสิบคน เคนโซ ยามาซากิตายในสงครามครั้งนี้ ชินเก็น ยามาซากิ บุกเข้ามาคนเดียวหลังมีคนในแก๊งบอกที่ตั้งฐาน และแพ้ให้คิม กัปรยองเป็นครั้งแรกในชีวิต อิทธิพลของยามาซากิในเกาหลีจบลง ชินเก็นกลับโอซาก้าพร้อมแผลที่ไม่มีวันหาย');
+  if((hasB('yamazaki')||hasB('yamaaff')||hasB('yamaexec')||S.job?.id==='yakuza')&&S.age>=16)return{text:'ชินเก็นเดินออกจากฐานของแก๊งหมัดด้วยขาที่ลากไปข้างหนึ่ง ทั้งชีวิตเขาไม่เคยแพ้ใคร ลูกน้องทุกคนไม่กล้ามองหน้าเขา',choices:[
+    {l:'ประคองชินเก็นกลับเรือ',g:'loyal kind',f(S){bond('shingen',14);fm(4);say('เขาไม่พูดอะไรตลอดทาง แต่ตอนลงเรือ เขาพยักหน้าให้คุณครั้งเดียว','good');remember('คืนที่ชินเก็นแพ้','ประคองเขากลับโอซาก้า','sad',2);}},
+    {l:'แอบกลับไปสู้กับคิม กัปรยองเพื่อล้างแค้น',g:'brave dark',foe:['คิม กัปรยอง',96,'b'],f(S){if(live(.35+fitb(500),'ถูกหมัดของคิม กัปรยองหลังกลับไปล้างแค้นให้ยามาซากิ')){fm(15);skill('fight',8);say('กัปรยองไม่ฆ่าคุณ เขาแค่ยิ้ม "กลับไปบอกนายของแกว่าพอได้แล้ว"','plain');}}},
+    {l:'เงียบไว้',g:'safe',f(S){say('คืนนั้นทั้งตระกูลรู้ว่าชินเก็น ยามาซากิ แพ้แล้ว','plain');}}]};
+  if(S.flags.fistGang&&S.age>=16)return{text:'คืนนั้นชินเก็น ยามาซากิเดินเข้าประตูฐานของแก๊งคนเดียว ทุกคนรู้ทันทีว่ามีคนทรยศบอกที่ตั้งฐาน',choices:[
+    {l:'สู้กับชินเก็น ยามาซากิ',g:'brave hero',foe:['ชินเก็น ยามาซากิ',95,'b'],f(S){if(live(.25+fitb(500),'ถูกชินเก็น ยามาซากิฆ่าในคืนสงคราม')){fm(25);skill('fight',8);say('คุณถ่วงชินเก็นไว้จนกัปรยองมาถึง แล้วตำนานก็ล้มเขาด้วยหมัดเดียว','good');remember('คืนสงครามกับยามาซากิ','ยืนข้างกัปรยอง','fight',3);}}},
+    {l:'ตามหาคนทรยศ',g:'curious loyal',f(S){st('iq',2);fm(6);say('คุณไม่เจอตัวคนทรยศ แต่สังเกตว่าบางคนในแก๊งไม่เคยกลัวเลยแม้แต่น้อย','plain');}}]};};
+addCanon('lookism',[{id:'lk_shintaro',y:1996,mo:10,t:'คืนรัฐประหารของชินทาโร่',major:true,play(S){
+  if(S.flags.saved_shingen){news(this.t,'ยามาซากิ ชินทาโร่ ตัดศีรษะชินจิผู้เป็นพ่อแล้วยึดซินดิเคต แต่ชินเก็นรอดจากคืนนั้นพร้อมลูกชาย เพราะมีคนคนหนึ่งยืนขวางดาบไว้');return;}
+  news(this.t,'หมอตำแยบอกความจริงว่าการสืบทอดผิดตั้งแต่แรก ยามาซากิ ชินทาโร่ แฝดผู้พี่จึงตัดศีรษะชินจิผู้เป็นพ่อแล้วยึดซินดิเคต ชินเก็นที่คลั่งในสภาวะไร้สติสู้กับคนของชินทาโร่ทั้งคืน เขาดึงหมัดกลับเพื่อไม่ให้โดนลูกชายตัวเล็ก ชินทาโร่ใช้จังหวะนั้นแทงทะลุคอ ชินเก็นเอาร่างบังลูกจนสิ้นใจ พัค โซมี แม่ของเด็กก็ไม่รอด เด็กคนนั้นรอดมาได้ และโตขึ้นในชื่อพัค จงกอน');
+  if((S.place==='osaka'||hasB('yamazaki')||hasB('yamaaff')||hasB('yamaexec')||S.job?.id==='yakuza')&&S.age>=16)return{text:'เสียงดาบดังทั่วคฤหาสน์ยามาซากิ ชินเก็นตาดำสนิท ยืนบังเด็กชายตัวเล็กคนหนึ่ง ข้างหลังเขาคือชินทาโร่ที่ถือดาบรออยู่',choices:[
+    {l:'สู้กับยามาซากิ ชินทาโร่',g:'brave loyal hero',foe:['ยามาซากิ ชินทาโร่',94,'b'],f(S){if(live(.2+fitb(500),'ถูกยามาซากิ ชินทาโร่ฟันในคืนรัฐประหาร')){S.flags.saved_shingen=1;S.flags.saved_shinji=0;fm(25);skill('fight',8);bond('shingen',20);bond('gun',10);say('ดาบของชินทาโร่พลาดคอชินเก็นไปเพราะคุณ ชินเก็นอุ้มลูกชายฝ่าออกจากคฤหาสน์ ชะตาของยามาซากิเปลี่ยนไปเพราะคุณ','power');remember('คืนรัฐประหาร','ชินเก็นรอดเพราะคุณ','fight',3);}}},
+    {l:'อุ้มเด็กชายหนีออกจากคฤหาสน์',g:'kind hero',f(S){if(live(.6+fitb(200),'ถูกคนของชินทาโร่ไล่ฟันระหว่างพาเด็กหนี')){bond('gun',18);fm(6);trauma(15);say('เด็กชายเงียบตลอดทาง ไม่ร้องไห้เลยสักครั้ง แม้แต่ตอนที่ได้ยินว่าพ่อตายแล้ว','sad');remember('เด็กชายในคืนรัฐประหาร','คนที่โตมาเป็นพัค จงกอน','sad',3);}}},
+    {l:'ก้มหัวให้หัวหน้าตระกูลคนใหม่',g:'safe dark',f(S){dk(8);mon(10);say('ชินทาโร่มองคุณครู่หนึ่ง แล้วโยนผ้าเช็ดดาบให้คุณ','bad');}}]};}}]);
+const f=ev('lk_yamafall');if(f){const p0=f.play;f.play=function(S){if(S.flags.yamaHeir)return p0.call(this,S);
+  news(this.t,`ศึกชิงทายาทและการกวาดล้างภายในกลืนกินตัวเอง ซินดิเคตยามาซากิที่ครองโลกใต้ดินมาครึ่งศตวรรษล่มสลาย ตระกูลในเครือแตกกระจาย${S.flags.saved_shingen&&!castGone('shingen')?' ข่าวลือว่าชินเก็นที่ใครๆ คิดว่าตายตั้งแต่คืนรัฐประหาร นั่งดูทุกอย่างพังอยู่เงียบๆ':''}`);if(S.job?.id==='yakuza'){setJob(null);say('ตระกูลที่คุณรับใช้ไม่มีอีกแล้ว คุณตกงานในคืนเดียว','bad');}};}}
+/* every family in the lore */
+{const c=id=>CLANS.lookism.find(x=>x.id===id),add=(id,txt)=>{const x=c(id);if(x)x.d+=txt;};
+add('gapryong',' ลูกของเขากระจายอยู่ทั่ว ทั้งคิม คีแท และเจค คิม ทุกคนมีดวงตาแบบเดียวกัน และได้ของตกทอดจากพ่อคนละชิ้น');
+add('moojin',' เขาคือพ่อของวินจิน และเป็นครูของยุก ซองจี ราชารุ่น 1');
+add('choi',' ประธานชาร์ลส์ ชเว คนที่ปั้นสิบอัจฉริยะ เป็นคนของตระกูลนี้');
+{const g=c('gapryong');if(g){const on1=g.on;g.on=function(S){on1.call(this,S);S.flags.gapItem=pick(['หมวกนิวส์บอยสีดำ','ไปป์ของพ่อ','ไฟแช็กที่สลักชื่อคิม กัปรยอง','ถุงมือหนังคู่เก่า','เสื้อลายทางสีแดง']);};}}
+{const y=c('yamazaki');if(y)y.d+=' ผู้ชายในตระกูลมีสันคิ้วหนาและโครงกระดูกใหญ่ ทั้งชินจิ ชินเก็น ชินทาโร่ และพัค จงกอน';}
+CLANS.lookism.push(
+  {id:'hong',n:'ตระกูลฮง (เครือ H Group)',d:'ตระกูลแชโบลของสตีฟ ฮง ประธานเครือ H Group พี่ชายคนโตเป็นทายาท ลูกคนที่สองอย่างเจย์ ฮงถูกพ่อตัดขาดเพราะไปมีเรื่องชกต่อย',pl:'gangnam',on(S){S.money=(S.money||0)+90;S.st.iq=Math.min(100,S.st.iq+5);S.flags.hongKid=1;}},
+  {id:'yamaexec',n:'ตระกูลผู้บริหารยามาซากิ',d:'ครอบครัวของผู้บริหารสูงสุดและผู้บริหารแห่งซินดิเคต อยู่ใต้ตระกูลหลักแต่เหนือตระกูลในเครือ',pl:'osaka',on(S){S.flags.yamaExec=pick(['มากามิ โซเง็น','ซาซากิ มูซาชิ','อาราชิมายะ ทาคุมะ','ซาเอจิมะ ทาเคชิ','กอนดะ เคนจิ','มาดาราเมะ เรย์จิ']);S.money=(S.money||0)+40;S.st.fit=Math.min(100,S.st.fit+6);if(/ซาซากิ/.test(S.flags.yamaExec)&&chance(.4)){S.powers=S.powers||[];if(!S.powers.includes('lk_sword'))S.powers.push('lk_sword');}}},
+);
+{const sx=LK.statusX;LK.statusX=S=>sx(S)+(S.flags.gapItem?` · ${S.flags.gapItem}`:'')+(S.flags.yamaExec?` · บ้าน${S.flags.yamaExec.split(' ')[0]}`:'');}
+/* the Yamazaki brow and frame show on a bloodline player */
+{const m0=meSpec;meSpec=function(){const o=m0.apply(this,arguments);if(W.id==='lookism'&&S){if(hasB('yamazaki'))o.lk={br:'heavy',jaw:1,ey:'narrow',...(S.age>=16?{bulk:1}:{})};if(hasB('gapryong'))o.lk={br:'droop',...(S.flags.gapItem==='หมวกนิวส์บอยสีดำ'&&S.age>=14?{cap:'#1c1a1f'}:{})};}return o;};}}
+/* small details people notice */
+EGG.lookism.push('มีคนนั่งเช็ดแว่นอยู่มุมร้าน พอเขาถอดแว่น ตาของเขาสีกลับด้าน ดำทั้งลูกแต่ตาดำเป็นสีขาว','ชายผมบลอนด์โคนดำโวยวายกลางถนนเพราะลมพัดผมเสีย','ชายร่างใหญ่ใส่สูทสีเบจ ถุงมือขาวข้างซ้าย หัวเราะเสียงดังกับขอทานข้างทาง','ป้ายโฆษณาเครือ H Group สูงสิบชั้นมองลงมาที่เมือง','ไฟแช็กเก่าที่สลักชื่อ "คิม กัปรยอง" ถูกตั้งราคาสูงลิบในร้านของเก่า');
+DESC.lookism.push([/ถอดแว่น.{0,30}สีกลับด้าน/,'gun'],[/ผมบลอนด์โคนดำ/,'goo'],[/ถุงมือขาวข้างซ้าย/,'tomlee']);
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
