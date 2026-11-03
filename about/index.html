@@ -1,0 +1,119 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta property="og:title" content="ชีวิตตัวประกอบ"><meta property="og:description" content="เกิดเป็นตัวประกอบใน 10 โลกอนิเมะและมังฮวา ใช้ชีวิตตั้งแต่เกิดจนตาย และเปลี่ยนประวัติศาสตร์ได้"><style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>ชีวิตตัวประกอบ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@500;600&family=Sarabun:wght@400;600&family=Silkscreen&display=swap">
+<style>
+/* layout: one dark arcade column; a hero with the play button, a short "how it works", then the ten worlds as screenshot cards */
+:root{
+  --bg:#12101a; --panel:#1c1926; --line:#2e2a3d; --fg:#ece8f4; --muted:#a59fb8; --accent:#feae34; --accent2:#7fd8ff;
+  --display:"Mitr","Sarabun",system-ui,sans-serif; --body:"Sarabun",system-ui,sans-serif; --pixel:"Silkscreen","Courier New",monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.65}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:grid;gap:44px}
+.eyebrow{font-family:var(--pixel);font-size:12px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(40px,8vw,72px);line-height:1.05;margin:6px 0 12px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(24px,4vw,32px);margin:0 0 14px;text-wrap:balance}
+h3{font-family:var(--display);font-weight:500;font-size:20px;margin:0}
+p{margin:0;max-width:65ch}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:center}
+.hero .lead{color:var(--muted);font-size:18px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:6px;font-family:var(--display);font-weight:500;font-size:17px;text-decoration:none;border:2px solid var(--accent);color:#1a1206;background:var(--accent);box-shadow:0 4px 0 #a86a14}
+.btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #a86a14}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line);box-shadow:none}
+.btn:focus-visible{outline:3px solid var(--accent2);outline-offset:3px}
+.shot{border:3px solid #0a0910;box-shadow:0 0 0 2px var(--line),0 10px 0 rgba(0,0,0,.35);border-radius:4px;overflow:hidden;background:#000}
+.shot img{display:block;width:100%;height:auto;image-rendering:pixelated}
+.urlrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;font-size:14px;color:var(--muted)}
+.urlrow code{font-family:var(--pixel);font-size:12px;color:var(--accent2);word-break:break-all}
+.copy{font:inherit;font-size:13px;padding:4px 10px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.how div{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:6px;align-content:start}
+.how b{font-family:var(--display);font-weight:500;font-size:18px}
+.how span{color:var(--muted);font-size:15px}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 28px;padding:0;margin:0;list-style:none}
+.feat li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start}
+.feat li::before{content:"";width:10px;height:10px;margin-top:9px;background:var(--accent);box-shadow:3px 3px 0 #a86a14}
+.feat b{color:var(--fg)}.feat span{color:var(--muted)}
+.worlds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.world{display:grid;gap:10px;align-content:start}
+.world .meta{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.world .era{font-family:var(--pixel);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.world .skill{font-size:15px;color:var(--muted)}
+.world .skill b{color:var(--accent)}
+.mobile{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;align-items:center}
+.mobile .shot{max-width:300px}
+.note{color:var(--muted);font-size:14px}
+footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:18px}
+@media (max-width:760px){.hero,.mobile{grid-template-columns:minmax(0,1fr)}.how,.feat,.worlds{grid-template-columns:minmax(0,1fr)}.mobile .shot{max-width:100%}}
+@media (prefers-reduced-motion:reduce){.btn:hover,.btn:active{transform:none}}
+</style>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Life sim · 10 worlds · เล่นฟรีบนเว็บ</div>
+      <h1>ชีวิตตัวประกอบ</h1>
+      <p class="lead">เกิดเป็นคนธรรมดาในโลกอนิเมะและมังฮวา ใช้ชีวิตตั้งแต่เกิดจนตาย มีครอบครัว ทำงาน ฝึกพลัง แล้วส่งต่อชีวิตให้ลูกหลาน ขณะที่เนื้อเรื่องหลักเดินไปรอบตัวคุณ และคุณเลือกได้ว่าจะยืนดูหรือเข้าไปเปลี่ยนประวัติศาสตร์</p>
+      <div class="cta">
+        <a class="btn" href="https://theningkungtv-lang.github.io/extra-life/" target="_blank" rel="noopener">▶ เล่นเลย</a>
+        <a class="btn ghost" href="#worlds">ดู 10 โลก</a>
+      </div>
+      <div class="urlrow"><code id="gameUrl">https://theningkungtv-lang.github.io/extra-life/</code><button class="copy" id="copyBtn" type="button">คัดลอกลิงก์</button></div>
+    </div>
+    <div class="shot"><img src="img/naruto.png" alt="ฉากต่อสู้ในโลกนารูโตะ ผู้เล่นใช้ซูซาโนะโอะ" width="900" height="560"></div>
+  </section>
+
+  <section>
+    <h2>เล่นยังไง</h2>
+    <div class="how">
+      <div><b>เลือกโลกและยุคที่เกิด</b><span>ตั้งแต่ก่อนเรื่องเริ่มจนหลังเรื่องจบ เลือกตระกูล สายเลือด และพรสวรรค์</span></div>
+      <div><b>ปล่อยให้เวลาเดิน</b><span>หนึ่งปีผ่านไปในไม่กี่สิบวินาที ทุกเดือนมีเรื่องให้ตัดสินใจ ตั้งแต่เรื่องในบ้านจนถึงสงครามใหญ่</span></div>
+      <div><b>ตายแล้วเล่นต่อในรุ่นลูก</b><span>มรดก ชื่อเสียง และความแค้นตกทอดไปยังลูกหลาน เรื่องราวของตระกูลจึงยาวกว่าชีวิตเดียว</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>ระบบเด่น</h2>
+    <ul class="feat">
+      <li><div><b>เนื้อเรื่องตาม lore</b> <span>เหตุการณ์จริงของแต่ละเรื่องเกิดตามปีและเดือน และมีฉากที่คุณช่วยตัวละครที่ควรตายได้</span></div></li>
+      <li><div><b>ต่อสู้แบบเทิร์นเบส</b> <span>ท่าไม้ตายตามเรื่อง ร่างตื่นพลังที่เปลี่ยนโมเดลตัวละคร และหลบด้วยการกดจังหวะ</span></div></li>
+      <li><div><b>ออนไลน์กับผู้เล่นจริง</b> <span>เปิดเซิร์ฟเวอร์เอง ทำภารกิจด้วยกัน และวีรกรรมของคุณกลายเป็นข่าวให้ผู้เล่นอื่นเห็น</span></div></li>
+      <li><div><b>คนรอบตัวมีความคิด</b> <span>ฟองความคิดลอยบนหัวคนในฉาก และทุกคนจำได้ว่าคุณทำอะไรกับเขา</span></div></li>
+      <li><div><b>ร้านค้า ท่องเที่ยว และที่เที่ยว</b> <span>อาวุธ ชุด พาหนะตามเรื่อง กับสถานที่ดังที่มีไข่อีสเตอร์ซ่อนอยู่</span></div></li>
+      <li><div><b>โทรศัพท์ หนังสือพิมพ์ หรือจดหมาย</b> <span>ดูว่าใครพูดถึงคุณ ตามยุคที่คุณเกิด</span></div></li>
+    </ul>
+  </section>
+
+  <section id="worlds">
+    <h2>10 โลก</h2>
+    <div class="worlds">
+      <article class="world"><div class="shot"><img src="img/naruto.png" alt="นารูโตะ: ซูซาโนะโอะ" loading="lazy" width="900" height="560"></div><div class="meta"><h3>นารูโตะ</h3><span class="era">KONOHA 20–160</span></div><p class="skill">ท่าเด่น <b>ซูซาโนะโอะ</b> · 43 วิชา ตระกูลอุจิวะ เนตรสีขาว และสัตว์หาง</p></article>
+      <article class="world"><div class="shot"><img src="img/aot.png" alt="ผ่าพิภพไททัน: แปลงร่างไททัน" loading="lazy" width="900" height="560"></div><div class="meta"><h3>ผ่าพิภพไททัน</h3><span class="era">YEAR 815–980</span></div><p class="skill">ท่าเด่น <b>แปลงร่างไททัน</b> · 9 ไททัน เครื่องเคลื่อนที่สามมิติ และสายเลือดแอคเคอร์แมน</p></article>
+      <article class="world"><div class="shot"><img src="img/op.png" alt="วันพีซ: ผลเมระเมระ" loading="lazy" width="900" height="560"></div><div class="meta"><h3>วันพีซ</h3><span class="era">SEA YEAR 1470–1600</span></div><p class="skill">ท่าเด่น <b>ผลเมระเมระ</b> · ออกเรือตามหาผลปีศาจ 28 ผลตามเรื่อง และฮาคิทั้งสามแบบ</p></article>
+      <article class="world"><div class="shot"><img src="img/jjk.png" alt="มหาเวทย์ผนึกมาร: วิชาว่างเปล่า ม่วง" loading="lazy" width="900" height="560"></div><div class="meta"><h3>มหาเวทย์ผนึกมาร</h3><span class="era">1926–2080</span></div><p class="skill">ท่าเด่น <b>วิชาว่างเปล่า: ม่วง</b> · ขยายอาณาเขต และศึกชิบุยะกับชินจูกุ</p></article>
+      <article class="world"><div class="shot"><img src="img/bleach.png" alt="บลีช: บังไค" loading="lazy" width="900" height="560"></div><div class="meta"><h3>บลีช</h3><span class="era">KARAKURA · SOUL SOCIETY</span></div><p class="skill">ท่าเด่น <b>บังไค</b> · ตายแล้วเลือกได้ว่าจะไปเป็นยมทูตหรือกลายเป็นฮอลโลว์</p></article>
+      <article class="world"><div class="shot"><img src="img/jojo.png" alt="โจโจ้: ฝนหมัดของสแตนด์" loading="lazy" width="900" height="560"></div><div class="meta"><h3>โจโจ้</h3><span class="era">1950–2050</span></div><p class="skill">ท่าเด่น <b>ฝนหมัดของสแตนด์</b> · สแตนด์ 19 ตัวตาม lore ฮามอน และการหยุดเวลา</p></article>
+      <article class="world"><div class="shot"><img src="img/heian.png" alt="ยุคเฮอัน: ขยายอาณาเขต" loading="lazy" width="900" height="560"></div><div class="meta"><h3>ยุคเฮอัน</h3><span class="era">HEIAN-KYO · 900–1070</span></div><p class="skill">ท่าเด่น <b>ขยายอาณาเขต</b> · ยุคทองของไสยเวท และสุคุนะร่างจริงสี่แขน</p></article>
+      <article class="world"><div class="shot"><img src="img/jjedo.png" alt="ยุคซามูไร: วิชาประจำตัว" loading="lazy" width="900" height="560"></div><div class="meta"><h3>ยุคซามูไร</h3><span class="era">EDO · 1071–1925</span></div><p class="skill">ท่าเด่น <b>วิชาประจำตัว</b> · ดาบ ปืนไฟ คาบูกิ และผู้ใช้ไสยเวทยุคก่อน</p></article>
+      <article class="world"><div class="shot"><img src="img/db.png" alt="ดราก้อนบอล: คาเมฮาเมฮะ" loading="lazy" width="900" height="560"></div><div class="meta"><h3>ดราก้อนบอล</h3><span class="era">AGE 700–800</span></div><p class="skill">ท่าเด่น <b>คาเมฮาเมฮะ</b> · ซูเปอร์ไซย่า อัลตร้าอินสติงต์ และบินไปดาวนาเม็กได้</p></article>
+      <article class="world"><div class="shot"><img src="img/lookism.png" alt="ลุคิซึม: คอมโบหมัดเท้า" loading="lazy" width="900" height="560"></div><div class="meta"><h3>ลุคิซึม</h3><span class="era">GEN 0 · 1970–2040</span></div><p class="skill">ท่าเด่น <b>คอมโบหมัดเท้า</b> · ห้าเส้นทางการบรรลุ สภาวะไร้สติของยามาซากิ และราชาแต่ละเมือง</p></article>
+    </div>
+  </section>
+
+  <section class="mobile">
+    <div class="shot"><img src="img/m_main.png" alt="หน้าเกมบนมือถือ" loading="lazy" width="504" height="900"></div>
+    <div>
+      <h2>เล่นบนมือถือได้</h2>
+      <p>ปุ่มใหญ่ กดง่าย เมนูพับเก็บได้ การแจ้งเตือนย่อเหลือทีละข้อและปิดได้ เกมบันทึกในเครื่องอัตโนมัติ เปิดใหม่ก็เล่นต่อได้ทันที</p>
+      <p class="note" style="margin-top:10px">แนะนำ Chrome หรือ Safari รุ่นใหม่ เปิดเสียงได้ที่ปุ่ม ⚙ ตั้งค่า</p>
+    </div>
+  </section>
+
+  <footer>ชีวิตตัวประกอบ เป็นเกมแฟนเมดที่ไม่ได้เกี่ยวข้องกับเจ้าของลิขสิทธิ์ของเรื่องใด ตัวละครและเนื้อเรื่องเป็นของผู้สร้างต้นฉบับ</footer>
+</div>
+<script>
+document.getElementById('copyBtn').addEventListener('click',async()=>{const b=document.getElementById('copyBtn'),t=document.getElementById('gameUrl').textContent;try{await navigator.clipboard.writeText(t);b.textContent='คัดลอกแล้ว';}catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById('gameUrl'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='เลือกข้อความแล้ว กดคัดลอกได้เลย';}setTimeout(()=>{b.textContent='คัดลอกลิงก์';},2200);});
+</script>
+</body></html>
