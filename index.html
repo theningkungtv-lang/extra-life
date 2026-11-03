@@ -9005,7 +9005,7 @@ function battle(E,o={}){return new Promise(done=>{try{if(typeof document==='unde
     const dx=now<dash?Math.round(Math.sin((1-(dash-now)/450)*3.1416)*80):0;
     if(!(now<flashM&&(now/80|0)%2))chibi(p2,Math.round((64+shM+dx+exM)/2),54,{...meSpec(),dir:1,pose:typeof btPose==='function'?btPose():'arm',md:'angry'});
     if(dx>60){for(let a=0;a<8;a++)px(170+Math.cos(a)*10,74+Math.sin(a)*10,3,3,'#fee761');c.strokeStyle='rgba(255,255,255,.6)';c.lineWidth=.5;for(let i=0;i<7;i++){c.beginPath();c.moveTo(20,60+i*6);c.lineTo(120,62+i*5);c.stroke();}}
-    if(fx&&now<fx.end&&now>=fx.t0){const A=ANIM[fx.anim]||ANIM.punch,tt=(now-fx.t0)*fx.k;fxx.setTransform(1,0,0,1,0,0);fxx.clearRect(0,0,220,72);fxx.imageSmoothingEnabled=false;
+    if(fx&&now<fx.end&&now>=fx.t0&&!(typeof fxSkip==='function'&&fxSkip(fx.anim))){const A=ANIM[fx.anim]||ANIM.punch,tt=(now-fx.t0)*fx.k;fxx.setTransform(1,0,0,1,0,0);fxx.clearRect(0,0,220,72);fxx.imageSmoothingEnabled=false;
       const q1=(x,y,w,h,col)=>{if(!col)return;fxx.fillStyle=col;fxx.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};q1.c=fxx;q1.k=1;const q2=(x,y,w,h,col)=>{if(!col)return;fxx.fillStyle=col;fxx.fillRect(Math.round(x)*2,Math.round(y)*2,w*2,h*2);};q2.c=fxx;q2.k=2;
       try{fxx.save();A(q1,tt,62,38,fx.col||'#feae34',220,72,68,q2);fxx.restore();}catch(e){}
       const put=()=>{c.save();if(fx.who==='me')c.drawImage(fxc,2,40);else{c.translate(240,0);c.scale(-1,1);c.drawImage(fxc,0,24);}c.restore();};
@@ -12258,8 +12258,12 @@ const REPL=new Set(['titan','oozaru','bijuu','zoan','steamblast','rockthrow','bi
 Object.assign(FORMS,{titan:{n:'ไททัน',look:{},aura:null,persist:1,titan:1},oozaru:{n:'โอซารุ',look:{},aura:['#7a5a32','#e43b44'],big:1,persist:1},bijuu:{n:'ร่างสัตว์หางเต็มตัว',look:{whisker:1},aura:['#f77622','#e43b44'],sp:'#feae34',big:1,persist:1},zoan:{n:'ร่างโซออน',look:{},aura:['#a07a4f','#5a4020'],persist:1}});
 {const c0=cutIn;cutIn=function(t,ch,anim){const keep=BTFORM&&formOf(BTFORM)?.persist&&!formOf(anim)?.persist?BTFORM:null;const r=c0.apply(this,arguments);if(keep)BTFORM=keep;return r;};}
 {const c0=chibi;chibi=function(px,x,gy,o){try{if(o&&o.formAura){const anchor={top:gy-30,left:x-8,w:17,h:30,cx:x,hx:x+3,hy:gy-15,ey:gy-21,dir:o.dir??1};
+    const dtT=performance.now()-LASTCI.t;
+    /* a titan shift: lightning strikes first, then the titan grows to full height right on the battlefield */
+    if(LASTCI.a==='titan'&&dtT<2600&&formOf(o.formAura)?.titan){if(dtT<450){if(typeof bolt==='function'){bolt(px,x,0,x+2,gy,'#fee761',Math.floor(dtT/60));bolt(px,x-3,0,x-1,gy,'#ffffff',Math.floor(dtT/50)+3);}return anchor;}
+      const k=Math.min(1,(dtT-450)/800),look=(typeof TLOOK!=='undefined'&&(TLOOK[S?.flags?.shiftId]||TLOOK.attack))||{};titanBody(px,x,gy,Math.round(16+34*k),look);for(let i=0;i<6;i++)px(x-10+((i*7)%20),gy-20-((dtT/30+i*9)%30),2,2,'rgba(255,255,255,.7)');return{...anchor,top:gy-50,hy:gy-28};}
     if((REPL.has(LASTCI.a)||(typeof replExtra==='function'&&replExtra(LASTCI.a)))&&performance.now()-LASTCI.t<2600)return anchor;
-    const F=formOf(o.formAura);if(F&&F.titan&&typeof titanBody==='function'){const look=(typeof TLOOK!=='undefined'&&(TLOOK[S?.flags?.shiftId]||TLOOK.attack))||{};titanBody(px,x,gy,42,look);return{...anchor,top:gy-42,hy:gy-24};}}}catch(e){}
+    const F=formOf(o.formAura);if(F&&F.titan&&typeof titanBody==='function'){const look=(typeof TLOOK!=='undefined'&&(TLOOK[S?.flags?.shiftId]||TLOOK.attack))||{};titanBody(px,x,gy,50,look);return{...anchor,top:gy-50,hy:gy-28};}}}catch(e){}
   return c0.apply(this,arguments);};}
 /* ===== stands that are not a humanoid body, drawn by the lore ===== */
 Object.assign(STANDLOOK,{
@@ -12285,6 +12289,9 @@ Object.assign(STANDOF,{joseph:'hermit',mista:'pistols',rohan:'heaven',yukako:'lo
 /* Heian Sukuna is the true form: four arms and a second pair of eyes, not Itadori's body */
 {const e0=exSpr;exSpr=function(o,set,R,G){e0.apply(this,arguments);try{if(o.ex.fourarms){const {by,hy,ey,skin}=G;R(2,by+4,2,4,skin);R(13,by+4,2,4,skin);set(2,by+8,skin);set(14,by+8,skin);set(6,ey+3,'#e43b44');set(10,ey+3,'#e43b44');set(5,ey+3,'#1c1a1f');set(11,ey+3,'#1c1a1f');}}catch(e){}};}
 {const a0=castAt;castAt=function(id,y){const o=a0.apply(this,arguments);try{if(o&&id==='sukuna'&&W&&W.id==='heian')o.ex={...(o.ex||{}),fourarms:1};}catch(e){}return o;};}
+
+/* the small effect canvas in battle is skipped for a titan shift: the titan itself is drawn full size instead */
+function fxSkip(a){return a==='titan';}
 
 /* ===== v58: iconic moments where the player can change history ===== */
 /* a saved character keeps living (castGone honours saved_<id>), and later story lines that say they died are rewritten */
@@ -12636,9 +12643,55 @@ async function travelGo(d){useFt();mon(-d.c);S.flags.trips=(S.flags.trips||0)+1;
   if(ex&&ex.cast&&CAST[W.id]?.[ex.cast]&&!castGone(ex.cast))bond(ex.cast,6);
   if(ex&&ex.pw&&POWERS[ex.pw[0]]&&!hasP(ex.pw[0])&&chance(ex.pw[1]))gainPower(ex.pw[0],ex.pw[2]);
   if(S.flags.trips===1)remember(`เที่ยวครั้งแรก: ${d.n}`,x.slice(0,60),'home',2);
-  await ask(`✈ ${d.n}`,x,[...d.deep.map(goAct),{l:'ถ่ายรูปเก็บไว้เป็นที่ระลึก',g:'safe',f(S){st('joy',2);remember(`ทริป${d.n}`,'รูปที่ระลึก','home',2);say('คุณเก็บรูปนี้ไว้ในอัลบั้ม','plain');}},{l:'กลับบ้าน',g:'safe',f(){say('คุณกลับบ้านพร้อมเรื่องเล่ามากมาย','plain');}}],'town');}
+  const T=typeof tnpcActs==='function'?tnpcActs(d):{acts:[],names:[]};
+  await ask(`✈ ${d.n}`,x+(T.names.length?` · ${T.names.join(' และ ')}อยู่แถวนั้น`:''),[...d.deep.map(goAct),...T.acts,{l:'ถ่ายรูปเก็บไว้เป็นที่ระลึก',g:'safe',f(S){st('joy',2);remember(`ทริป${d.n}`,'รูปที่ระลึก','home',2);say('คุณเก็บรูปนี้ไว้ในอัลบั้ม','plain');}},{l:'กลับบ้าน',g:'safe',f(){say('คุณกลับบ้านพร้อมเรื่องเล่ามากมาย','plain');}}],'town');}
 if(typeof WACTS!=='undefined'&&!WACTS.some(a=>a[0]==='travelBtn'))WACTS.push(['travelBtn','✈ ท่องเที่ยว',()=>travelMenu()]);
 for(const w in TRAVEL)for(const d of TRAVEL[w])if(!PLACESC[d.n])PLACESC[d.n]='port';
+
+/* ===== v60: people you can meet at each travel destination, by the lore ===== */
+/* {id: cast id (bond, face in the scene) or n: a name, talk: lines, teach: [skill, amount, line], spar: [power, win line]} */
+const TNPC={
+  'มิทราส เมืองหลวงในกำแพงซีน่า':[{id:'historia',talk:['"ฉันไม่ได้อยากเป็นราชินีหรอก ฉันแค่อยากให้เด็กๆ ในเขตใต้ดินได้กินอิ่ม"','เธอยิ้มเหนื่อยๆ "เรียกฉันว่าฮิสโทเรียก็พอ"'],teach:['charm',3,'เธอสอนวิธีพูดให้ขุนนางยอมฟัง']}],
+  'ชายหาดที่ทุกคนเห็นทะเลครั้งแรก':[{id:'armin',talk:['"รู้ไหม ในหนังสือของปู่บอกว่าน้ำทะเลเค็มกว่าน้ำตา"','"สักวันฉันจะไปเห็นทะเลทรายน้ำแข็งด้วย"'],teach:['iq',3,'เขาอธิบายเรื่องน้ำขึ้นน้ำลงจนคุณเข้าใจ']},{id:'eren',talk:['เขาจ้องขอบฟ้านานจนคุณไม่กล้าพูด "อีกฝั่งทะเล… ถ้าฆ่าศัตรูทั้งหมด เราจะเป็นอิสระไหม"'],spar:[62,'เขายิ้มนิดๆ "ไม่เลวนี่"']}],
+  'โบสถ์ใต้ดินของตระกูลไรส์':[{id:'kenny',talk:['ชายหมวกปีกกว้างหัวเราะ "เด็กอย่างแกมาทำอะไรในที่แบบนี้"'],spar:[85,'เขาเก็บปืนแล้วบอกว่า "แกจะอยู่รอดในโลกนี้ได้"']}],
+  'เลแบรีโอ เมืองชาวเอลเดียในมาร์เลย์':[{id:'reiner',talk:['ทหารร่างใหญ่ยิ้มแข็งๆ "ที่เกาะนั่น… ไม่มีปีศาจหรอก มีแต่คน"'],spar:[70,'เขาพยักหน้า "แข็งแรงดีนะ"']},{id:'gabi',talk:['"ฉันจะเป็นผู้สืบทอดไททันเกราะให้ได้!"']}],
+  'หุบเขาแห่งจุดจบ':[{id:'sasuke',talk:['เด็กหนุ่มผมดำยืนบนรูปปั้นมาดาระ "ที่นี่คือที่ที่คนสองคนตัดสินอนาคตกัน"'],spar:[78,'ดวงตาสีแดงของเขาหมุนช้าๆ แล้วหยุดลง "พอแค่นี้"']}],
+  'ภูเขาเมียวโบคุ':[{id:'jiraiya',talk:['"ข้าคือเซียนคางคกผู้ยิ่งใหญ่! …อย่าบอกซึนาเดะนะว่าข้ามาที่นี่"','เขาเขียนนิยายไปพลางมองคุณ "เจ้าเหมาะเป็นตัวประกอบในเล่มหน้า"'],teach:['gear',5,'เขาสอนวิธีควบคุมจักระให้นิ่งเหมือนผิวน้ำ']}],
+  'หมู่บ้านคุโมะ':[{id:'killerb',talk:['"หยอ! แร็พให้ฟังหน่อย! ไม่งั้นก็หลีกทางไป!"'],teach:['fight',4,'เขาสอนวิชาดาบเจ็ดเล่มที่ถือด้วยข้อพับแขน']}],
+  'หมู่บ้านซึนะในทะเลทราย':[{id:'gaara',talk:['เขาพูดเบาๆ "ความรักคืออะไร… ข้ายังหาคำตอบอยู่"'],spar:[80,'ทรายรอบตัวเขาสงบลง "เจ้าไม่ได้มาเพื่อฆ่าข้า"']},{id:'kankuro',talk:['"หุ่นเชิดของข้าสวยกว่าของใครในหมู่บ้าน"'],teach:['craft',4,'เขาสอนวิธีต่อเส้นจักระกับหุ่นไม้']}],
+  'เกาะมนุษย์เงือก':[{n:'จินเบ',talk:['ชายมนุษย์เงือกร่างใหญ่พูดช้าๆ "มนุษย์กับมนุษย์เงือกต้องอยู่ร่วมกันได้"'],teach:['fight',5,'เขาสอนคาราเต้มนุษย์เงือกที่ส่งแรงผ่านน้ำในร่างกายศัตรู']}],
+  'ลิตเติลการ์เดน':[{n:'ดอรี่กับโบรกี้',talk:['ยักษ์สองคนหัวเราะพร้อมกัน "เกียห์ฮะฮะฮะ! เจ้าตัวเล็กมาดูการดวลของเราเหรอ"'],spar:[80,'ยักษ์คนหนึ่งตบเข่า "นักรบตัวจิ๋ว!"']}],
+  'อมาซอนลิลลี่ เกาะแห่งผู้หญิง':[{n:'โบอา แฮนค็อก',talk:['จักรพรรดินีมองคุณจากที่สูง "ทุกอย่างให้อภัยได้ เพราะข้าสวย"']}],
+  'ธริลเลอร์บาร์ค':[{n:'บรู๊ค',talk:['โครงกระดูกในหมวกทรงสูงโค้งให้ "ขอดูกางเกงในหน่อยได้ไหมครับ… โยโฮโฮโฮ!"','เขาเล่นไวโอลินเพลงบินกส์ซาเกะให้คุณฟัง'],teach:['art',4,'เขาสอนเพลงที่ลูกเรือของเขาเคยร้องก่อนตาย']}],
+  'โซว เกาะบนหลังช้าง':[{n:'เนโกะมามูชิ',talk:['แมวยักษ์หัวเราะลั่น "ฮาฮาฮา! ข้าคือเจ้าแห่งราตรี!"'],spar:[78,'เขาตบหัวคุณเบาๆ ด้วยอุ้งเท้า "ดีมาก!"']}],
+  'ฮูเอโกมุนโด':[{n:'เนล',talk:['เด็กหญิงอารันคาร์ตัวเล็กน้ำมูกไหล "อิชิโกะอยู่ไหน~"']}],
+  'ลานฝึกใต้ร้านอุราฮาระ':[{id:'urahara',talk:['"ยินดีต้อนรับสู่ร้านขายขนมธรรมดาๆ ของผม"'],teach:['fight',6,'เขาไล่ฟันคุณสามวันสามคืนจนคุณหลบได้ทุกดาบ']}],
+  'บ้านตระกูลชิบะ':[{n:'คูคาคุ ชิบะ',talk:['"พวกยมทูตน่ะ ข้าไม่ชอบ แต่เจ้าดูไม่เลว"'],teach:['gear',4,'เธอสอนวิธีปั้นลูกพลังวิญญาณให้กลม']}],
+  'ชายหาดโอกินาว่า':[{id:'riko',talk:['เด็กสาวหัวเราะ "ทะเลสวยจัง ถ้าไม่ต้องไปรวมร่างกับเทนเก็นก็ดีสิ"']}],
+  'บ้านตระกูลเซนอิน':[{id:'maki',talk:['"ในบ้านนี้ ถ้าไม่มีพลังคำสาปก็ไม่ใช่คน"','เธอดันแว่นขึ้น "แต่ฉันจะเป็นหัวหน้าตระกูลให้ได้"'],spar:[72,'เธอเก็บพลองแล้วพูดว่า "ฝีมือใช้ได้"']}],
+  'เวนิส':[{id:'bucciarati',talk:['"ฉันจะเดินบนเส้นทางที่ฉันเชื่อว่าถูกต้อง ต่อให้มันพาไปสู่ความตาย"'],spar:[78,'ซิปบนพื้นปิดลง เขายื่นมือให้คุณ "คุณมีความตั้งใจ"']}],
+  'ปอมเปอี':[{n:'ฟูโก',talk:['ชายหนุ่มผมสีอ่อนนั่งอ่านหนังสือ "ระวังตัวด้วย เมืองนี้มีอะไรมากกว่าซากหิน"']}],
+  'อัสวาน อียิปต์':[{id:'avdol',talk:['"ไพ่บอกว่าคุณจะมีการเดินทางไกล… และมีไฟอยู่ในชะตา"'],teach:['iq',3,'เขาสอนการอ่านไพ่ทาโร่ให้คุณ']}],
+  'ศูนย์อวกาศแหลมคานาเวอรัล':[{id:'pucci',talk:['"หากรู้อนาคต มนุษย์จะไม่ต้องกลัวอีก คุณไม่อยากรู้หรือ"']}],
+  'ภูเขาไฟฟูจิ':[{n:'ฤๅษีบนเขา',talk:['"ภูเขาไม่รีบร้อน เจ้าก็ไม่ต้องรีบ"'],teach:['fit',4,'เขาให้คุณแบกหินขึ้นเขาทุกเช้า']}],
+  'ศาลเจ้าอิเสะ':[{n:'นักบวชศาลเจ้า',talk:['"เทพเจ้าอยู่ในทุกสิ่ง แม้แต่ในเมล็ดข้าว"']}],
+  'นิฮงบาชิ เอโดะ':[{n:'นักเล่านิทานริมสะพาน',talk:['"เคยได้ยินเรื่องซามูไรที่ฟันได้แม้แต่วิญญาณไหม"']}],
+  'ฐานทัพกองทัพริบบอนแดงที่ถูกทิ้ง':[{n:'หุ่นยนต์หมายเลข 8',talk:['หุ่นยนต์ตัวใหญ่ยิ้มใจดี "ผมไม่ชอบการต่อสู้ ผมชอบดอกไม้"']}],
+  'ภูเขาฟรายแพน':[{id:'chichi',talk:['"ถ้าจะมาที่นี่ก็ต้องกินข้าวให้หมดก่อนนะ!"'],spar:[48,'เธอตะโกน "ใช้ได้! แต่ห้ามมาจีบลูกสาวใครนะ!"']}],
+  'ดาวนาเม็ก':[{n:'ผู้เฒ่าแห่งนาเม็ก',talk:['ผู้เฒ่าตัวใหญ่หลับตา "ข้ารู้สึกได้ถึงพลังที่ยังหลับใหลในตัวเจ้า"']}],
+  'สนามแข่งเกมของเซล':[{id:'satan',talk:['"ใช่แล้ว! ฉันนี่แหละที่ช่วยโลกไว้! อยากได้ลายเซ็นไหม"'],spar:[30,'เขาล้มลงแล้วรีบลุก "ฉันแค่ยอมให้นายชนะนะ!"']}],
+  'เกาะเชจู':[{id:'hyungseok',talk:['เด็กหนุ่มหน้าตาดีพูดอย่างเกรงใจ "ขอโทษนะครับ เพื่อนๆ ผมอยู่แถวไหนเหรอ"'],spar:[70,'เขาหลบหมัดคุณแบบไม่รู้ตัว แล้วขอโทษซ้ำ']}],
+  'เม็กซิโก':[{id:'kitae',talk:['เขามองคุณด้วยตาที่มีรอยคล้ำ "อย่ามายุ่งเรื่องของฉัน"']}],
+  'โตเกียว':[{id:'gun',talk:['ชายใส่แว่นสูบบุหรี่ "แกอยากโดนต่อยเหรอ"'],spar:[97,'เขาถอดแว่นออกครึ่งหนึ่งแล้วใส่คืน "ยังไม่ถึงเวลา"']}],
+  'ค่ายมวยไทยที่ประเทศไทย':[{n:'ครูมวยเฒ่า',talk:['"มวยไทยไม่ใช่แค่เตะ ต้องมีใจ"'],teach:['fight',5,'คุณเรียนเตะก้านคอจนต้นกล้วยหักครึ่ง']}],
+};
+/* the actions a person at the destination offers */
+function tnpcActs(d){const out=[],names=[];for(const N of TNPC[d.n]||[]){
+  if(N.id&&(!CAST[W.id]?.[N.id]||castGone(N.id)))continue;const nm=N.id?(pOf({t:'cast',id:N.id})?.short||CAST[W.id][N.id]):N.n;names.push(N.id?CAST[W.id][N.id]:N.n);
+  out.push({l:`คุยกับ${nm}`,g:'kind curious',h:N.id?'ความสัมพันธ์+':'ความสุข+',f(S){st('joy',2);if(N.id)bond(N.id,6);say(pick(N.talk),'plain');}});
+  if(N.teach){const [k,a,line]=N.teach;out.push({l:`ขอให้${nm}สอน`,g:'curious',h:`${GOSTN[k]||W.skL?.[k]||k}+`,f(S){if(GOSTN[k])st(k,a);else skill(k,a);if(N.id)bond(N.id,3);say(line,'good');}});}
+  else if(N.spar){const [pw,win]=N.spar;out.push({l:`ประลองฝีมือกับ${nm}`,g:'brave',foe:[N.id?CAST[W.id][N.id]:N.n,pw],h:'ฝีมือต่อสู้+',f(S){if(chance(.5+fitb(300))){skill('fight',4);fm(2);if(N.id)bond(N.id,5);say(win,'good');}else{st('hp',-R(4,10));say(`${nm}เอาชนะคุณได้อย่างง่ายดาย`,'bad');}}});}}
+  return{acts:out,names};}
 
 /* ===== v59: non-human enemies look like what they are; Bleach souls choose Soul Society or become a Hollow ===== */
 {const m0=monSpr;monSpr=function(o,set,R,G){const oy=G.Hh-30,P=(x,y,c)=>set(x,y+oy,c),Q=(x,y,w,h,c)=>R(x,y+oy,w,h,c),D=INK;
@@ -12691,6 +12744,110 @@ BLEACH.pool.push(
     {l:'รับพลังของโฮเงียวคุ',g:'dark brave',f(S){S.flags.arrancar=1;S.powers=S.powers||[];for(const p of ['bl_hollow','bl_flash'])if(!S.powers.includes(p))S.powers.push(p);fm(20);dk(10);skill('fight',8);say('หน้ากากแตกเหลือแค่เศษที่กราม ร่างของคุณกลับมาเป็นคนอีกครั้ง พร้อมดาบที่ผนึกพลังฮอลโลว์ไว้ คุณคืออารันคาร์','power');remember('กลายเป็นอารันคาร์','พลังของไอเซ็น','power',3);}},
     {l:'ปฏิเสธไอเซ็น',g:'brave',f(S){say('ไอเซ็นยิ้มบางๆ "น่าเสียดาย" แล้วหายไป คุณรู้สึกว่ารอดมาได้เพราะเขายังไม่สนใจคุณจริงๆ','plain');}}]};}});
 function hevoUp(S,ev0){const now=hevoName(S);if(now!==ev0){say(`ร่างของคุณบิดเบี้ยวแล้วเติบโต คุณกลายเป็น${now}`,'power');remember(`กลายเป็น${now}`,'วิวัฒนาการของฮอลโลว์','dark',3);try{bigCard('pow',now,'วิวัฒนาการของฮอลโลว์','#f4f0e8');}catch(e){}}}
+
+/* ===== v60: take a canon character's place — become the new villain, the hero who stopped them, or hold their rank ===== */
+/* S.flags.title = {n: title, k: 'villain'|'hero'|'rank', y: year}; a choice may kill the holder (they leave the story) */
+const castAlive=id=>{try{return!!CAST[W.id]?.[id]&&!castGone(id);}catch(e){return false;}};
+function takeTitle(n,k,o={}){S.flags.title={n,k,y:S.year};if(o.kill&&CAST[W.id]?.[o.kill]){S.killed=S.killed||[];if(!S.killed.includes(o.kill))S.killed.push(o.kill);if(S.bonds)delete S.bonds[o.kill];}
+  if(o.dark)dk(o.dark);fm(o.fame??25);if(o.power&&POWERS[o.power[0]]&&!hasP(o.power[0]))gainPower(o.power[0],o.power[1]);
+  say(o.s||`คุณกลายเป็น${n}`,k==='villain'?'bad':'power');news(`${n}คนใหม่`,`${S.name} ${o.news||'ขึ้นมาแทนที่ในเรื่องนี้ ประวัติศาสตร์ไม่เหมือนเดิมอีกต่อไป'}`);
+  remember(`กลายเป็น${n}`,k==='villain'?'เส้นทางของตัวร้าย':k==='hero'?'เส้นทางของวีรบุรุษ':'ตำแหน่งใหม่','power',3);try{bigCard('pow',n,k==='villain'?'ตัวร้ายคนใหม่ของเรื่อง':k==='hero'?'วีรบุรุษคนใหม่ของเรื่อง':'ตำแหน่งใหม่','#feae34');sfx('fanfare');}catch(e){}}
+/* one turning point: a pool event that happens once per life */
+function TK(w,o){const X=WORLDS[w];if(!X)return;X.pool=X.pool||[];X.pool.push({id:o.id,w:o.w||3,when:S=>!S.flags['tk_'+o.id]&&S.age>=(o.age||16)&&(!S.flags.title||o.override)&&o.when(S),play(S){S.flags['tk_'+o.id]=1;
+  return{text:typeof o.text==='function'?o.text(S):o.text,choices:[...o.c.map(c=>({l:c.l,g:c.g,foe:c.foe,h:c.h||(c.title?`กลายเป็น${c.title}`:''),f(S){
+    if(c.foe&&!live((c.p??.3)+fitb(400),c.d||`ตายในศึกกับ${c.foe[0]}`))return;if(c.title)takeTitle(c.title,c.k,c);else if(c.s)say(c.s,'plain');if(c.after)c.after(S);}})),
+    {l:o.stay||'ไม่ยุ่งกับเรื่องนี้',g:'safe',f(S){say(o.fate||'ประวัติศาสตร์เดินต่อไปตามทางเดิม','plain');}}]};}});}
+/* Jujutsu Kaisen */
+TK('jjk',{id:'sukuna',w:4,when:S=>S.year>=2018&&S.year<=2019&&castAlive('sukuna')&&(S.sk?.fight||0)>=70,
+  text:'สุคุนะยืนอยู่บนซากตึกในชิบุยะ รอยสักบนหน้าเรืองแดง "เจ้าแมลงตัวนั้น มีพลังให้ข้าเล่นด้วยหรือไม่"',c:[
+  {l:'สู้กับสุคุนะเพื่อหยุดราชาคำสาป',g:'brave hero',foe:['ราชาคำสาป สุคุนะ',98,'b'],p:.12,title:'ผู้ปราบราชาคำสาป',k:'hero',kill:'sukuna',fame:40,s:'นิ้วทั้งยี่สิบสลายเป็นเถ้า ราชาคำสาปที่อยู่มาพันปีจบลงด้วยมือของคุณ',news:'ปราบราชาคำสาปสุคุนะได้ โลกไสยเวทไม่มีวันเหมือนเดิม'},
+  {l:'สู้กับสุคุนะเพื่อชิงนิ้วทั้งยี่สิบ',g:'brave dark',foe:['ราชาคำสาป สุคุนะ',98,'b'],p:.12,title:'ราชาคำสาปคนใหม่',k:'villain',kill:'sukuna',dark:35,fame:40,power:['jj_domain','คุณกลืนนิ้วสุดท้ายลงไป อาณาเขตของสุคุนะกลายเป็นของคุณ'],s:'คุณกลืนนิ้วของสุคุนะทีละนิ้ว เสียงหัวเราะของเขาเงียบไปในตัวคุณ ตอนนี้คุณคือราชาคำสาป',news:'ฆ่าสุคุนะแล้วกลืนนิ้วทั้งยี่สิบ กลายเป็นราชาคำสาปคนใหม่'},
+  {l:'กินนิ้วของสุคุนะแล้วร่วมมือกับเขา',g:'dark curious',title:'ภาชนะของสุคุนะ',k:'villain',dark:30,fame:20,power:['jj_tech','รอยสักสีดำขึ้นบนหน้าคุณ สุคุนะหัวเราะอยู่ในหัว'],s:'สุคุนะลืมตาขึ้นบนแก้มของคุณ "น่าสนใจ ข้าจะให้เจ้ายืมพลังสักหน่อย"',news:'กลายเป็นภาชนะที่ร่วมมือกับราชาคำสาป'}],fate:'สุคุนะหันหลังกลับไปหาเป้าหมายที่น่าสนใจกว่า'});
+TK('jjk',{id:'kenjaku',w:3,when:S=>S.year>=2018&&S.year<=2019&&(castAlive('kenjaku')||!CAST.jjk?.kenjaku),
+  text:'ชายที่มีรอยเย็บบนหน้าผากยิ้มให้คุณ "ข้ากำลังจะทำให้มนุษย์ทั้งโลกพัฒนา เจ้าจะช่วยหรือขวาง"',c:[
+  {l:'สู้กับเคนจาคุเพื่อหยุดเกมล้างบาง',g:'brave hero',foe:['เคนจาคุ',95,'b'],p:.15,title:'ผู้หยุดแผนของเคนจาคุ',k:'hero',kill:'kenjaku',fame:35,s:'สมองที่ย้ายร่างมาพันปีหยุดเต้น เกมล้างบางพังทลาย'},
+  {l:'ร่วมแผนรวมมนุษยชาติกับเคนจาคุ',g:'dark',title:'มือขวาของเคนจาคุ',k:'villain',dark:25,fame:15,s:'คุณได้รับรายชื่อผู้เล่นเกมล้างบางทั้งหมด และสิทธิ์เขียนกฎข้อใหม่'}]});
+TK('jjk',{id:'strongest',w:3,when:S=>S.year>=2019&&!castAlive('gojo')&&(S.sk?.fight||0)>=85,
+  text:'หลังจากโกโจจากไป โลกไสยเวทไม่มีใครถูกเรียกว่า "ผู้แข็งแกร่งที่สุด" อีก ผู้ใช้ไสยเวทชั้นพิเศษหลายคนมองมาที่คุณ',c:[
+  {l:'ท้าประลองผู้ใช้ไสยเวทชั้นพิเศษทุกคนเพื่อพิสูจน์',g:'brave',foe:['ผู้ใช้ไสยเวทชั้นพิเศษ',92],p:.3,title:'ผู้แข็งแกร่งที่สุดคนใหม่',k:'rank',fame:35,s:'ไม่มีใครยืนอยู่ได้หลังเจอคุณ คำเรียกที่เคยเป็นของโกโจตกมาถึงคุณ'}]});
+/* Heian */
+TK('heian',{id:'hsukuna',w:4,when:S=>castAlive('sukuna')&&(S.sk?.fight||0)>=75,
+  text:'ราชาคำสาปสี่แขนนั่งบนกองกระดูกนอกเมืองเฮอัน "ผู้ใช้ไสยเวททั้งเมืองมาเพื่อตาย เจ้าก็เช่นกันหรือ"',c:[
+  {l:'สู้กับสุคุนะเพื่อชิงตำแหน่งราชาคำสาป',g:'brave dark',foe:['ราชาคำสาป สุคุนะ',99,'b'],p:.1,title:'ราชาคำสาปแห่งเฮอัน',k:'villain',kill:'sukuna',dark:30,fame:40,s:'ร่างสี่แขนล้มลงบนกองกระดูก ผู้ใช้ไสยเวททั้งเมืองคุกเข่าให้ราชาคนใหม่'},
+  {l:'ขอเป็นผู้รับใช้ของสุคุนะ',g:'dark loyal',title:'ผู้รับใช้ของราชาคำสาป',k:'villain',dark:20,fame:15,s:'อุราอุเมะมองคุณด้วยหางตา คุณกลายเป็นหนึ่งในผู้ติดตามที่สุคุนะยอมให้มีชีวิต'}]});
+/* Naruto */
+TK('naruto',{id:'hokage',w:3,age:25,when:S=>(S.fame||0)>=60&&(S.sk?.fight||0)>=70&&!S.flags.outlaw,
+  text:'สภาผู้อาวุโสเรียกคุณเข้าพบ "หมู่บ้านต้องการผู้นำคนใหม่ ชื่อของเจ้าอยู่ในรายชื่อ"',c:[
+  {l:'รับตำแหน่งโฮคาเงะ',g:'hero loyal',title:'โฮคาเงะ',k:'rank',fame:40,s:'ใบหน้าของคุณถูกแกะสลักบนหน้าผาโฮคาเงะ เด็กๆ ทั้งหมู่บ้านอยากเป็นแบบคุณ'},
+  {l:'ท้าดวลกับผู้สมัครอีกคนเพื่อพิสูจน์ตัวเอง',g:'brave',foe:['โจนินผู้สมัครโฮคาเงะ',80],p:.45,title:'โฮคาเงะ',k:'rank',fame:45,s:'คุณชนะต่อหน้าทั้งหมู่บ้าน แล้วสวมหมวกโฮคาเงะท่ามกลางเสียงเชียร์'}]});
+TK('naruto',{id:'akatsuki',w:3,when:S=>S.year>=56&&S.year<=66&&castAlive('nagato')&&(S.dark||0)>=30,
+  text:'ชายผมส้มที่มีเหล็กเจาะเต็มหน้ายืนกลางสายฝน "โลกนี้ต้องรู้จักความเจ็บปวด เจ้าจะเข้าร่วมแสงอุษาหรือไม่"',c:[
+  {l:'สู้กับเพนเพื่อชิงตำแหน่งผู้นำแสงอุษา',g:'brave dark',foe:['หกวิถีเพน',92,'b'],p:.15,title:'ผู้นำแสงอุษาคนใหม่',k:'villain',kill:'nagato',dark:30,fame:35,s:'ร่างทั้งหกล้มลง สมาชิกแสงอุษาถอดแหวนวางตรงหน้าคุณ'},
+  {l:'เข้าร่วมแสงอุษา',g:'dark',title:'สมาชิกแสงอุษา',k:'villain',dark:20,fame:15,s:'คุณได้เสื้อคลุมเมฆสีแดงกับแหวนวงหนึ่ง และคู่หูที่ไม่ค่อยพูด',after(S){S.flags.outlaw=1;}}]});
+TK('naruto',{id:'madara',w:4,when:S=>S.year>=67&&S.year<=68&&(S.sk?.fight||0)>=80,
+  text:'อุจิวะ มาดาระที่ฟื้นจากความตายยืนบนสนามรบ ดวงตาสังสารวัฏมองลงมาที่คุณ "ข้าจะพาโลกนี้เข้าสู่ความฝันนิรันดร์"',c:[
+  {l:'สู้กับอุจิวะ มาดาระ',g:'brave hero',foe:['อุจิวะ มาดาระ',99,'b'],p:.1,title:'วีรบุรุษสงครามโลกนินจาครั้งที่สี่',k:'hero',fame:50,s:'มาดาระคุกเข่าลงครั้งแรกในชีวิต พันธมิตรนินจาทั้งห้าหมู่บ้านเรียกชื่อคุณ'},
+  {l:'ยอมรับใช้แผนเนตรจันทรา',g:'dark',title:'ผู้รับใช้เนตรจันทรา',k:'villain',dark:35,fame:20,s:'มาดาระมอบเสื้อคลุมให้คุณ "เจ้าจะได้เห็นโลกที่ไม่มีใครต้องเจ็บปวด"'}]});
+/* One Piece */
+TK('op',{id:'yonko',w:3,when:S=>S.year>=1500&&S.year<=1530&&(S.sk?.fight||0)>=85,
+  text:'ข่าวลือว่าจักรพรรดิแห่งท้องทะเลคนหนึ่งบาดเจ็บหนัก อาณาเขตของเขาไม่มีใครคุ้มครอง ลูกเรือของคุณมองคุณรอคำสั่ง',c:[
+  {l:'บุกไปท้าสู้กับจักรพรรดิแห่งท้องทะเล',g:'brave dark',foe:['จักรพรรดิแห่งท้องทะเล',97,'b'],p:.15,title:'จักรพรรดิแห่งท้องทะเลคนใหม่',k:'villain',dark:15,fame:50,s:'ใบประกาศจับของคุณถูกพิมพ์ใหม่ ค่าหัวพุ่งเป็นพันล้าน คุณคือหนึ่งในสี่จักรพรรดิ'},
+  {l:'ยึดเกาะในอาณาเขตทีละเกาะ',g:'dark',title:'เจ้าพ่อแห่งโลกใหม่',k:'villain',dark:10,fame:25,s:'เกาะสามเกาะชักธงของคุณ ภาษีเริ่มไหลเข้ามา'}]});
+TK('op',{id:'admiral',w:3,age:25,when:S=>/ทหารเรือ|marine/.test((S.job?.n||'')+(S.job?.id||''))&&(S.fame||0)>=50,
+  text:'จอมพลเรียกคุณไปที่มารีนฟอร์ด "ที่นั่งพลเรือเอกว่างอยู่หนึ่งที่ ข้าอยากรู้ว่าความยุติธรรมของเจ้าคืออะไร"',c:[
+  {l:'รับยศพลเรือเอก',g:'loyal hero',title:'พลเรือเอก',k:'rank',fame:40,s:'คุณได้เสื้อคลุมยุติธรรมที่ปักชื่อของคุณเอง'},
+  {l:'ประลองกับพลเรือเอกคนเก่าเพื่อพิสูจน์',g:'brave',foe:['พลเรือเอก',95,'b'],p:.2,title:'พลเรือเอก',k:'rank',fame:50,s:'คุณชนะ และทั้งมารีนฟอร์ดรู้ว่าพลเรือเอกคนใหม่ไม่ได้มาเพราะเส้นสาย'}]});
+TK('op',{id:'pirateking',w:2,when:S=>S.year>=1522&&(S.sk?.fight||0)>=95&&(S.fame||0)>=80,
+  text:'โพเนกลีฟสีแดงสี่แผ่นชี้ไปที่เกาะสุดท้ายของแกรนด์ไลน์ ลาฟเทล คุณคือคนเดียวที่อ่านแผนที่ครบ',c:[
+  {l:'ออกเรือไปลาฟเทล',g:'brave hero',title:'ราชาโจรสลัด',k:'hero',fame:80,s:'คุณหัวเราะจนน้ำตาไหลเมื่อเห็นสมบัติชิ้นนั้น ราชาโจรสลัดคนใหม่ถือกำเนิดแล้ว'}]});
+/* Bleach */
+TK('bleach',{id:'captain',w:3,when:S=>!!S.flags.soul&&(S.sk?.fight||0)>=75,
+  text:'ตำแหน่งหัวหน้าหน่วยหนึ่งในสิบสามหน่วยว่างลง กฎเก่าของหน่วยที่ 11 บอกว่า ใครฆ่าหัวหน้าได้ต่อหน้าลูกน้องสองร้อยคน คนนั้นคือหัวหน้า',c:[
+  {l:'ท้าดวลซารากิ เคนปาจิ ต่อหน้าหน่วยที่ 11',g:'brave dark',foe:['ซารากิ เคนปาจิ',96,'b'],p:.15,title:'เคนปาจิคนใหม่ หัวหน้าหน่วยที่ 11',k:'rank',kill:'kenpachi',dark:10,fame:45,s:'กระดิ่งบนผมของเคนปาจิหยุดดัง ลูกน้องสองร้อยคนคุกเข่าให้คุณ'},
+  {l:'สอบเป็นหัวหน้าหน่วยด้วยบังไค',g:'hero',title:'หัวหน้าหน่วย',k:'rank',fame:35,s:'หัวหน้าหน่วยสามคนรับรองบังไคของคุณ คุณได้ฮาโอริสีขาวพร้อมหมายเลขหน่วย'}]});
+TK('bleach',{id:'espada',w:3,when:S=>!!S.flags.arrancar,
+  text:'ไอเซ็นนั่งบนบัลลังก์ในลาสโนเชส "หมายเลขหนึ่งในเอสปาด้าว่างลง เจ้าต้องการมันหรือไม่"',c:[
+  {l:'ท้าสู้เอสปาด้าเพื่อชิงหมายเลข',g:'brave dark',foe:['เอสปาด้า',88],p:.3,title:'เอสปาด้า',k:'villain',dark:15,fame:30,s:'หมายเลขถูกสักลงบนร่างของคุณ คุณคือหนึ่งในสิบอารันคาร์ที่แข็งแกร่งที่สุด'}]});
+TK('bleach',{id:'aizen',w:4,when:S=>S.year>=2001&&S.year<=2002&&castAlive('aizen')&&(S.sk?.fight||0)>=80,
+  text:'ไอเซ็นยืนเหนือเมืองคาราคุระปลอม โฮเงียวคุในอกเรืองแสง "เจ้าจะยืนข้างข้าบนฟ้า หรือจะตายบนพื้นกับพวกนั้น"',c:[
+  {l:'สู้กับไอเซ็น โซสุเกะ',g:'brave hero',foe:['ไอเซ็น โซสุเกะ',98,'b'],p:.1,title:'ผู้หยุดไอเซ็น',k:'hero',fame:50,s:'โฮเงียวคุปฏิเสธเจ้าของ ไอเซ็นถูกผนึกเพราะคุณถ่วงเขาไว้ได้นานพอ'},
+  {l:'ยืนข้างไอเซ็นบนฟ้า',g:'dark',title:'ขุนพลของไอเซ็น',k:'villain',dark:30,fame:25,s:'ไอเซ็นยิ้ม "การตัดสินใจที่ถูกต้อง"'}]});
+/* Attack on Titan */
+TK('aot',{id:'commander',w:3,age:22,when:S=>S.year>=850&&!castAlive('erwin')&&(S.job?.id==='survey'||S.job?.mil)&&(S.fame||0)>=40,
+  text:'หน่วยสำรวจไม่มีผู้บัญชาการ ฮันจิจับไหล่คุณ "เออร์วินเคยบอกว่าคนที่ยอมทิ้งบางอย่างได้ คือคนที่เปลี่ยนแปลงอะไรได้"',c:[
+  {l:'รับตำแหน่งผู้บัญชาการหน่วยสำรวจ',g:'hero loyal',title:'ผู้บัญชาการหน่วยสำรวจ',k:'rank',fame:35,s:'ทหารทั้งหน่วยวางกำปั้นบนอก "อุทิศหัวใจ!"'}]});
+TK('aot',{id:'rumbling',w:4,when:S=>S.year===854&&castAlive('eren'),
+  text:'กำแพงทั้งสามแตกออก ไททันมหึมานับล้านเริ่มเดิน เสียงของเอเรนดังในหัวของชาวเอลเดียทุกคน "ฉันจะกำจัดทุกสิ่งนอกเกาะนี้"',c:[
+  {l:'สู้กับไททันต้นกำเนิดเพื่อหยุดแผ่นดินถล่ม',g:'brave hero',foe:['ไททันต้นกำเนิด',98,'t'],p:.1,title:'ผู้หยุดแผ่นดินถล่ม',k:'hero',fame:60,s:'เสียงฝีเท้าหยุดลง โลกนอกเกาะยังมีชีวิตอยู่ได้เพราะคุณ'},
+  {l:'เดินทัพไปกับเอเรน',g:'dark loyal',title:'ผู้เดินทัพแห่งแผ่นดินถล่ม',k:'villain',dark:40,fame:30,s:'คุณยืนบนหัวไททันมหึมา มองเมืองทั้งเมืองหายไปใต้ฝีเท้า'}]});
+/* Dragon Ball */
+TK('db',{id:'destroyer',w:3,when:S=>S.year>=778&&(S.sk?.fight||0)>=95,
+  text:'บีรุสหาวยาว "ข้าเบื่อแล้ว ใครจะมาเป็นเทพแห่งการทำลายแทนข้า ลองสู้ให้ข้าดูหน่อย" วิสยิ้มอยู่ข้างๆ',c:[
+  {l:'สู้กับบีรุสเพื่อชิงตำแหน่ง',g:'brave',foe:['บีรุส',99,'b'],p:.08,title:'เทพแห่งการทำลายล้างคนใหม่',k:'rank',fame:60,s:'บีรุสหัวเราะจนน้ำตาไหล "ใช้ได้! ตำแหน่งนี้เป็นของเจ้า แต่ข้ายังจะมากินพุดดิ้งที่บ้านเจ้าทุกวัน"'},
+  {l:'ขอเป็นศิษย์ของวิส',g:'curious',title:'ศิษย์ของทูตสวรรค์',k:'rank',fame:20,s:'วิสเคาะคทาลงพื้น "เริ่มจากเดินบนน้ำโดยไม่เปียกก่อนนะคะ"',after(S){skill('fight',8);}}]});
+TK('db',{id:'redribbon',w:3,when:S=>S.year>=745&&S.year<=752&&(S.dark||0)>=30,
+  text:'จอมพลของกองทัพริบบอนแดงต้องการคนนำกองทัพหาดราก้อนบอลทั้งเจ็ด "ทำได้ เจ้าจะได้กองทัพนี้"',c:[
+  {l:'รับเป็นผู้นำกองทัพริบบอนแดง',g:'dark',title:'ผู้นำกองทัพริบบอนแดง',k:'villain',dark:25,fame:25,s:'ทหารนับพันทำความเคารพคุณ เรดาร์ดราก้อนบอลถูกวางบนโต๊ะของคุณ'}]});
+/* JoJo */
+TK('jojo',{id:'passione',w:3,when:S=>S.year>=2000&&S.year<=2002&&castAlive('diavolo')&&(S.sk?.fight||0)>=75,
+  text:'ไม่มีใครเคยเห็นหน้าบอสของพาสซิโอเน แต่คุณเพิ่งได้ภาพถ่ายของเขามาหนึ่งใบ',c:[
+  {l:'สู้กับดิอาโวโล่เพื่อชิงแก๊ง',g:'brave dark',foe:['ดิอาโวโล่',96,'b'],p:.15,title:'บอสแห่งพาสซิโอเน',k:'villain',kill:'diavolo',dark:20,fame:40,s:'เวลาที่ถูกลบกลับมาเดินต่อ แก๊งที่ใหญ่ที่สุดในอิตาลีเป็นของคุณ'},
+  {l:'ส่งภาพให้จอร์โน่แล้วช่วยเขา',g:'hero',title:'ผู้ช่วยจอร์โน่ โจวานน่า',k:'hero',fame:30,s:'จอร์โน่พยักหน้า "ความฝันของผมคือการเป็นแก๊งสตาร์ที่ดี ขอบคุณที่ช่วย"'}]});
+TK('jojo',{id:'dio',w:3,when:S=>S.year>=1987&&S.year<=1989&&castAlive('dio'),
+  text:'ชายผมทองในคฤหาสน์ที่ไคโรยื่นมือให้คุณ "เจ้าไม่ต้องกลัวอะไรอีก มาเป็นเพื่อนกับข้า"',c:[
+  {l:'รับใช้ดิโอ',g:'dark',title:'ผู้รับใช้ของดิโอ',k:'villain',dark:30,fame:20,s:'เมล็ดเนื้อของดิโอฝังลงบนหน้าผากของคุณ คุณรู้สึกสงบอย่างน่ากลัว'},
+  {l:'สู้กับดิโอ',g:'brave hero',foe:['ดิโอ',97,'b'],p:.12,title:'ผู้ปราบดิโอ',k:'hero',kill:'dio',fame:50,s:'แสงแดดยามเช้าแผดเผาร่างของดิโอเป็นผุยผง'}]});
+/* Lookism */
+TK('lookism',{id:'genking',w:3,when:S=>S.year>=2012&&(S.sk?.fight||0)>=88,
+  text:'ทุกคนในย่านพูดถึงราชาแห่งรุ่น ชายผมขาวที่ไม่เคยแพ้ใคร วันนี้เขายืนรอคุณที่ลานจอดรถ',c:[
+  {l:'ท้าดวลราชาแห่งรุ่น',g:'brave',foe:['เจมส์ ลี',96,'b'],p:.15,title:'ราชาแห่งรุ่นคนใหม่',k:'rank',fame:45,s:'ทั้งเกาหลีรู้ชื่อคุณในคืนเดียว คุณคือราชาแห่งรุ่น'}]});
+/* what a title brings each year */
+{const mp=monthPass;monthPass=async function(){const r=await mp.apply(this,arguments);try{const T=S&&S.alive&&S.flags.title;if(T&&(S.mo||0)===0&&S.year>T.y){
+  if(T.k==='villain'){mon(R(4,10));dk(1);fm(2);if(chance(.3)){if(live(.7+fitb(300),`ถูกวีรบุรุษที่มาล้มล้าง${T.n}สังหาร`))say(`ผู้กล้าคนหนึ่งบุกมาหวังล้ม${T.n} แต่ไม่รอดกลับไป`,'bad');}else say(`ลูกน้องนำบรรณาการมาให้${T.n}`,'plain');}
+  else if(T.k==='hero'){fm(2);st('joy',2);mon(R(1,4));say(pick([`เด็กๆ เล่นเป็น${T.n}ในสนามเด็กเล่น`,`คนแปลกหน้าขอบคุณคุณกลางถนนในฐานะ${T.n}`]),'good');}
+  else{mon(R(5,12));fm(1);say(`เงินเดือนของ${T.n}เข้าบัญชีแล้ว พร้อมงานที่ไม่เคยหมด`,'plain');}}}catch(e){}return r;};}
+/* the title shows in the status line of every world */
+for(const w of Object.keys(WORLDS)){const X=WORLDS[w],sx=X.statusX;X.statusX=S=>(sx?sx(S):'')+(S.flags.title?` · ${S.flags.title.n}`:'');}
 
 /* ===== setup ===== */
 const cfg={world:'aot',sex:'m',year:835,place:'shiganshina',vil:'konoha',name:'',edited:false,traits:null,look:null,dream:null};
